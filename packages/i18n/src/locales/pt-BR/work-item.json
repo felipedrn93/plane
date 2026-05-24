@@ -25,6 +25,68 @@
       "link": "Adicionar link",
       "existing": "Adicionar item de trabalho existente"
     },
+    "recurrence": {
+      "label": "Recorrência",
+      "no_recurrence": "Não repete",
+      "needs_target_date": "Defina uma data de término para ativar a recorrência",
+      "enable": "Repetir",
+      "disable": "Desativar recorrência",
+      "repeat_every": "Repetir a cada",
+      "next_occurrence": "Próxima ocorrência:",
+      "frequency": {
+        "daily": "Diário",
+        "weekly": "Semanal",
+        "monthly": "Mensal",
+        "yearly": "Anual"
+      },
+      "unit": {
+        "day": "{count, plural, one {dia} other {dias}}",
+        "week": "{count, plural, one {semana} other {semanas}}",
+        "month": "{count, plural, one {mês} other {meses}}",
+        "year": "{count, plural, one {ano} other {anos}}"
+      },
+      "weekday": {
+        "short": {
+          "MO": "Seg",
+          "TU": "Ter",
+          "WE": "Qua",
+          "TH": "Qui",
+          "FR": "Sex",
+          "SA": "Sáb",
+          "SU": "Dom"
+        },
+        "long": {
+          "MO": "Segunda-feira",
+          "TU": "Terça-feira",
+          "WE": "Quarta-feira",
+          "TH": "Quinta-feira",
+          "FR": "Sexta-feira",
+          "SA": "Sábado",
+          "SU": "Domingo"
+        }
+      },
+      "monthly": {
+        "option_monthday": "No dia {day} do mês",
+        "option_setpos": "Na {position} {weekday} do mês",
+        "monthday_prefix": "No dia",
+        "monthday_suffix": "do mês",
+        "setpos_prefix": "Na",
+        "setpos_suffix": "do mês"
+      },
+      "setpos": {
+        "first": "primeira",
+        "second": "segunda",
+        "third": "terceira",
+        "fourth": "quarta",
+        "last": "última"
+      },
+      "summary": {
+        "weekly_with_days": "A cada {count, plural, one {semana} other {# semanas}} em {days}",
+        "monthly_on_day": "A cada {count, plural, one {mês} other {# meses}} no dia {day}",
+        "monthly_on_setpos": "A cada {count, plural, one {mês} other {# meses}} na {position} {weekday}",
+        "interval": "A cada {count} {unit}"
+      }
+    },
     "remove": {
       "label": "Remover item de trabalho",
       "cycle": {

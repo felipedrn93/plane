@@ -4,10 +4,12 @@
  * See the LICENSE file for details.
  */
 
+import type { FC } from "react";
 import { observer } from "mobx-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
 // ui icons
+import { Repeat } from "lucide-react";
 import {
   CycleIcon,
   StatePropertyIcon,
@@ -25,6 +27,7 @@ import { cn, getDate, renderFormattedPayloadDate, shouldHighlightIssueDueDate } 
 // components
 import { DateDropdown } from "@/components/dropdowns/date";
 import { EstimateDropdown } from "@/components/dropdowns/estimate";
+import { RecurrenceDropdown } from "@/components/dropdowns/recurrence";
 import { ButtonAvatars } from "@/components/dropdowns/member/avatar";
 import { MemberDropdown } from "@/components/dropdowns/member/dropdown";
 import { PriorityDropdown } from "@/components/dropdowns/priority";
@@ -45,6 +48,8 @@ import type { TIssueOperations } from "../issue-detail";
 import { IssueCycleSelect } from "../issue-detail/cycle-select";
 import { IssueLabel } from "../issue-detail/label";
 import { IssueModuleSelect } from "../issue-detail/module-select";
+
+const RecurrenceIcon: FC<{ className?: string }> = ({ className }) => <Repeat className={className} />;
 
 interface IPeekOverviewProperties {
   workspaceSlug: string;
@@ -187,6 +192,18 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
             />
             {issue.target_date && <DateAlert date={issue.target_date} workItem={issue} projectId={projectId} />}
           </div>
+        </SidebarPropertyListItem>
+
+        <SidebarPropertyListItem icon={RecurrenceIcon} label={t("issue.recurrence.label")}>
+          <RecurrenceDropdown
+            value={issue.recurrence_pattern}
+            onChange={(val) =>
+              issueOperations.update(workspaceSlug, projectId, issueId, { recurrence_pattern: val })
+            }
+            disabled={disabled}
+            targetDate={issue.target_date}
+            className="w-full"
+          />
         </SidebarPropertyListItem>
 
         {isEstimateEnabled && (

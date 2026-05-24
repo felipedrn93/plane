@@ -25,6 +25,68 @@
       "link": "Add link",
       "existing": "Add existing work item"
     },
+    "recurrence": {
+      "label": "Recurrence",
+      "no_recurrence": "Does not repeat",
+      "needs_target_date": "Set a due date to enable recurrence",
+      "enable": "Repeat",
+      "disable": "Turn off recurrence",
+      "repeat_every": "Repeat every",
+      "next_occurrence": "Next occurrence:",
+      "frequency": {
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "unit": {
+        "day": "{count, plural, one {day} other {days}}",
+        "week": "{count, plural, one {week} other {weeks}}",
+        "month": "{count, plural, one {month} other {months}}",
+        "year": "{count, plural, one {year} other {years}}"
+      },
+      "weekday": {
+        "short": {
+          "MO": "Mon",
+          "TU": "Tue",
+          "WE": "Wed",
+          "TH": "Thu",
+          "FR": "Fri",
+          "SA": "Sat",
+          "SU": "Sun"
+        },
+        "long": {
+          "MO": "Monday",
+          "TU": "Tuesday",
+          "WE": "Wednesday",
+          "TH": "Thursday",
+          "FR": "Friday",
+          "SA": "Saturday",
+          "SU": "Sunday"
+        }
+      },
+      "monthly": {
+        "option_monthday": "On day {day} of the month",
+        "option_setpos": "On the {position} {weekday} of the month",
+        "monthday_prefix": "On day",
+        "monthday_suffix": "of the month",
+        "setpos_prefix": "On the",
+        "setpos_suffix": "of the month"
+      },
+      "setpos": {
+        "first": "first",
+        "second": "second",
+        "third": "third",
+        "fourth": "fourth",
+        "last": "last"
+      },
+      "summary": {
+        "weekly_with_days": "Every {count, plural, one {week} other {# weeks}} on {days}",
+        "monthly_on_day": "Every {count, plural, one {month} other {# months}} on day {day}",
+        "monthly_on_setpos": "Every {count, plural, one {month} other {# months}} on the {position} {weekday}",
+        "interval": "Every {count} {unit}"
+      }
+    },
     "remove": {
       "label": "Remove work item",
       "cycle": {

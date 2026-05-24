@@ -168,6 +168,7 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         null=True,
         blank=True,
     )
+    recurrence_pattern = models.JSONField(null=True, blank=True)
 
     issue_objects = IssueManager()
 
@@ -179,7 +180,9 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
 
     def save(self, *args, **kwargs):
         self._ensure_default_state()
+        was_completed_before = self.completed_at is not None
         kwargs = self._sync_completed_at(kwargs)
+        becoming_completed = self.completed_at is not None and not was_completed_before
 
         if self._state.adding:
             with transaction.atomic():
@@ -220,6 +223,12 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
                 else strip_tags(self.description_html)
             )
             super(Issue, self).save(*args, **kwargs)
+
+        if becoming_completed and self.recurrence_pattern:
+            from plane.bgtasks.recurring_issue_task import create_next_recurring_issue
+
+            issue_id_str = str(self.id)
+            transaction.on_commit(lambda: create_next_recurring_issue.delay(issue_id_str))
 
     def __str__(self):
         """Return name of the issue"""

@@ -47,6 +47,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
+from plane.bgtasks.recurring_issue_task import validate_recurrence_pattern
 
 
 class IssueFlatSerializer(BaseSerializer):
@@ -130,6 +131,11 @@ class IssueCreateSerializer(BaseSerializer):
             and attrs.get("start_date", None) > attrs.get("target_date", None)
         ):
             raise serializers.ValidationError("Start date cannot exceed target date")
+
+        if "recurrence_pattern" in attrs:
+            is_valid, error_msg = validate_recurrence_pattern(attrs.get("recurrence_pattern"))
+            if not is_valid:
+                raise serializers.ValidationError({"recurrence_pattern": error_msg})
 
         # Validate description content for security
         if "description_html" in attrs and attrs["description_html"]:
@@ -799,6 +805,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "link_count",
             "is_draft",
             "archived_at",
+            "recurrence_pattern",
         ]
         read_only_fields = fields
 
@@ -849,6 +856,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "updated_by": instance.updated_by_id,
             "is_draft": instance.is_draft,
             "archived_at": instance.archived_at,
+            "recurrence_pattern": instance.recurrence_pattern,
             # Computed fields
             "cycle_id": instance.cycle_id,
             "module_ids": self.get_module_ids(instance),

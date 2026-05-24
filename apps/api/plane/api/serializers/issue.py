@@ -31,6 +31,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
+from plane.bgtasks.recurring_issue_task import validate_recurrence_pattern
 
 from .base import BaseSerializer
 from .cycle import CycleLiteSerializer, CycleSerializer
@@ -79,6 +80,11 @@ class IssueSerializer(BaseSerializer):
             and data.get("start_date", None) > data.get("target_date", None)
         ):
             raise serializers.ValidationError("Start date cannot exceed target date")
+
+        if "recurrence_pattern" in data:
+            is_valid, error_msg = validate_recurrence_pattern(data.get("recurrence_pattern"))
+            if not is_valid:
+                raise serializers.ValidationError({"recurrence_pattern": error_msg})
 
         try:
             if data.get("description_html", None) is not None:

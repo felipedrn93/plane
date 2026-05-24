@@ -26,6 +26,18 @@ export enum EIssueServiceType {
   WORK_ITEMS = "work-items",
 }
 
+export type TRecurrenceFrequency = "daily" | "weekly" | "monthly" | "yearly";
+
+export type TRecurrenceWeekday = "MO" | "TU" | "WE" | "TH" | "FR" | "SA" | "SU";
+
+export type TRecurrencePattern = {
+  frequency: TRecurrenceFrequency;
+  interval: number;
+  by_weekday?: TRecurrenceWeekday[];
+  by_monthday?: number;
+  by_setpos?: number;
+};
+
 export enum EIssuesStoreType {
   GLOBAL = "GLOBAL",
   PROFILE = "PROFILE",
@@ -77,6 +89,8 @@ export type TBaseIssue = {
   is_draft: boolean;
   is_epic?: boolean;
   is_intake?: boolean;
+
+  recurrence_pattern: TRecurrencePattern | null;
 };
 
 type IssueRelation = {
