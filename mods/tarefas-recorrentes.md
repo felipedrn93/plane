@@ -62,13 +62,15 @@ JSONField nullable no model `Issue`:
 - `apps/api/plane/api/serializers/issue.py`
   - `IssueSerializer.validate` chama `validate_recurrence_pattern` (o `exclude` do Meta já incluía o campo automaticamente).
 - `apps/api/plane/app/views/issue/base.py` e `apps/api/plane/app/views/issue/sub_issue.py`
-  - `IssueViewSet.list` (fallback `.values()`), `IssueViewSet.create` (response pós-create), `IssuePaginatedViewSet.list` (`required_fields`) e `SubIssuesEndpoint` (`.values()`) listam manualmente os campos a devolver — `recurrence_pattern` adicionado em todos eles, senão o frontend recebe o issue sem o campo no GET de listagem (e o painel "apaga" o que foi configurado, mesmo estando no banco).
+  - `IssueListEndpoint.get` (`.values()`), `IssueViewSet.create` (response pós-create `.values()`), `IssuePaginatedViewSet.list` (`required_fields`) e `SubIssuesEndpoint.get` (`.values()`) listam manualmente os campos a devolver — `recurrence_pattern` adicionado em todos eles, senão o frontend recebe o issue sem o campo no GET de listagem (e o painel "apaga" o que foi configurado, mesmo estando no banco).
 - `apps/api/plane/settings/common.py`
   - `recurring_issue_task` adicionado em `CELERY_IMPORTS`. Sem isso o worker boota sem importar o módulo, o `@shared_task` em `create_next_recurring_issue` nunca registra e a mensagem enfileirada por `Issue.save()` cai como "Received unregistered task" — a próxima ocorrência nunca é criada. Outras bgtasks evitam isso porque estão em `CELERY_IMPORTS` ou são puxadas transitivamente por algo que está; o `recurring_issue_task` só era importado lazy dentro de `Issue.save()`, que roda no processo da API, não no worker.
 - `apps/web/core/store/issue/issue-details/issue.store.ts`
   - `addIssueToStore` monta o objeto `TIssue` no store com allowlist explícita campo a campo (`id`, `name`, `state_id`, …). `recurrence_pattern` faltava — o `IssueDetailSerializer` do backend devolve o campo, mas o store o jogava fora ao popular. Resultado: ao abrir uma issue recorrente o dropdown mostrava "sem recorrência" mesmo com o JSONB salvo no banco. Fix: incluir `recurrence_pattern: issue?.recurrence_pattern` no payload.
 - `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx`
   - Pequeno badge com ícone `Repeat` adicionado entre os indicadores extras (sub-issues, attachments, links). Renderiza só quando `issue.recurrence_pattern` está setado. Tooltip mostra "Recorrência" como heading e a frequência traduzida (`daily/weekly/monthly/yearly`) como content. Sem gate de display-properties — o ícone só aparece em issues recorrentes então é discreto e serve como pista visual sem precisar de toggle no settings de layout.
+- `apps/api/plane/utils/grouper.py`
+  - `issue_on_results` (usado pelo `IssueViewSet.list`, o endpoint principal do kanban/list/spreadsheet) projeta a queryset com uma lista hardcoded de `required_fields`. Ainda outra "shadow allowlist" sem `recurrence_pattern` — o ícone que adicionei em `all-properties.tsx` nunca renderizava porque o store recebia issues sem o campo. Fix: adicionar `"recurrence_pattern"` na lista.
 
 **Frontend / Tipos**
 
@@ -89,7 +91,7 @@ JSONField nullable no model `Issue`:
 ## Fluxo end-to-end
 
 1. Usuário abre uma issue, define `target_date`, abre o dropdown "Recorrência", liga o toggle e configura o padrão. O `RecurrenceDropdown` chama `issueOperations.update(ws, project, issue, { recurrence_pattern: {...} })`.
-2. Backend recebe o PATCH em `IssuePaginatedViewSet`, valida via `validate_recurrence_pattern`, persiste.
+2. Backend recebe o PATCH em `IssueViewSet.partial_update`, valida via `validate_recurrence_pattern` (chamado dentro de `IssueCreateSerializer.validate`, que é o serializer usado para create/update/partial_update — ver `IssueViewSet.get_serializer_class`), persiste no campo JSONB.
 3. Usuário marca a issue como concluída (state vira grupo `completed`). `Issue.save()` detecta a transição e enfileira `create_next_recurring_issue.delay(issue_id)` via `transaction.on_commit`.
 4. O worker Celery executa a task: calcula `next_target_date` (e `next_start_date` preservando o delta) com `dateutil.rrule`, escolhe o state default do projeto, e cria uma nova `Issue` clonando name/description/priority/assignees/labels/parent/recurrence_pattern.
 5. A nova issue aparece na lista; ao ser concluída, gera a próxima, e assim por diante.
@@ -115,6 +117,43 @@ yarn dev   # em apps/web
    - `target_date` deslocado para o próximo Seg/Qua/Sex.
    - `state` no default do projeto (Backlog/Todo).
    - `recurrence_pattern` preservado (para continuar a série).
+
+## Pitfalls — todos os lugares onde um campo novo de `Issue` precisa aparecer
+
+Lições da implementação de `recurrence_pattern`. O Plane espalha o conhecimento de "quais campos uma Issue tem" por várias listas hardcoded. Adicionar um novo campo no model **não basta** — precisa ser declarado em cada uma das seguintes:
+
+**Backend — model e migration:**
+- `apps/api/plane/db/models/issue.py` — declaração do campo.
+- `apps/api/plane/db/migrations/0xxx_<nome>.py` — migration.
+
+**Backend — serializers (formato de I/O):**
+- `apps/api/plane/app/serializers/issue.py` → `IssueSerializer.Meta.fields` (lista de retorno).
+- `apps/api/plane/app/serializers/issue.py` → `IssueListDetailSerializer.to_representation` (constrói o dict manualmente).
+- `apps/api/plane/app/serializers/issue.py` → `IssueCreateSerializer.validate` (validação no PATCH/POST). Esse é o serializer usado por create/update/partial_update do `IssueViewSet`.
+- `apps/api/plane/api/serializers/issue.py` → `IssueSerializer.validate` (rota `/api/v1/...`, se quiser que a public API também aceite o campo).
+
+**Backend — `.values()` projections em views de listagem (shadow allowlists):**
+- `apps/api/plane/utils/grouper.py` → `issue_on_results.required_fields` — **o mais fácil de esquecer**. É o que `IssueViewSet.list` usa para projetar a queryset que vai pro kanban/list/spreadsheet. Sem o campo aqui, o frontend nunca recebe na listagem principal.
+- `apps/api/plane/app/views/issue/base.py:163` → `IssueListEndpoint.get` (`.values()` no fallback sem fields/expand).
+- `apps/api/plane/app/views/issue/base.py:428` → `IssueViewSet.create` (response pós-create — `.values()` para retornar a issue recém-criada).
+- `apps/api/plane/app/views/issue/base.py:859` → `IssuePaginatedViewSet.list` (`required_fields` da v2).
+- `apps/api/plane/app/views/issue/sub_issue.py:141` → `SubIssuesEndpoint.get` (`.values()` para sub-issues).
+
+**Backend — Celery (se o `save()` enfileirar task):**
+- `apps/api/plane/settings/common.py` → `CELERY_IMPORTS` (lista explícita de módulos de task que o worker importa no boot). Sem o módulo aqui, o `@shared_task` nunca registra no worker e mensagens enfileiradas pelo API caem como `Received unregistered task` e são descartadas. **Não confiar** que `autodiscover_tasks()` resolve — o do Plane procura `<app>.tasks` que não existe pro `plane.bgtasks`.
+
+**Frontend — tipos:**
+- `packages/types/src/issues/issue.ts` → `TBaseIssue` (adicionar o campo opcional/nullable).
+
+**Frontend — stores (shadow allowlists do lado JS):**
+- `apps/web/core/store/issue/issue-details/issue.store.ts` → `addIssueToStore` — outra allowlist explícita campo-a-campo. O backend pode estar mandando o campo certinho, mas se ele não estiver listado aqui o detail/peek-overview nunca vê. O root `addIssue` em `apps/web/core/store/issue/issue.store.ts` usa spread, então não precisa de mudança lá.
+
+**Frontend — UI (onde o campo deve aparecer):**
+- `apps/web/core/components/issues/peek-overview/properties.tsx` — sidebar do peek-overview (campo editável).
+- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx` — indicadores compactos no kanban/list/spreadsheet (badge com ícone).
+- (futuro) settings de "Display properties" se quiser deixar o usuário esconder o indicador.
+
+**Como detectar shadow allowlists novas:** `grep -rn '"target_date"' apps/api/plane apps/web/core` mostra a maioria delas — onde aparece `target_date` literal numa lista, provavelmente é uma allowlist que precisa do campo novo também.
 
 ## Idempotência e edge cases tratados
 
