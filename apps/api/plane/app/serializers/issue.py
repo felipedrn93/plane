@@ -47,7 +47,7 @@ from plane.utils.content_validator import (
     validate_html_content,
     validate_binary_data,
 )
-from plane.bgtasks.recurring_issue_task import validate_recurrence_pattern
+from plane.utils.recurrence_validator import validate_recurrence_pattern
 
 
 class IssueFlatSerializer(BaseSerializer):

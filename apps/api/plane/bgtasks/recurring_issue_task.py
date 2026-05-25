@@ -32,6 +32,7 @@ from plane.bgtasks.issue_activities_task import issue_activity
 from plane.db.models import Issue, IssueAssignee, IssueLabel, State
 from plane.db.models.state import StateGroup
 from plane.utils.exception_logger import log_exception
+from plane.utils.recurrence_validator import validate_recurrence_pattern  # re-exported
 
 
 FREQUENCY_MAP = {
@@ -50,50 +51,6 @@ WEEKDAY_MAP = {
     "SA": SA,
     "SU": SU,
 }
-
-
-def validate_recurrence_pattern(value):
-    """Return (is_valid, error_message). `value` may be None or a dict."""
-    if value is None:
-        return True, None
-    if not isinstance(value, dict):
-        return False, "recurrence_pattern must be an object"
-
-    if value.get("frequency") not in FREQUENCY_MAP:
-        return False, "recurrence_pattern.frequency must be one of daily, weekly, monthly, yearly"
-
-    interval = value.get("interval", 1)
-    try:
-        interval_int = int(interval)
-    except (TypeError, ValueError):
-        return False, "recurrence_pattern.interval must be a positive integer"
-    if interval_int < 1:
-        return False, "recurrence_pattern.interval must be a positive integer"
-
-    weekdays = value.get("by_weekday")
-    if weekdays is not None:
-        if not isinstance(weekdays, list) or not all(d in WEEKDAY_MAP for d in weekdays):
-            return False, "recurrence_pattern.by_weekday must be a list of MO/TU/WE/TH/FR/SA/SU"
-
-    monthday = value.get("by_monthday")
-    if monthday is not None:
-        try:
-            monthday_int = int(monthday)
-        except (TypeError, ValueError):
-            return False, "recurrence_pattern.by_monthday must be an integer"
-        if monthday_int == 0 or monthday_int < -31 or monthday_int > 31:
-            return False, "recurrence_pattern.by_monthday must be in 1..31 or -1"
-
-    setpos = value.get("by_setpos")
-    if setpos is not None:
-        try:
-            setpos_int = int(setpos)
-        except (TypeError, ValueError):
-            return False, "recurrence_pattern.by_setpos must be an integer"
-        if setpos_int == 0 or setpos_int < -4 or setpos_int > 4:
-            return False, "recurrence_pattern.by_setpos must be in -4..-1 or 1..4"
-
-    return True, None
 
 
 def _to_date(value):
