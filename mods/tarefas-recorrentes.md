@@ -46,7 +46,7 @@ JSONField nullable no model `Issue`:
 
 **Frontend**
 
-- `apps/web/core/components/dropdowns/recurrence.tsx` — `RecurrenceDropdown` (Popover do Headless UI com toggle de recorrência, input de intervalo, select de frequência, chips de dias da semana para semanal, radios "dia X do mês" / "Nª weekday do mês" para mensal, preview da próxima ocorrência).
+- `apps/web/core/components/dropdowns/recurrence.tsx` — `RecurrenceDropdown` (painel ancorado ao botão via `react-popper` + `createPortal`, mesmo padrão de `DateDropdown`/`StateDropdown`. Toggle de recorrência, input de intervalo, select de frequência, chips de dias da semana para semanal, radios "dia X do mês" / "Nª weekday do mês" para mensal, preview da próxima ocorrência). Versão inicial usava `Popover` do Headless UI com `absolute right-0`, mas no peek overview (sidebar de 400px com `overflow-hidden`) o painel "saltava" pra borda direita da página — trocado pelo padrão portal+popper do projeto.
 
 ## Arquivos modificados
 
@@ -61,6 +61,8 @@ JSONField nullable no model `Issue`:
   - `IssueCreateSerializer.validate` chama `validate_recurrence_pattern` quando o campo está presente no payload.
 - `apps/api/plane/api/serializers/issue.py`
   - `IssueSerializer.validate` chama `validate_recurrence_pattern` (o `exclude` do Meta já incluía o campo automaticamente).
+- `apps/api/plane/app/views/issue/base.py` e `apps/api/plane/app/views/issue/sub_issue.py`
+  - `IssueViewSet.list` (fallback `.values()`), `IssueViewSet.create` (response pós-create), `IssuePaginatedViewSet.list` (`required_fields`) e `SubIssuesEndpoint` (`.values()`) listam manualmente os campos a devolver — `recurrence_pattern` adicionado em todos eles, senão o frontend recebe o issue sem o campo no GET de listagem (e o painel "apaga" o que foi configurado, mesmo estando no banco).
 
 **Frontend / Tipos**
 

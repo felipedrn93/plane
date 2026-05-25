@@ -165,6 +165,7 @@ class SubIssuesEndpoint(BaseAPIView):
                 "is_draft",
                 "archived_at",
                 "state_group",
+                "recurrence_pattern",
             )
         )
 
