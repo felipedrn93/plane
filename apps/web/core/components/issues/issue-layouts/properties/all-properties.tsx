@@ -10,7 +10,7 @@ import { xor } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
-import { Paperclip } from "lucide-react";
+import { Paperclip, Repeat } from "lucide-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon, StartDatePropertyIcon, ViewsIcon, DueDatePropertyIcon } from "@plane/propel/icons";
@@ -470,6 +470,24 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           </div>
         </Tooltip>
       </WithDisplayPropertiesHOC>
+
+      {/* recurrence indicator */}
+      {issue.recurrence_pattern && (
+        <Tooltip
+          tooltipHeading={t("issue.recurrence.label")}
+          tooltipContent={t(`issue.recurrence.frequency.${issue.recurrence_pattern.frequency}`)}
+          isMobile={isMobile}
+          renderByDefault={false}
+        >
+          <div
+            className="flex h-5 flex-shrink-0 items-center justify-center overflow-hidden rounded-sm border-[0.5px] border-strong px-2 py-1"
+            onFocus={handleEventPropagation}
+            onClick={handleEventPropagation}
+          >
+            <Repeat className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+          </div>
+        </Tooltip>
+      )}
 
       {/* Additional Properties */}
       <WorkItemLayoutAdditionalProperties displayProperties={displayProperties} issue={issue} />
