@@ -41,7 +41,8 @@ JSONField nullable no model `Issue`:
 **Backend**
 
 - `apps/api/plane/db/migrations/0122_issue_recurrence_pattern.py` — adiciona a coluna JSONB em `issues`.
-- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`, `validate_recurrence_pattern`. Usa `dateutil.rrule`.
+- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`. Usa `dateutil.rrule`. Re-exporta `validate_recurrence_pattern` de `plane.utils.recurrence_validator` para manter compatibilidade com os testes.
+- `apps/api/plane/utils/recurrence_validator.py` — função `validate_recurrence_pattern` (schema do JSONB) extraída do `recurring_issue_task.py` para um módulo dependency-free. Necessário porque os serializers de Issue precisam validar o campo, e importar direto do `recurring_issue_task.py` (que importa `issue_activities_task`, que importa `IssueActivitySerializer` do pacote serializers) fechava um ciclo durante o boot do Django.
 - `apps/api/plane/tests/unit/bg_tasks/test_recurring_issue_task.py` — 16 testes pytest cobrindo cálculo de próxima data (diário, semanal com/sem weekdays + wrap, mensal monthday, mensal Nª/última weekday, anual), `compute_next_dates` (preserva delta start↔target) e validação do schema.
 
 **Frontend**
@@ -58,9 +59,9 @@ JSONField nullable no model `Issue`:
 - `apps/api/plane/app/serializers/issue.py`
   - `IssueSerializer.Meta.fields` inclui `recurrence_pattern`.
   - `IssueListDetailSerializer.to_representation` retorna o campo.
-  - `IssueCreateSerializer.validate` chama `validate_recurrence_pattern` quando o campo está presente no payload.
+  - `IssueCreateSerializer.validate` chama `validate_recurrence_pattern` quando o campo está presente no payload. Import de `plane.utils.recurrence_validator` (não de `plane.bgtasks.recurring_issue_task`, pra evitar circular import — ver módulo `recurrence_validator.py` em "Arquivos criados").
 - `apps/api/plane/api/serializers/issue.py`
-  - `IssueSerializer.validate` chama `validate_recurrence_pattern` (o `exclude` do Meta já incluía o campo automaticamente).
+  - `IssueSerializer.validate` chama `validate_recurrence_pattern` (o `exclude` do Meta já incluía o campo automaticamente). Mesmo import de `plane.utils.recurrence_validator`.
 - `apps/api/plane/app/views/issue/base.py` e `apps/api/plane/app/views/issue/sub_issue.py`
   - `IssueListEndpoint.get` (`.values()`), `IssueViewSet.create` (response pós-create `.values()`), `IssuePaginatedViewSet.list` (`required_fields`) e `SubIssuesEndpoint.get` (`.values()`) listam manualmente os campos a devolver — `recurrence_pattern` adicionado em todos eles, senão o frontend recebe o issue sem o campo no GET de listagem (e o painel "apaga" o que foi configurado, mesmo estando no banco).
 - `apps/api/plane/settings/common.py`
@@ -71,6 +72,15 @@ JSONField nullable no model `Issue`:
   - Pequeno badge com ícone `Repeat` adicionado entre os indicadores extras (sub-issues, attachments, links). Renderiza só quando `issue.recurrence_pattern` está setado. Tooltip mostra "Recorrência" como heading e a frequência traduzida (`daily/weekly/monthly/yearly`) como content. Sem gate de display-properties — o ícone só aparece em issues recorrentes então é discreto e serve como pista visual sem precisar de toggle no settings de layout.
 - `apps/api/plane/utils/grouper.py`
   - `issue_on_results` (usado pelo `IssueViewSet.list`, o endpoint principal do kanban/list/spreadsheet) projeta a queryset com uma lista hardcoded de `required_fields`. Ainda outra "shadow allowlist" sem `recurrence_pattern` — o ícone que adicionei em `all-properties.tsx` nunca renderizava porque o store recebia issues sem o campo. Fix: adicionar `"recurrence_pattern"` na lista.
+
+**Infra do fork (necessárias pra rodar a partir do código, não estritamente da feature)**
+
+- `docker-compose.yml` (raiz)
+  - Serviço `live`: adicionado `env_file: ./apps/api/.env` e `environment: API_BASE_URL: http://api:8000`. Sem isso o Hocuspocus crashava com `Invalid environment variables: { API_BASE_URL: "Required", LIVE_SERVER_SECRET_KEY: "Required" }`.
+  - Serviço `proxy`: adicionado `env_file: .env`. Sem isso o `SITE_ADDRESS` não chegava no Caddyfile, ele renderizava como bloco global vazio e Caddy recusava com `server block without any key is global configuration`.
+  - Bug existe só no compose da raiz (usado para build a partir do código). O `deployments/cli/community/docker-compose.yml` (usado pelo `setup.sh` oficial) já cabeia isso via âncoras YAML `*live-env` e `*proxy-env`.
+- `.gitignore`
+  - Adicionado `meu proxmox/` (notas locais do CT do Proxmox, fora do escopo do repo) e `*/*.stackdump` (crash dumps do Cygwin no Windows).
 
 **Frontend / Tipos**
 
