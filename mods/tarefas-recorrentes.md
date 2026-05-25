@@ -63,6 +63,8 @@ JSONField nullable no model `Issue`:
   - `IssueSerializer.validate` chama `validate_recurrence_pattern` (o `exclude` do Meta já incluía o campo automaticamente).
 - `apps/api/plane/app/views/issue/base.py` e `apps/api/plane/app/views/issue/sub_issue.py`
   - `IssueViewSet.list` (fallback `.values()`), `IssueViewSet.create` (response pós-create), `IssuePaginatedViewSet.list` (`required_fields`) e `SubIssuesEndpoint` (`.values()`) listam manualmente os campos a devolver — `recurrence_pattern` adicionado em todos eles, senão o frontend recebe o issue sem o campo no GET de listagem (e o painel "apaga" o que foi configurado, mesmo estando no banco).
+- `apps/api/plane/settings/common.py`
+  - `recurring_issue_task` adicionado em `CELERY_IMPORTS`. Sem isso o worker boota sem importar o módulo, o `@shared_task` em `create_next_recurring_issue` nunca registra e a mensagem enfileirada por `Issue.save()` cai como "Received unregistered task" — a próxima ocorrência nunca é criada. Outras bgtasks evitam isso porque estão em `CELERY_IMPORTS` ou são puxadas transitivamente por algo que está; o `recurring_issue_task` só era importado lazy dentro de `Issue.save()`, que roda no processo da API, não no worker.
 
 **Frontend / Tipos**
 
