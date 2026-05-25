@@ -127,6 +127,7 @@ def issue_on_results(
         "is_draft",
         "archived_at",
         "state__group",
+        "recurrence_pattern",
     ]
 
     if group_by in FIELD_MAPPER:
