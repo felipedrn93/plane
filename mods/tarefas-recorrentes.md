@@ -67,6 +67,8 @@ JSONField nullable no model `Issue`:
   - `recurring_issue_task` adicionado em `CELERY_IMPORTS`. Sem isso o worker boota sem importar o módulo, o `@shared_task` em `create_next_recurring_issue` nunca registra e a mensagem enfileirada por `Issue.save()` cai como "Received unregistered task" — a próxima ocorrência nunca é criada. Outras bgtasks evitam isso porque estão em `CELERY_IMPORTS` ou são puxadas transitivamente por algo que está; o `recurring_issue_task` só era importado lazy dentro de `Issue.save()`, que roda no processo da API, não no worker.
 - `apps/web/core/store/issue/issue-details/issue.store.ts`
   - `addIssueToStore` monta o objeto `TIssue` no store com allowlist explícita campo a campo (`id`, `name`, `state_id`, …). `recurrence_pattern` faltava — o `IssueDetailSerializer` do backend devolve o campo, mas o store o jogava fora ao popular. Resultado: ao abrir uma issue recorrente o dropdown mostrava "sem recorrência" mesmo com o JSONB salvo no banco. Fix: incluir `recurrence_pattern: issue?.recurrence_pattern` no payload.
+- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx`
+  - Pequeno badge com ícone `Repeat` adicionado entre os indicadores extras (sub-issues, attachments, links). Renderiza só quando `issue.recurrence_pattern` está setado. Tooltip mostra "Recorrência" como heading e a frequência traduzida (`daily/weekly/monthly/yearly`) como content. Sem gate de display-properties — o ícone só aparece em issues recorrentes então é discreto e serve como pista visual sem precisar de toggle no settings de layout.
 
 **Frontend / Tipos**
 
