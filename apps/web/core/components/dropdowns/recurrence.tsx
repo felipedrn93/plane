@@ -4,9 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import { Fragment, useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { observer } from "mobx-react";
-import { Popover, Transition } from "@headlessui/react";
+import { createPortal } from "react-dom";
+import { usePopper } from "react-popper";
 import { Repeat } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@plane/propel/tooltip";
@@ -16,6 +17,7 @@ import type {
   TRecurrenceWeekday,
 } from "@plane/types";
 import { cn, getDate } from "@plane/utils";
+import { useDropdown } from "@/hooks/use-dropdown";
 
 type Props = {
   value: TRecurrencePattern | null;
@@ -195,6 +197,22 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
   } = props;
   const { t, currentLocale } = useTranslation();
 
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [referenceElement, setReferenceElement] = useState<HTMLButtonElement | null>(null);
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
+
+  const { styles, attributes } = usePopper(referenceElement, popperElement, {
+    placement: "bottom-start",
+    modifiers: [{ name: "preventOverflow", options: { padding: 12 } }],
+  });
+
+  const { handleOnClick, handleKeyDown } = useDropdown({
+    dropdownRef,
+    isOpen,
+    setIsOpen,
+  });
+
   const pattern = value;
   const isEnabled = !!pattern;
   const isDisabled = disabled || !targetDate;
@@ -215,7 +233,6 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
   const update = (next: Partial<TRecurrencePattern>) => {
     if (!pattern) return;
     const merged: TRecurrencePattern = { ...pattern, ...next };
-    // When switching frequency, drop fields specific to the previous one.
     if (next.frequency && next.frequency !== pattern.frequency) {
       delete merged.by_weekday;
       delete merged.by_monthday;
@@ -257,191 +274,189 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
   const disableRecurrence = () => onChange(null);
 
   return (
-    <Popover className={cn("relative w-full", className)}>
-      {({ open }) => (
-        <>
-          <Tooltip
-            disabled={!!targetDate || disabled}
-            tooltipContent={t("issue.recurrence.needs_target_date")}
+    <div ref={dropdownRef} className={cn("relative w-full", className)}>
+      <Tooltip
+        disabled={!!targetDate || disabled}
+        tooltipContent={t("issue.recurrence.needs_target_date")}
+      >
+        <span className={cn("flex w-full", buttonContainerClassName)}>
+          <button
+            ref={setReferenceElement}
+            type="button"
+            disabled={isDisabled}
+            onClick={handleOnClick}
+            onKeyDown={handleKeyDown}
+            className={cn(
+              "group flex h-7.5 w-full items-center gap-2 rounded px-2 text-left text-body-xs-medium",
+              "hover:bg-layer-2 focus-visible:bg-layer-2 outline-none",
+              isDisabled && "cursor-not-allowed opacity-60",
+              !isEnabled && "text-placeholder",
+              buttonClassName
+            )}
           >
-            <span className={cn("flex w-full", buttonContainerClassName)}>
-              <Popover.Button
-                as="button"
-                type="button"
-                disabled={isDisabled}
-                className={cn(
-                  "group flex h-7.5 w-full items-center gap-2 rounded px-2 text-left text-body-xs-medium",
-                  "hover:bg-layer-2 focus-visible:bg-layer-2 outline-none",
-                  isDisabled && "cursor-not-allowed opacity-60",
-                  !isEnabled && "text-placeholder",
-                  buttonClassName
-                )}
-              >
-                <Repeat className="size-3.5 shrink-0" />
-                <span className="truncate">{label}</span>
-              </Popover.Button>
-            </span>
-          </Tooltip>
+            <Repeat className="size-3.5 shrink-0" />
+            <span className="truncate">{label}</span>
+          </button>
+        </span>
+      </Tooltip>
 
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="opacity-0 translate-y-1"
-            enterTo="opacity-100 translate-y-0"
-            leave="transition ease-in duration-75"
-            leaveFrom="opacity-100 translate-y-0"
-            leaveTo="opacity-0 translate-y-1"
+      {isOpen &&
+        createPortal(
+          <div
+            data-prevent-outside-click
+            ref={setPopperElement}
+            style={styles.popper}
+            {...attributes.popper}
+            className="z-30 my-1 w-72 rounded-md border border-strong bg-layer-1 p-3 shadow-lg focus:outline-none"
           >
-            <Popover.Panel className="absolute right-0 z-20 mt-1 w-72 origin-top-right rounded-md border border-strong bg-layer-1 p-3 shadow-lg focus:outline-none">
-              <div className="flex items-center justify-between gap-2 pb-2">
-                <span className="text-body-xs-medium text-primary">{t("issue.recurrence.label")}</span>
-                <label className="flex items-center gap-2 text-body-xs-medium text-secondary">
+            <div className="flex items-center justify-between gap-2 pb-2">
+              <span className="text-body-xs-medium text-primary">{t("issue.recurrence.label")}</span>
+              <label className="flex items-center gap-2 text-body-xs-medium text-secondary">
+                <input
+                  type="checkbox"
+                  checked={isEnabled}
+                  onChange={(e) => (e.target.checked ? enable() : disableRecurrence())}
+                  className="size-3.5 accent-primary"
+                />
+                {t("issue.recurrence.enable")}
+              </label>
+            </div>
+
+            {isEnabled && pattern && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center gap-2 text-body-xs-regular">
+                  <span className="text-secondary">{t("issue.recurrence.repeat_every")}</span>
                   <input
-                    type="checkbox"
-                    checked={isEnabled}
-                    onChange={(e) => (e.target.checked ? enable() : disableRecurrence())}
-                    className="size-3.5 accent-primary"
+                    type="number"
+                    min={1}
+                    value={pattern.interval}
+                    onChange={(e) => {
+                      const n = parseInt(e.target.value, 10);
+                      if (!Number.isNaN(n) && n >= 1) update({ interval: n });
+                    }}
+                    className="h-7 w-14 rounded border border-strong bg-layer-1 px-2 text-center"
                   />
-                  {t("issue.recurrence.enable")}
-                </label>
-              </div>
-
-              {isEnabled && pattern && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center gap-2 text-body-xs-regular">
-                    <span className="text-secondary">{t("issue.recurrence.repeat_every")}</span>
-                    <input
-                      type="number"
-                      min={1}
-                      value={pattern.interval}
-                      onChange={(e) => {
-                        const n = parseInt(e.target.value, 10);
-                        if (!Number.isNaN(n) && n >= 1) update({ interval: n });
-                      }}
-                      className="h-7 w-14 rounded border border-strong bg-layer-1 px-2 text-center"
-                    />
-                    <select
-                      value={pattern.frequency}
-                      onChange={(e) => update({ frequency: e.target.value as TRecurrenceFrequency })}
-                      className="h-7 flex-1 rounded border border-strong bg-layer-1 px-2"
-                    >
-                      {FREQUENCIES.map((f) => (
-                        <option key={f} value={f}>
-                          {t(`issue.recurrence.frequency.${f}`)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {pattern.frequency === "weekly" && (
-                    <div className="flex flex-wrap gap-1">
-                      {WEEKDAYS.map((d) => {
-                        const active = pattern.by_weekday?.includes(d);
-                        return (
-                          <button
-                            key={d}
-                            type="button"
-                            onClick={() => toggleWeekday(d)}
-                            className={cn(
-                              "size-8 rounded-full border text-body-xs-medium transition-colors",
-                              active
-                                ? "border-primary bg-primary text-on-primary"
-                                : "border-strong text-secondary hover:bg-layer-2"
-                            )}
-                          >
-                            {t(`issue.recurrence.weekday.short.${d}`)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {pattern.frequency === "monthly" && (
-                    <div className="space-y-2 text-body-xs-regular">
-                      <label className="flex flex-wrap items-center gap-2">
-                        <input
-                          type="radio"
-                          checked={pattern.by_monthday !== undefined}
-                          onChange={() => setMonthlyMode("monthday")}
-                          className="accent-primary"
-                        />
-                        <span>{t("issue.recurrence.monthly.monthday_prefix")}</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={31}
-                          value={pattern.by_monthday ?? ""}
-                          disabled={pattern.by_monthday === undefined}
-                          onChange={(e) => {
-                            const n = parseInt(e.target.value, 10);
-                            if (!Number.isNaN(n) && n >= 1 && n <= 31)
-                              onChange({ ...pattern, by_monthday: n, by_weekday: undefined, by_setpos: undefined });
-                          }}
-                          className="h-6 w-14 rounded border border-strong bg-layer-1 px-1 text-center"
-                        />
-                        <span>{t("issue.recurrence.monthly.monthday_suffix")}</span>
-                      </label>
-
-                      <label className="flex flex-wrap items-center gap-2">
-                        <input
-                          type="radio"
-                          checked={pattern.by_setpos !== undefined}
-                          onChange={() => setMonthlyMode("setpos")}
-                          className="accent-primary"
-                        />
-                        <span>{t("issue.recurrence.monthly.setpos_prefix")}</span>
-                        <select
-                          value={setposKey(pattern.by_setpos)}
-                          disabled={pattern.by_setpos === undefined}
-                          onChange={(e) =>
-                            onChange({ ...pattern, by_setpos: setposValue(e.target.value as SetposKey) })
-                          }
-                          className="h-6 rounded border border-strong bg-layer-1 px-1"
-                        >
-                          {SETPOS_KEYS.map((k) => (
-                            <option key={k} value={k}>
-                              {t(`issue.recurrence.setpos.${k}`)}
-                            </option>
-                          ))}
-                        </select>
-                        <select
-                          value={pattern.by_weekday?.[0] ?? "MO"}
-                          disabled={pattern.by_setpos === undefined}
-                          onChange={(e) =>
-                            onChange({ ...pattern, by_weekday: [e.target.value as TRecurrenceWeekday] })
-                          }
-                          className="h-6 rounded border border-strong bg-layer-1 px-1"
-                        >
-                          {WEEKDAYS.map((d) => (
-                            <option key={d} value={d}>
-                              {t(`issue.recurrence.weekday.long.${d}`)}
-                            </option>
-                          ))}
-                        </select>
-                        <span>{t("issue.recurrence.monthly.setpos_suffix")}</span>
-                      </label>
-                    </div>
-                  )}
-
-                  {previewLabel && (
-                    <div className="border-t border-strong pt-2 text-body-xs-regular text-secondary">
-                      {t("issue.recurrence.next_occurrence")} <span className="text-primary">{previewLabel}</span>
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={disableRecurrence}
-                    className="w-full rounded border border-strong px-2 py-1 text-body-xs-medium text-danger-primary hover:bg-layer-2"
+                  <select
+                    value={pattern.frequency}
+                    onChange={(e) => update({ frequency: e.target.value as TRecurrenceFrequency })}
+                    className="h-7 flex-1 rounded border border-strong bg-layer-1 px-2"
                   >
-                    {t("issue.recurrence.disable")}
-                  </button>
+                    {FREQUENCIES.map((f) => (
+                      <option key={f} value={f}>
+                        {t(`issue.recurrence.frequency.${f}`)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              )}
-            </Popover.Panel>
-          </Transition>
-        </>
-      )}
-    </Popover>
+
+                {pattern.frequency === "weekly" && (
+                  <div className="flex flex-wrap gap-1">
+                    {WEEKDAYS.map((d) => {
+                      const active = pattern.by_weekday?.includes(d);
+                      return (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => toggleWeekday(d)}
+                          className={cn(
+                            "size-8 rounded-full border text-body-xs-medium transition-colors",
+                            active
+                              ? "border-primary bg-primary text-on-primary"
+                              : "border-strong text-secondary hover:bg-layer-2"
+                          )}
+                        >
+                          {t(`issue.recurrence.weekday.short.${d}`)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {pattern.frequency === "monthly" && (
+                  <div className="space-y-2 text-body-xs-regular">
+                    <label className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={pattern.by_monthday !== undefined}
+                        onChange={() => setMonthlyMode("monthday")}
+                        className="accent-primary"
+                      />
+                      <span>{t("issue.recurrence.monthly.monthday_prefix")}</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={pattern.by_monthday ?? ""}
+                        disabled={pattern.by_monthday === undefined}
+                        onChange={(e) => {
+                          const n = parseInt(e.target.value, 10);
+                          if (!Number.isNaN(n) && n >= 1 && n <= 31)
+                            onChange({ ...pattern, by_monthday: n, by_weekday: undefined, by_setpos: undefined });
+                        }}
+                        className="h-6 w-14 rounded border border-strong bg-layer-1 px-1 text-center"
+                      />
+                      <span>{t("issue.recurrence.monthly.monthday_suffix")}</span>
+                    </label>
+
+                    <label className="flex flex-wrap items-center gap-2">
+                      <input
+                        type="radio"
+                        checked={pattern.by_setpos !== undefined}
+                        onChange={() => setMonthlyMode("setpos")}
+                        className="accent-primary"
+                      />
+                      <span>{t("issue.recurrence.monthly.setpos_prefix")}</span>
+                      <select
+                        value={setposKey(pattern.by_setpos)}
+                        disabled={pattern.by_setpos === undefined}
+                        onChange={(e) =>
+                          onChange({ ...pattern, by_setpos: setposValue(e.target.value as SetposKey) })
+                        }
+                        className="h-6 rounded border border-strong bg-layer-1 px-1"
+                      >
+                        {SETPOS_KEYS.map((k) => (
+                          <option key={k} value={k}>
+                            {t(`issue.recurrence.setpos.${k}`)}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={pattern.by_weekday?.[0] ?? "MO"}
+                        disabled={pattern.by_setpos === undefined}
+                        onChange={(e) =>
+                          onChange({ ...pattern, by_weekday: [e.target.value as TRecurrenceWeekday] })
+                        }
+                        className="h-6 rounded border border-strong bg-layer-1 px-1"
+                      >
+                        {WEEKDAYS.map((d) => (
+                          <option key={d} value={d}>
+                            {t(`issue.recurrence.weekday.long.${d}`)}
+                          </option>
+                        ))}
+                      </select>
+                      <span>{t("issue.recurrence.monthly.setpos_suffix")}</span>
+                    </label>
+                  </div>
+                )}
+
+                {previewLabel && (
+                  <div className="border-t border-strong pt-2 text-body-xs-regular text-secondary">
+                    {t("issue.recurrence.next_occurrence")} <span className="text-primary">{previewLabel}</span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={disableRecurrence}
+                  className="w-full rounded border border-strong px-2 py-1 text-body-xs-medium text-danger-primary hover:bg-layer-2"
+                >
+                  {t("issue.recurrence.disable")}
+                </button>
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
+    </div>
   );
 });
