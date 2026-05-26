@@ -25,7 +25,7 @@ def get_upload_path(instance, filename):
 
 def file_size(value):
     if value.size > settings.FILE_SIZE_LIMIT:
-        raise ValidationError("File too large. Size should not exceed 5 MB.")
+        raise ValidationError("File too large. Size should not exceed 100 MB.")
 
 
 class FileAsset(BaseModel):

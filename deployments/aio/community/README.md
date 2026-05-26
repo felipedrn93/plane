@@ -77,7 +77,7 @@ docker run --name myaio --rm -it \
     -e AWS_SECRET_ACCESS_KEY=7xMqAiAHsf2UUjMH+EwICXlyJL9TO30m8leEaDsL \
     -e AWS_S3_BUCKET_NAME=plane-app \
     -e AWS_S3_ENDPOINT_URL=http://${MYIP}:19000 \
-    -e FILE_SIZE_LIMIT=10485760 \
+    -e FILE_SIZE_LIMIT=104857600 \
     makeplane/plane-aio-community:latest
 ```
 
@@ -97,7 +97,7 @@ docker run --name myaio --rm -it \
 
 #### File Handling
 
-- `FILE_SIZE_LIMIT`: Maximum file upload size in bytes (default: `5242880` = 5MB)
+- `FILE_SIZE_LIMIT`: Maximum file upload size in bytes (default: `104857600` = 100MB)
 
 #### API Configuration
 
