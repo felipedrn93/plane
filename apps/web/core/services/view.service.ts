@@ -5,7 +5,7 @@
  */
 
 import { API_BASE_URL } from "@plane/constants";
-import type { IProjectView } from "@plane/types";
+import type { IProjectView, IIssueViewUserPropertiesResponse } from "@plane/types";
 import { APIService } from "@/services/api.service";
 // types
 // helpers
@@ -79,6 +79,56 @@ export class ViewService extends APIService {
 
   async removeViewFromFavorites(workspaceSlug: string, projectId: string, viewId: string): Promise<any> {
     return this.delete(`/api/workspaces/${workspaceSlug}/projects/${projectId}/user-favorite-views/${viewId}/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  // User Properties (per-user view settings — backed by IssueViewUserProperty model)
+
+  async getViewUserProperties(
+    workspaceSlug: string,
+    projectId: string,
+    viewId: string
+  ): Promise<IIssueViewUserPropertiesResponse> {
+    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/views/${viewId}/user-properties/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async updateViewUserProperties(
+    workspaceSlug: string,
+    projectId: string,
+    viewId: string,
+    data: Partial<IIssueViewUserPropertiesResponse>
+  ): Promise<IIssueViewUserPropertiesResponse> {
+    return this.patch(`/api/workspaces/${workspaceSlug}/projects/${projectId}/views/${viewId}/user-properties/`, data)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async getWorkspaceViewUserProperties(
+    workspaceSlug: string,
+    viewId: string
+  ): Promise<IIssueViewUserPropertiesResponse> {
+    return this.get(`/api/workspaces/${workspaceSlug}/views/${viewId}/user-properties/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async updateWorkspaceViewUserProperties(
+    workspaceSlug: string,
+    viewId: string,
+    data: Partial<IIssueViewUserPropertiesResponse>
+  ): Promise<IIssueViewUserPropertiesResponse> {
+    return this.patch(`/api/workspaces/${workspaceSlug}/views/${viewId}/user-properties/`, data)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;
