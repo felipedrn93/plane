@@ -37,6 +37,8 @@ type Props = {
   loadMoreIssues: () => void;
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   selectionHelpers: TSelectionHelper;
+  onReorderColumn?: (from: number, to: number) => void;
+  isReorderEnabled?: boolean;
   isEpic?: boolean;
 };
 
@@ -56,6 +58,8 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
     loadMoreIssues,
     spreadsheetColumnsList,
     selectionHelpers,
+    onReorderColumn,
+    isReorderEnabled = false,
     isEpic = false,
   } = props;
 
@@ -120,6 +124,8 @@ export const SpreadsheetTable = observer(function SpreadsheetTable(props: Props)
         isEstimateEnabled={isEstimateEnabled}
         spreadsheetColumnsList={spreadsheetColumnsList}
         selectionHelpers={selectionHelpers}
+        onReorder={onReorderColumn}
+        isReorderEnabled={isReorderEnabled}
         isEpic={isEpic}
       />
       <tbody>
