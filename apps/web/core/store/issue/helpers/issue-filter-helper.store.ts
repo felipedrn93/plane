@@ -11,6 +11,7 @@ import {
   EIssueGroupByToServerOptions,
   EServerGroupByToFilterOptions,
   ENABLE_ISSUE_DEPENDENCIES,
+  SPREADSHEET_PROPERTY_LIST,
 } from "@plane/constants";
 import type {
   EIssuesStoreType,
@@ -20,6 +21,7 @@ import type {
   IIssueFilters,
   IIssueFiltersResponse,
   IssuePaginationOptions,
+  TIssueDisplayPropertiesOrder,
   TIssueKanbanFilters,
   TIssueParams,
   TStaticViewTypes,
@@ -65,6 +67,7 @@ export interface IIssueFilterHelperStore {
     defaultValues?: IIssueDisplayFilterOptions
   ): IIssueDisplayFilterOptions;
   computedDisplayProperties(filters: IIssueDisplayProperties): IIssueDisplayProperties;
+  computedDisplayPropertiesOrder(savedOrder?: unknown): TIssueDisplayPropertiesOrder;
 }
 
 export class IssueFilterHelperStore implements IIssueFilterHelperStore {
@@ -79,6 +82,7 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
     richFilters: isEmpty(filters?.richFilters) ? {} : filters?.richFilters,
     displayFilters: isEmpty(filters?.displayFilters) ? undefined : filters?.displayFilters,
     displayProperties: isEmpty(filters?.displayProperties) ? undefined : filters?.displayProperties,
+    displayPropertiesOrder: filters?.displayPropertiesOrder,
     kanbanFilters: isEmpty(filters?.kanbanFilters) ? undefined : filters?.kanbanFilters,
   });
 
@@ -195,6 +199,36 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
    */
   computedDisplayProperties = (displayProperties: IIssueDisplayProperties): IIssueDisplayProperties =>
     getComputedDisplayProperties(displayProperties);
+
+  /**
+   * Sanitizes a saved spreadsheet column order: drops invalid keys, deduplicates,
+   * and appends any keys from SPREADSHEET_PROPERTY_LIST not present in the saved
+   * order (so columns added to Plane after the save automatically show up at the end).
+   */
+  computedDisplayPropertiesOrder = (savedOrder?: unknown): TIssueDisplayPropertiesOrder => {
+    const defaultOrder = SPREADSHEET_PROPERTY_LIST;
+    if (!Array.isArray(savedOrder) || savedOrder.length === 0) {
+      return [...defaultOrder];
+    }
+
+    const validKeys = new Set<string>(defaultOrder);
+    const seen = new Set<string>();
+    const sanitized: TIssueDisplayPropertiesOrder = [];
+
+    for (const key of savedOrder) {
+      if (typeof key !== "string") continue;
+      if (!validKeys.has(key)) continue;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      sanitized.push(key as TIssueDisplayPropertiesOrder[number]);
+    }
+
+    for (const key of defaultOrder) {
+      if (!seen.has(key)) sanitized.push(key);
+    }
+
+    return sanitized;
+  };
 
   handleIssuesLocalFilters = {
     fetchFiltersFromStorage: () => {
