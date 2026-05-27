@@ -8,7 +8,7 @@ import React, { useCallback } from "react";
 import { observer } from "mobx-react";
 // plane constants
 import { ALL_ISSUES, EIssueFilterType, EUserPermissions, EUserPermissionsLevel } from "@plane/constants";
-import type { IIssueDisplayFilterOptions } from "@plane/types";
+import type { IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
 import { EIssuesStoreType, EIssueLayoutTypes } from "@plane/types";
 // components
 import { AllIssueQuickActions } from "@/components/issues/issue-layouts/quick-action-dropdowns";
@@ -84,6 +84,20 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
     [updateFilters, workspaceSlug, globalViewId]
   );
 
+  const handleReorderColumns = useCallback(
+    (newOrder: (keyof IIssueDisplayProperties)[]) => {
+      if (!workspaceSlug || !globalViewId) return;
+      updateFilters(
+        workspaceSlug.toString(),
+        undefined,
+        EIssueFilterType.DISPLAY_PROPERTIES_ORDER,
+        newOrder,
+        globalViewId.toString()
+      );
+    },
+    [updateFilters, workspaceSlug, globalViewId]
+  );
+
   // Quick actions renderer
   const renderQuickActions: TRenderQuickActions = useCallback(
     ({ issue, parentRef, customActionButton, placement, portalElement }) => (
@@ -118,6 +132,8 @@ export const WorkspaceSpreadsheetRoot = observer(function WorkspaceSpreadsheetRo
         displayProperties={issueFilters?.displayProperties ?? {}}
         displayFilters={issueFilters?.displayFilters ?? {}}
         handleDisplayFilterUpdate={handleDisplayFiltersUpdate}
+        displayPropertiesOrder={issueFilters?.displayPropertiesOrder}
+        onReorderColumns={handleReorderColumns}
         issueIds={Array.isArray(issueIds) ? issueIds : []}
         quickActions={renderQuickActions}
         updateIssue={updateIssue}

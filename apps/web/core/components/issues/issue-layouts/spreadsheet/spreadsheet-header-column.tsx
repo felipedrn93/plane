@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from "react";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { draggable, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import { GripVertical } from "lucide-react";
 import { observer } from "mobx-react";
 import type { IIssueDisplayFilterOptions, IIssueDisplayProperties } from "@plane/types";
 import { cn } from "@plane/utils";
@@ -41,6 +42,7 @@ export const SpreadsheetHeaderColumn = observer(function SpreadsheetHeaderColumn
   } = props;
 
   const tableHeaderCellRef = useRef<HTMLTableCellElement | null>(null);
+  const dragHandleRef = useRef<HTMLButtonElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dropEdge, setDropEdge] = useState<"left" | "right" | null>(null);
 
@@ -48,11 +50,12 @@ export const SpreadsheetHeaderColumn = observer(function SpreadsheetHeaderColumn
 
   useEffect(() => {
     const element = tableHeaderCellRef.current;
-    if (!element || !isReorderEnabled || !onReorder) return;
+    const handle = dragHandleRef.current;
+    if (!element || !handle || !isReorderEnabled || !onReorder) return;
 
     return combine(
       draggable({
-        element,
+        element: handle,
         getInitialData: (): DragData => ({ property, index }),
         onDragStart: () => setIsDragging(true),
         onDrop: () => setIsDragging(false),
@@ -87,10 +90,9 @@ export const SpreadsheetHeaderColumn = observer(function SpreadsheetHeaderColumn
     >
       <th
         className={cn(
-          "relative h-11 min-w-36 items-center border border-t-0 border-b-0 border-subtle bg-layer-1 py-1 text-13 font-medium",
+          "group/spreadsheet-header relative h-11 min-w-36 items-center border border-t-0 border-b-0 border-subtle bg-layer-1 py-1 text-13 font-medium",
           {
             "opacity-50": isDragging,
-            "cursor-grab": isReorderEnabled,
           }
         )}
         ref={tableHeaderCellRef}
@@ -108,15 +110,29 @@ export const SpreadsheetHeaderColumn = observer(function SpreadsheetHeaderColumn
             className="pointer-events-none absolute inset-y-0 right-0 w-[2px] bg-accent-primary"
           />
         )}
-        <HeaderColumn
-          displayFilters={displayFilters}
-          handleDisplayFilterUpdate={handleDisplayFilterUpdate}
-          property={property}
-          onClose={() => {
-            tableHeaderCellRef?.current?.focus();
-          }}
-          isEpic={isEpic}
-        />
+        <div className="flex h-full items-center">
+          {isReorderEnabled && (
+            <button
+              type="button"
+              ref={dragHandleRef}
+              aria-label="Reorder column"
+              className="flex w-4 flex-shrink-0 cursor-grab items-center justify-center text-tertiary opacity-0 transition-opacity group-hover/spreadsheet-header:opacity-100 active:cursor-grabbing"
+            >
+              <GripVertical className="size-3" />
+            </button>
+          )}
+          <div className="min-w-0 flex-1">
+            <HeaderColumn
+              displayFilters={displayFilters}
+              handleDisplayFilterUpdate={handleDisplayFilterUpdate}
+              property={property}
+              onClose={() => {
+                tableHeaderCellRef?.current?.focus();
+              }}
+              isEpic={isEpic}
+            />
+          </div>
+        </div>
       </th>
     </WithDisplayPropertiesHOC>
   );
