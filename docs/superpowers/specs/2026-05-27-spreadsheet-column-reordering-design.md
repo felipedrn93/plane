@@ -53,9 +53,34 @@ Models afetados:
 | `CycleUserProperties` | `apps/api/plane/db/models/cycle.py` | spreadsheet de cycle |
 | `ModuleUserProperties` | `apps/api/plane/db/models/module.py` | spreadsheet de module |
 | `WorkspaceUserProperties` | `apps/api/plane/db/models/workspace.py` | spreadsheet workspace-level |
-| View user properties | `apps/api/plane/db/models/view.py` — nome exato do model/campo é uma das primeiras tarefas do plano de implementação | spreadsheets de Views custom |
+| **`IssueViewUserProperty` (NOVA tabela)** | `apps/api/plane/db/models/view.py` | spreadsheets de Views custom — per-user (o `IssueView.display_properties` atual é compartilhado entre usuários; criamos tabela separada para a ordem per-user) |
 
-**Migration única:** `0XXX_add_display_properties_order.py` com `AddField` para os 5 modelos. Default `[]`, `null=False`. Sem data migration (registros antigos ficam com `[]` → comportamento idêntico ao atual).
+**Nova model `IssueViewUserProperty`** (em `apps/api/plane/db/models/view.py`):
+
+```python
+class IssueViewUserProperty(WorkspaceBaseModel):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                             related_name="view_property_user")
+    view = models.ForeignKey("db.IssueView", on_delete=models.CASCADE,
+                             related_name="view_user_properties")
+    display_properties_order = models.JSONField(default=list)
+
+    class Meta:
+        db_table = "issue_view_user_properties"
+        unique_together = ["user", "view", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "view"],
+                condition=Q(deleted_at__isnull=True),
+                name="view_user_property_unique_user_view_when_deleted_at_null",
+            )
+        ]
+```
+
+**Migrations:** uma migration única `0XXX_add_display_properties_order.py` que:
+- Adiciona campo `display_properties_order` em `ProjectUserProperty`, `CycleUserProperties`, `ModuleUserProperties`, `WorkspaceUserProperties` (default `[]`, `null=False`).
+- Cria nova tabela `IssueViewUserProperty` com schema acima.
+- Sem data migration (registros antigos ficam com `[]` → comportamento idêntico ao atual).
 
 **Serializers:** adicionar `display_properties_order` no `Meta.fields` (ou explicitamente nos `read_only_fields`/payload dos endpoints `*UserProperty`).
 
@@ -304,7 +329,7 @@ Reutilizados — cada um passa a aceitar `display_properties_order` no payload (
 - `PATCH /workspaces/<slug>/projects/<pid>/cycles/<cid>/user-properties/`
 - `PATCH /workspaces/<slug>/projects/<pid>/modules/<mid>/user-properties/`
 - `PATCH /workspaces/<slug>/user-properties/`
-- `PATCH /workspaces/<slug>/views/<vid>/user-properties/` — path exato é uma das primeiras tarefas do plano (descobrir junto com o nome do model de view user properties)
+- **NOVO endpoint:** `GET/PATCH /workspaces/<slug>/views/<vid>/user-properties/` (project view) e `GET/PATCH /workspaces/<slug>/workspace-views/<vid>/user-properties/` (workspace view) — viewset novo que opera sobre `IssueViewUserProperty`.
 
 ## Testes
 
