@@ -4,7 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React, { useRef } from "react";
+import React, { useCallback, useRef } from "react";
 import { observer } from "mobx-react";
 // plane constants
 import { SPREADSHEET_SELECT_GROUP, SPREADSHEET_PROPERTY_LIST } from "@plane/constants";
@@ -22,12 +22,15 @@ import { useBulkOperationStatus } from "@/plane-web/hooks/use-bulk-operation-sta
 // local imports
 import type { TRenderQuickActions } from "../list/list-view-types";
 import { QuickAddIssueRoot, SpreadsheetAddIssueButton } from "../quick-add";
+import { moveColumn } from "./spreadsheet-column-dnd.helpers";
 import { SpreadsheetTable } from "./spreadsheet-table";
 
 type Props = {
   displayProperties: IIssueDisplayProperties;
   displayFilters: IIssueDisplayFilterOptions;
   handleDisplayFilterUpdate: (data: Partial<IIssueDisplayFilterOptions>) => void;
+  displayPropertiesOrder?: (keyof IIssueDisplayProperties)[];
+  onReorderColumns?: (newOrder: (keyof IIssueDisplayProperties)[]) => void;
   issueIds: string[] | undefined;
   quickActions: TRenderQuickActions;
   updateIssue: ((projectId: string | null, issueId: string, data: Partial<TIssue>) => Promise<void>) | undefined;
@@ -47,6 +50,8 @@ export const SpreadsheetView = observer(function SpreadsheetView(props: Props) {
     displayProperties,
     displayFilters,
     handleDisplayFilterUpdate,
+    displayPropertiesOrder,
+    onReorderColumns,
     issueIds,
     quickActions,
     updateIssue,
@@ -69,13 +74,25 @@ export const SpreadsheetView = observer(function SpreadsheetView(props: Props) {
 
   const isEstimateEnabled: boolean = currentProjectDetails?.estimate !== null;
 
+  const orderedAll = displayPropertiesOrder?.length ? displayPropertiesOrder : SPREADSHEET_PROPERTY_LIST;
+
   const spreadsheetColumnsList = isWorkspaceLevel
-    ? SPREADSHEET_PROPERTY_LIST
-    : SPREADSHEET_PROPERTY_LIST.filter((property) => {
+    ? orderedAll
+    : orderedAll.filter((property) => {
         if (property === "cycle" && !currentProjectDetails?.cycle_view) return false;
         if (property === "modules" && !currentProjectDetails?.module_view) return false;
         return true;
       });
+
+  const handleReorderColumn = useCallback(
+    (from: number, to: number) => {
+      if (!onReorderColumns) return;
+      const newOrder = moveColumn(spreadsheetColumnsList, from, to);
+      if (newOrder === spreadsheetColumnsList) return;
+      onReorderColumns(newOrder);
+    },
+    [spreadsheetColumnsList, onReorderColumns]
+  );
 
   if (!issueIds || issueIds.length === 0) return <></>;
   return (
@@ -106,6 +123,8 @@ export const SpreadsheetView = observer(function SpreadsheetView(props: Props) {
                 loadMoreIssues={loadMoreIssues}
                 spreadsheetColumnsList={spreadsheetColumnsList}
                 selectionHelpers={helpers}
+                onReorderColumn={handleReorderColumn}
+                isReorderEnabled={Boolean(onReorderColumns)}
                 isEpic={isEpic}
               />
             </div>
