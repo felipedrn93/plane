@@ -13,6 +13,7 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  TIssueDisplayPropertiesOrder,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -151,6 +152,7 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
     const richFilters: TWorkItemFilterExpression = _filters?.rich_filters;
     const displayFilters: IIssueDisplayFilterOptions = this.computedDisplayFilters(_filters?.display_filters);
     const displayProperties: IIssueDisplayProperties = this.computedDisplayProperties(_filters?.display_properties);
+    const displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
 
     // fetching the kanban toggle helpers in the local storage
     const kanbanFilters = {
@@ -173,6 +175,7 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
       set(this.filters, [cycleId, "richFilters"], richFilters);
       set(this.filters, [cycleId, "displayFilters"], displayFilters);
       set(this.filters, [cycleId, "displayProperties"], displayProperties);
+      set(this.filters, [cycleId, "displayPropertiesOrder"], displayPropertiesOrder);
       set(this.filters, [cycleId, "kanbanFilters"], kanbanFilters);
     });
   };
@@ -211,6 +214,7 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
         richFilters: this.filters[cycleId].richFilters,
         displayFilters: this.filters[cycleId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[cycleId].displayProperties as IIssueDisplayProperties,
+        displayPropertiesOrder: this.filters[cycleId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
         kanbanFilters: this.filters[cycleId].kanbanFilters as TIssueKanbanFilters,
       };
 
@@ -283,6 +287,19 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
 
           await this.issueFilterService.patchCycleIssueFilters(workspaceSlug, projectId, cycleId, {
             display_properties: _filters.displayProperties,
+          });
+          break;
+        }
+        case EIssueFilterType.DISPLAY_PROPERTIES_ORDER: {
+          const newOrder = this.computedDisplayPropertiesOrder(filters);
+          _filters.displayPropertiesOrder = newOrder;
+
+          runInAction(() => {
+            set(this.filters, [cycleId, "displayPropertiesOrder"], newOrder);
+          });
+
+          await this.issueFilterService.patchCycleIssueFilters(workspaceSlug, projectId, cycleId, {
+            display_properties_order: newOrder,
           });
           break;
         }
