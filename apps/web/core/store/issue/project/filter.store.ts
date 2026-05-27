@@ -13,6 +13,7 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  TIssueDisplayPropertiesOrder,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -140,6 +141,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     const richFilters = _filters?.rich_filters;
     const displayFilters = this.computedDisplayFilters(_filters?.display_filters);
     const displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+    const displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
 
     // fetching the kanban toggle helpers in the local storage
     const kanbanFilters = {
@@ -162,6 +164,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       set(this.filters, [projectId, "richFilters"], richFilters);
       set(this.filters, [projectId, "displayFilters"], displayFilters);
       set(this.filters, [projectId, "displayProperties"], displayProperties);
+      set(this.filters, [projectId, "displayPropertiesOrder"], displayPropertiesOrder);
       set(this.filters, [projectId, "kanbanFilters"], kanbanFilters);
     });
   };
@@ -199,6 +202,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
         richFilters: this.filters[projectId].richFilters,
         displayFilters: this.filters[projectId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[projectId].displayProperties as IIssueDisplayProperties,
+        displayPropertiesOrder: this.filters[projectId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
         kanbanFilters: this.filters[projectId].kanbanFilters as TIssueKanbanFilters,
       };
 
@@ -266,6 +270,19 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
 
           await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
             display_properties: _filters.displayProperties,
+          });
+          break;
+        }
+        case EIssueFilterType.DISPLAY_PROPERTIES_ORDER: {
+          const newOrder = this.computedDisplayPropertiesOrder(filters);
+          _filters.displayPropertiesOrder = newOrder;
+
+          runInAction(() => {
+            set(this.filters, [projectId, "displayPropertiesOrder"], newOrder);
+          });
+
+          await this.projectService.updateProjectUserProperties(workspaceSlug, projectId, {
+            display_properties_order: newOrder,
           });
           break;
         }
