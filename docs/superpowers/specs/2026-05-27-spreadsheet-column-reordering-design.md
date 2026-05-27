@@ -192,7 +192,7 @@ case EIssueFilterType.DISPLAY_PROPERTIES_ORDER: {
 
 ## Frontend — UI e drag-and-drop
 
-**Biblioteca:** reaproveitar `@dnd-kit/core` + `@dnd-kit/sortable` (já em uso no Plane).
+**Biblioteca:** reaproveitar `@atlaskit/pragmatic-drag-and-drop` (já em uso no Plane — ver `apps/web/core/components/labels/label-drag-n-drop-HOC.tsx` como referência canônica de uso, incluindo drag handle, drop indicator e preview customizado). Não adicionar dependência nova.
 
 **Arquivos afetados:**
 
@@ -220,52 +220,25 @@ const spreadsheetColumnsList = isWorkspaceLevel
 
 **`spreadsheet-header.tsx`:**
 
-```tsx
-<DndContext
-  onDragEnd={handleColumnReorder}
-  sensors={sensors}
-  collisionDetection={closestCenter}
->
-  <SortableContext
-    items={spreadsheetColumnsList}
-    strategy={horizontalListSortingStrategy}
-  >
-    {/* Sticky: ficam FORA do SortableContext */}
-    <SelectionColumn />
-    <TitleColumn />
+Continua iterando `spreadsheetColumnsList` no map. Cada `<SpreadsheetHeaderColumn>` se torna draggable/dropTarget via novo wrapper. A coluna sticky de seleção/título NÃO é draggable.
 
-    {/* Reordenáveis */}
-    {spreadsheetColumnsList.map((propertyKey) => (
-      <SortableHeaderColumn
-        key={propertyKey}
-        propertyKey={propertyKey}
-        displayProperties={displayProperties}
-        displayFilters={displayFilters}
-        handleDisplayFilterUpdate={handleDisplayFilterUpdate}
-      />
-    ))}
-  </SortableContext>
-</DndContext>
-```
+**`SpreadsheetHeaderColumn`** ganha:
+- `useRef` no `<th>` e botão drag handle no `<HeaderColumn>` (ou no próprio `<th>`).
+- `useEffect` que chama `combine(draggable({...}), dropTargetForElements({...}))` igual ao pattern de `LabelDndHOC`.
+- `getInitialData` retorna `{ propertyKey, index }`.
+- Em `onDrop`, calcula `from`/`to` e chama `onReorder(from, to)` que vem do header.
+- Drop indicator visual (linha vertical entre colunas) usando `<DropIndicator />` do `@plane/ui`.
+- Drag handle separado do `ChevronDown` do menu de sort para não interferir no onClick.
+- Feedback visual: `opacity-50` enquanto `isDragging`.
 
-**`SortableHeaderColumn`** (novo wrapper sobre `SpreadsheetHeaderColumn`):
-
-- `useSortable({ id: propertyKey })`
-- Aplica `transform` + `transition` via `style`.
-- Drag handle cobre o título e o ícone da propriedade, **mas não** o `ChevronDown` do menu de sort (que tem onClick próprio). Implementação: aplicar `{...attributes} {...listeners}` num `<div>` interno que NÃO cobre o trigger do menu.
-- Feedback visual: `opacity-50` enquanto arrasta, `cursor: grab/grabbing`.
-
-**Handler:**
+**Handler no header:**
 
 ```ts
-function handleColumnReorder(event: DragEndEvent) {
-  const { active, over } = event;
-  if (!over || active.id === over.id) return;
-  const oldIndex = spreadsheetColumnsList.indexOf(active.id as string);
-  const newIndex = spreadsheetColumnsList.indexOf(over.id as string);
-  if (oldIndex < 0 || newIndex < 0) return;
-
-  const newOrder = arrayMove(spreadsheetColumnsList, oldIndex, newIndex);
+function handleColumnReorder(from: number, to: number) {
+  if (from === to) return;
+  const newOrder = [...spreadsheetColumnsList];
+  const [moved] = newOrder.splice(from, 1);
+  newOrder.splice(to, 0, moved);
   // O store sanitiza e dispara o PATCH (optimistic + rollback no catch)
   issuesFilter.updateFilters(
     workspaceSlug,
@@ -278,7 +251,7 @@ function handleColumnReorder(event: DragEndEvent) {
 
 **Sticky horizontal scroll:** preservado — colunas sticky ficam fora do `SortableContext`, CSS sticky atual intacto.
 
-**Acessibilidade:** suporte a teclado vem de fábrica do `@dnd-kit` (Tab + Space + setas). Anúncios screen-reader opcionais nessa primeira versão.
+**Acessibilidade:** `@atlaskit/pragmatic-drag-and-drop` não traz suporte a teclado de fábrica. Nessa primeira versão a reordenação só é via mouse/touch. Suporte a teclado fica como melhoria futura (issue separada).
 
 **`spreadsheet-table.tsx`:** continua iterando `spreadsheetColumnsList` para body (cada `IssueColumn` da row). Mesma fonte de verdade do header garante consistência.
 
