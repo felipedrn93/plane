@@ -6,8 +6,8 @@
 from rest_framework import serializers
 
 # Module imports
-from .base import DynamicBaseSerializer
-from plane.db.models import IssueView
+from .base import BaseSerializer, DynamicBaseSerializer
+from plane.db.models import IssueView, IssueViewUserProperty
 from plane.utils.issue_filters import issue_filters
 
 
@@ -84,3 +84,10 @@ class IssueViewSerializer(DynamicBaseSerializer):
             validated_data["query"] = {}
         validated_data["query"] = issue_filters(query_params, "PATCH")
         return super().update(instance, validated_data)
+
+
+class IssueViewUserPropertySerializer(BaseSerializer):
+    class Meta:
+        model = IssueViewUserProperty
+        fields = "__all__"
+        read_only_fields = ["user", "workspace", "view"]

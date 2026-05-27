@@ -24,12 +24,17 @@ from rest_framework.response import Response
 
 # Module imports
 from plane.app.permissions import allow_permission, ROLE
-from plane.app.serializers import IssueViewSerializer, ViewIssueListSerializer
+from plane.app.serializers import (
+    IssueViewSerializer,
+    IssueViewUserPropertySerializer,
+    ViewIssueListSerializer,
+)
 from plane.db.models import (
     Issue,
     FileAsset,
     IssueLink,
     IssueView,
+    IssueViewUserProperty,
     Workspace,
     WorkspaceMember,
     ProjectMember,
@@ -43,7 +48,7 @@ from plane.db.models import (
 from plane.utils.issue_filters import issue_filters
 from plane.utils.order_queryset import order_issue_queryset
 from plane.bgtasks.recent_visited_task import recent_visited_task
-from .. import BaseViewSet
+from .. import BaseAPIView, BaseViewSet
 from plane.db.models import UserFavorite
 from plane.utils.filters import ComplexFilterBackend
 from plane.utils.filters import IssueFilterSet
@@ -431,3 +436,67 @@ class IssueViewFavoriteViewSet(BaseViewSet):
         )
         view_favorite.delete(soft=False)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class IssueViewUserPropertyEndpoint(BaseAPIView):
+    """GET/PATCH per-user settings for a project-scoped IssueView."""
+
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    def get(self, request, slug, project_id, view_id):
+        prop, _ = IssueViewUserProperty.objects.get_or_create(
+            user=request.user,
+            view_id=view_id,
+            workspace__slug=slug,
+        )
+        return Response(
+            IssueViewUserPropertySerializer(prop).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
+    def patch(self, request, slug, project_id, view_id):
+        prop, _ = IssueViewUserProperty.objects.get_or_create(
+            user=request.user,
+            view_id=view_id,
+            workspace__slug=slug,
+        )
+        serializer = IssueViewUserPropertySerializer(
+            prop, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class WorkspaceIssueViewUserPropertyEndpoint(BaseAPIView):
+    """GET/PATCH per-user settings for a workspace-scoped IssueView."""
+
+    @allow_permission(
+        allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE"
+    )
+    def get(self, request, slug, view_id):
+        prop, _ = IssueViewUserProperty.objects.get_or_create(
+            user=request.user,
+            view_id=view_id,
+            workspace__slug=slug,
+        )
+        return Response(
+            IssueViewUserPropertySerializer(prop).data,
+            status=status.HTTP_200_OK,
+        )
+
+    @allow_permission(
+        allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE"
+    )
+    def patch(self, request, slug, view_id):
+        prop, _ = IssueViewUserProperty.objects.get_or_create(
+            user=request.user,
+            view_id=view_id,
+            workspace__slug=slug,
+        )
+        serializer = IssueViewUserPropertySerializer(
+            prop, data=request.data, partial=True
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
