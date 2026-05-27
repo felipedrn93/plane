@@ -54,7 +54,7 @@ def get_default_props():
             "order_by": "-created_at",
             "type": None,
             "sub_issue": True,
-            "show_empty_groups": True,
+            "show_empty_groups": False,
             "layout": "list",
             "calendar_date_range": "",
         },

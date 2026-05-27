@@ -64,7 +64,7 @@ def get_default_display_filters():
         "order_by": "-created_at",
         "type": None,
         "sub_issue": True,
-        "show_empty_groups": True,
+        "show_empty_groups": False,
         "layout": "list",
         "calendar_date_range": "",
     }
@@ -73,13 +73,13 @@ def get_default_display_filters():
 def get_default_display_properties():
     return {
         "assignee": True,
-        "attachment_count": True,
+        "attachment_count": False,
         "created_on": True,
         "due_date": True,
-        "estimate": True,
+        "estimate": False,
         "key": True,
         "labels": True,
-        "link": True,
+        "link": False,
         "parent_breadcrumb": True,
         "priority": True,
         "start_date": True,
