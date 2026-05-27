@@ -46,6 +46,7 @@ import { usePlatformOS } from "@/hooks/use-platform-os";
 import { WorkItemLayoutAdditionalProperties } from "@/plane-web/components/issues/issue-layouts/additional-properties";
 // local components
 import { IssuePropertyLabels } from "./labels";
+import { ParentBreadcrumb } from "./parent-breadcrumb";
 import { WithDisplayPropertiesHOC } from "./with-display-properties-HOC";
 
 export interface IIssueProperties {
@@ -193,6 +194,20 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
 
   return (
     <div className={className}>
+      {/* parent breadcrumb (only shown on sub-items; rendered first so the
+          ancestor path reads naturally before the row's own properties) */}
+      <WithDisplayPropertiesHOC
+        displayProperties={displayProperties}
+        displayPropertyKey="parent_breadcrumb"
+        shouldRenderProperty={() => Boolean(issue.parent_id && issue.parent_chain?.length)}
+      >
+        <ParentBreadcrumb
+          chain={issue.parent_chain}
+          workspaceSlug={workspaceSlug?.toString()}
+          className="h-5 max-w-[16rem] rounded-sm border-[0.5px] border-strong px-2 py-1"
+        />
+      </WithDisplayPropertiesHOC>
+
       {/* basic properties */}
       {/* state */}
       <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="state">

@@ -5,6 +5,7 @@
 # Django imports
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
+from django.db import connection
 from django.db.models import Q, UUIDField, Value, QuerySet, OuterRef, Subquery
 from django.db.models.functions import Coalesce
 
@@ -22,7 +23,8 @@ from plane.db.models import (
     ModuleIssue,
     IssueLabel,
 )
-from typing import Optional, Dict, Tuple, Any, Union, List
+from plane.utils.exception_logger import log_exception
+from typing import Iterable, Optional, Dict, Tuple, Any, Union, List
 
 
 def issue_queryset_grouper(
@@ -128,6 +130,8 @@ def issue_on_results(
         "archived_at",
         "state__group",
         "recurrence_pattern",
+        # parent_chain is computed in Python via attach_parent_chain (single CTE).
+        # Kept out of the .values() projection because it isn't a model column.
     ]
 
     if group_by in FIELD_MAPPER:
@@ -139,7 +143,87 @@ def issue_on_results(
         original_list.append(sub_group_by)
 
     required_fields.extend(original_list)
-    return list(issues.values(*required_fields))
+    rows = list(issues.values(*required_fields))
+    attach_parent_chain(rows)
+    return rows
+
+
+def fetch_parent_chains(issue_ids: Iterable[Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """For each issue id, return the ancestor chain ordered root-first.
+
+    Each entry: {id, name, project_id, identifier, sequence_id}. Returns an
+    empty dict on failure or when the input list is empty. Walks the
+    self-referential ``Issue.parent`` chain with a single ``WITH RECURSIVE``
+    so listings with N sub-items pay one query, not N.
+    """
+    ids_list = [iid for iid in issue_ids if iid is not None]
+    if not ids_list:
+        return {}
+
+    # ``c.depth < 50`` defends against accidentally cyclic parent links
+    # (Plane's API guards against them, but a corrupt row shouldn't loop forever).
+    sql = """
+        WITH RECURSIVE chain AS (
+            SELECT i.id AS leaf_id, i.parent_id AS ancestor_id, 1 AS depth
+            FROM issues i
+            WHERE i.id = ANY(%s::uuid[]) AND i.parent_id IS NOT NULL
+            UNION ALL
+            SELECT c.leaf_id, a.parent_id, c.depth + 1
+            FROM chain c
+            JOIN issues a ON a.id = c.ancestor_id
+            WHERE a.parent_id IS NOT NULL AND c.depth < 50
+        )
+        SELECT c.leaf_id, a.id, a.name, a.project_id, p.identifier, a.sequence_id, c.depth
+        FROM chain c
+        JOIN issues a ON a.id = c.ancestor_id
+        JOIN projects p ON p.id = a.project_id
+        WHERE a.deleted_at IS NULL
+        ORDER BY c.leaf_id, c.depth DESC;
+    """
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, [[str(i) for i in ids_list]])
+            rows = cursor.fetchall()
+    except Exception as exc:  # defensive: never break the listing because of breadcrumb
+        log_exception(exc)
+        return {}
+
+    result: Dict[str, List[Dict[str, Any]]] = {}
+    for leaf_id, ancestor_id, name, project_id, identifier, sequence_id, _depth in rows:
+        result.setdefault(str(leaf_id), []).append(
+            {
+                "id": str(ancestor_id),
+                "name": name,
+                "project_id": str(project_id),
+                "identifier": identifier,
+                "sequence_id": sequence_id,
+            }
+        )
+    return result
+
+
+def attach_parent_chain(rows: Optional[List[Dict[str, Any]]]) -> Optional[List[Dict[str, Any]]]:
+    """Mutate each row dict adding ``parent_chain``. Default to ``[]``."""
+    if not rows:
+        return rows
+    ids_with_parent = [r.get("id") for r in rows if r.get("parent_id")]
+    chains = fetch_parent_chains(ids_with_parent) if ids_with_parent else {}
+    for row in rows:
+        row["parent_chain"] = chains.get(str(row.get("id")), [])
+    return rows
+
+
+def attach_parent_chain_to_instances(instances: Iterable[Any]) -> Iterable[Any]:
+    """Attach ``parent_chain`` attribute to each model instance."""
+    instances_list = list(instances)
+    if not instances_list:
+        return instances_list
+    ids_with_parent = [getattr(i, "id", None) for i in instances_list if getattr(i, "parent_id", None)]
+    chains = fetch_parent_chains(ids_with_parent) if ids_with_parent else {}
+    for inst in instances_list:
+        inst.parent_chain = chains.get(str(getattr(inst, "id", "")), [])
+    return instances_list
 
 
 def issue_group_values(

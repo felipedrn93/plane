@@ -171,6 +171,7 @@ export class IssueStore implements IIssueStore {
       is_subscribed: issue?.is_subscribed,
       is_epic: issue?.is_epic,
       recurrence_pattern: issue?.recurrence_pattern,
+      parent_chain: issue?.parent_chain,
     };
 
     this.rootIssueDetailStore.rootIssueStore.issues.addIssue([issuePayload]);

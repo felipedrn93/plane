@@ -25,6 +25,10 @@
       "link": "Add link",
       "existing": "Add existing work item"
     },
+    "parent_breadcrumb": {
+      "column": "Parent path",
+      "tooltip_full": "Full path"
+    },
     "recurrence": {
       "label": "Recurrence",
       "no_recurrence": "Does not repeat",

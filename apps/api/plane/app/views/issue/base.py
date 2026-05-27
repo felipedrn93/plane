@@ -64,6 +64,8 @@ from plane.db.models import (
 from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.utils.global_paginator import paginate
 from plane.utils.grouper import (
+    attach_parent_chain,
+    attach_parent_chain_to_instances,
     issue_group_values,
     issue_on_results,
     issue_queryset_grouper,
@@ -158,37 +160,41 @@ class IssueListEndpoint(BaseAPIView):
         )
 
         if self.fields or self.expand:
-            issues = IssueSerializer(issue_queryset, many=True, fields=self.fields, expand=self.expand).data
+            issue_instances = attach_parent_chain_to_instances(issue_queryset)
+            issues = IssueSerializer(issue_instances, many=True, fields=self.fields, expand=self.expand).data
         else:
-            issues = issue_queryset.values(
-                "id",
-                "name",
-                "state_id",
-                "sort_order",
-                "completed_at",
-                "estimate_point",
-                "priority",
-                "start_date",
-                "target_date",
-                "sequence_id",
-                "project_id",
-                "parent_id",
-                "cycle_id",
-                "module_ids",
-                "label_ids",
-                "assignee_ids",
-                "sub_issues_count",
-                "created_at",
-                "updated_at",
-                "created_by",
-                "updated_by",
-                "attachment_count",
-                "link_count",
-                "is_draft",
-                "archived_at",
-                "deleted_at",
-                "recurrence_pattern",
+            issues = list(
+                issue_queryset.values(
+                    "id",
+                    "name",
+                    "state_id",
+                    "sort_order",
+                    "completed_at",
+                    "estimate_point",
+                    "priority",
+                    "start_date",
+                    "target_date",
+                    "sequence_id",
+                    "project_id",
+                    "parent_id",
+                    "cycle_id",
+                    "module_ids",
+                    "label_ids",
+                    "assignee_ids",
+                    "sub_issues_count",
+                    "created_at",
+                    "updated_at",
+                    "created_by",
+                    "updated_by",
+                    "attachment_count",
+                    "link_count",
+                    "is_draft",
+                    "archived_at",
+                    "deleted_at",
+                    "recurrence_pattern",
+                )
             )
+            attach_parent_chain(issues)
             datetime_fields = ["created_at", "updated_at"]
             issues = user_timezone_converter(issues, datetime_fields, request.user.user_timezone)
         return Response(issues, status=status.HTTP_200_OK)
@@ -457,6 +463,8 @@ class IssueViewSet(BaseViewSet):
                 )
                 .first()
             )
+            if issue is not None:
+                attach_parent_chain([issue])
             datetime_fields = ["created_at", "updated_at"]
             issue = user_timezone_converter(issue, datetime_fields, request.user.user_timezone)
             # Send the model activity
@@ -843,7 +851,8 @@ class IssuePaginatedViewSet(BaseViewSet):
         )
 
     def process_paginated_result(self, fields, results, timezone):
-        paginated_data = results.values(*fields)
+        paginated_data = list(results.values(*fields))
+        attach_parent_chain(paginated_data)
 
         # converting the datetime fields in paginated data
         datetime_fields = ["created_at", "updated_at"]
@@ -1089,7 +1098,10 @@ class IssueDetailEndpoint(BaseAPIView):
             queryset=issue,
             total_count_queryset=total_issue_queryset,
             on_results=lambda issue: IssueListDetailSerializer(
-                issue, many=True, fields=self.fields, expand=self.expand
+                attach_parent_chain_to_instances(issue),
+                many=True,
+                fields=self.fields,
+                expand=self.expand,
             ).data,
         )
 

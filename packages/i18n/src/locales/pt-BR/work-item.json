@@ -25,6 +25,10 @@
       "link": "Adicionar link",
       "existing": "Adicionar item de trabalho existente"
     },
+    "parent_breadcrumb": {
+      "column": "Caminho do pai",
+      "tooltip_full": "Caminho completo"
+    },
     "recurrence": {
       "label": "Recorrência",
       "no_recurrence": "Não repete",

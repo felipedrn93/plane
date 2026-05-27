@@ -38,6 +38,14 @@ export type TRecurrencePattern = {
   by_setpos?: number;
 };
 
+export type TIssueParentChainNode = {
+  id: string;
+  name: string;
+  project_id: string;
+  identifier: string;
+  sequence_id: number;
+};
+
 export enum EIssuesStoreType {
   GLOBAL = "GLOBAL",
   PROFILE = "PROFILE",
@@ -91,6 +99,7 @@ export type TBaseIssue = {
   is_intake?: boolean;
 
   recurrence_pattern: TRecurrencePattern | null;
+  parent_chain?: TIssueParentChainNode[];
 };
 
 type IssueRelation = {

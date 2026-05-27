@@ -156,6 +156,7 @@ export const ISSUE_DISPLAY_PROPERTIES_KEYS: (keyof IIssueDisplayProperties)[] = 
   "modules",
   "cycle",
   "issue_type",
+  "parent_breadcrumb",
 ];
 
 export const SUB_ISSUES_DISPLAY_PROPERTIES_KEYS: (keyof IIssueDisplayProperties)[] = [
@@ -208,6 +209,10 @@ export const ISSUE_DISPLAY_PROPERTIES: {
   },
   { key: "modules", titleTranslationKey: "common.module" },
   { key: "cycle", titleTranslationKey: "common.cycle" },
+  {
+    key: "parent_breadcrumb",
+    titleTranslationKey: "issue.parent_breadcrumb.column",
+  },
 ];
 
 export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
@@ -225,6 +230,7 @@ export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
   "link",
   "attachment_count",
   "sub_issue_count",
+  "parent_breadcrumb",
 ];
 
 export const SPREADSHEET_PROPERTY_DETAILS: {
@@ -348,6 +354,16 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     descendingOrderKey: "sub_issues_count",
     descendingOrderTitle: "Least",
     icon: "LayersIcon",
+  },
+  parent_breadcrumb: {
+    // Server-side sorting by the recursive parent chain isn't supported yet (v2);
+    // both order keys fall back to manual sort_order so the header menu is a no-op.
+    i18n_title: "issue.parent_breadcrumb.column",
+    ascendingOrderKey: "sort_order",
+    ascendingOrderTitle: "Manual",
+    descendingOrderKey: "sort_order",
+    descendingOrderTitle: "Manual",
+    icon: "ParentBreadcrumbIcon",
   },
 };
 

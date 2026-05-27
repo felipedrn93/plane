@@ -5,9 +5,12 @@
  */
 
 import { observer } from "mobx-react";
+import { useParams } from "next/navigation";
 // plane imports
 import { PriorityIcon, StateGroupIcon } from "@plane/propel/icons";
 import type { TIssue, TStateGroups } from "@plane/types";
+// components
+import { ParentBreadcrumb } from "@/components/issues/issue-layouts/properties/parent-breadcrumb";
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 import { useProjectState } from "@/hooks/store/use-project-state";
@@ -23,11 +26,16 @@ type Props = {
     id?: string;
     name?: string;
   };
-  workItem: Pick<TIssue, "id" | "name" | "sequence_id" | "priority" | "start_date" | "target_date" | "type_id">;
+  workItem: Pick<
+    TIssue,
+    "id" | "name" | "sequence_id" | "priority" | "start_date" | "target_date" | "type_id" | "parent_chain" | "parent_id"
+  >;
 };
 
 export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: Props) {
   const { projectId, stateDetails, workItem } = props;
+  // router
+  const { workspaceSlug } = useParams();
   // store hooks
   const { getProjectIdentifierById } = useProject();
   const { getStateById } = useProjectState();
@@ -36,6 +44,7 @@ export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: 
   const fallbackStateDetails = stateDetails.id ? getStateById(stateDetails.id) : undefined;
   const stateGroup = stateDetails?.group ?? fallbackStateDetails?.group ?? "backlog";
   const stateName = stateDetails?.name ?? fallbackStateDetails?.name;
+  const hasParentChain = Boolean(workItem.parent_id && workItem.parent_chain?.length);
 
   return (
     <div className="w-72 space-y-2 rounded-lg border-[0.5px] border-strong bg-surface-1 p-3 shadow-raised-200">
@@ -53,6 +62,9 @@ export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: 
           <p className="text-11 font-medium">{stateName}</p>
         </div>
       </div>
+      {hasParentChain && (
+        <ParentBreadcrumb chain={workItem.parent_chain} workspaceSlug={workspaceSlug?.toString()} />
+      )}
       <div>
         <h6 className="text-13 wrap-break-word">{workItem.name}</h6>
       </div>

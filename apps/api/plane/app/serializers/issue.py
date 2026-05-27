@@ -777,6 +777,13 @@ class IssueSerializer(DynamicBaseSerializer):
     attachment_count = serializers.IntegerField(read_only=True)
     link_count = serializers.IntegerField(read_only=True)
 
+    # Virtual breadcrumb of ancestor issues (root → immediate parent).
+    # Populated via plane.utils.grouper.attach_parent_chain_to_instances.
+    parent_chain = serializers.SerializerMethodField()
+
+    def get_parent_chain(self, obj):
+        return getattr(obj, "parent_chain", []) or []
+
     class Meta:
         model = Issue
         fields = [
@@ -792,6 +799,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "sequence_id",
             "project_id",
             "parent_id",
+            "parent_chain",
             "cycle_id",
             "module_ids",
             "label_ids",
@@ -850,6 +858,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "sequence_id": instance.sequence_id,
             "project_id": instance.project_id,
             "parent_id": instance.parent_id,
+            "parent_chain": getattr(instance, "parent_chain", []) or [],
             "created_at": instance.created_at,
             "updated_at": instance.updated_at,
             "created_by": instance.created_by_id,
