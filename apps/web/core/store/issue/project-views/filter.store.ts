@@ -13,6 +13,7 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  TIssueDisplayPropertiesOrder,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -177,6 +178,22 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
     try {
       const viewDetails = await this.issueFilterService.getViewDetails(workspaceSlug, projectId, viewId);
       this.mutateFilters(workspaceSlug, viewId, viewDetails);
+
+      // Fetch per-user view settings (display_properties_order) in parallel-ish.
+      // Failure is non-fatal — UI falls back to default order via computedDisplayPropertiesOrder.
+      try {
+        const userProps = await this.issueFilterService.getViewUserProperties(workspaceSlug, projectId, viewId);
+        const displayPropertiesOrder = this.computedDisplayPropertiesOrder(userProps?.display_properties_order);
+        runInAction(() => {
+          set(this.filters, [viewId, "displayPropertiesOrder"], displayPropertiesOrder);
+        });
+      } catch (userPropsError) {
+        console.log("error while fetching view user properties (non-fatal)", userPropsError);
+        // Fall back to default order
+        runInAction(() => {
+          set(this.filters, [viewId, "displayPropertiesOrder"], this.computedDisplayPropertiesOrder(undefined));
+        });
+      }
     } catch (error) {
       console.log("error while fetching project view filters", error);
       throw error;
@@ -225,6 +242,7 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
         richFilters: this.filters[viewId].richFilters,
         displayFilters: this.filters[viewId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[viewId].displayProperties as IIssueDisplayProperties,
+        displayPropertiesOrder: this.filters[viewId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
         kanbanFilters: this.filters[viewId].kanbanFilters as TIssueKanbanFilters,
       };
 
@@ -291,6 +309,19 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
             });
           });
 
+          break;
+        }
+        case EIssueFilterType.DISPLAY_PROPERTIES_ORDER: {
+          const newOrder = this.computedDisplayPropertiesOrder(filters);
+          _filters.displayPropertiesOrder = newOrder;
+
+          runInAction(() => {
+            set(this.filters, [viewId, "displayPropertiesOrder"], newOrder);
+          });
+
+          await this.issueFilterService.updateViewUserProperties(workspaceSlug, projectId, viewId, {
+            display_properties_order: newOrder,
+          });
           break;
         }
         case EIssueFilterType.KANBAN_FILTERS: {
