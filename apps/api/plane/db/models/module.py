@@ -47,6 +47,7 @@ def get_default_display_properties():
         "key": True,
         "labels": True,
         "link": True,
+        "parent_breadcrumb": True,
         "priority": True,
         "start_date": True,
         "state": True,

@@ -143,6 +143,17 @@ pnpm --filter web dev
 
 ## Pitfalls específicos
 
+- **`getComputedDisplayProperties` é uma whitelist hardcoded — sem isso, o toggle "esquece" a cada navegação** (descoberto após o deploy). `packages/utils/src/work-item/base.ts:getComputedDisplayProperties` re-constrói o objeto `displayProperties` listando cada chave conhecida (`assignee`, `start_date`, …). Qualquer chave fora da lista é dropada toda vez que o filtro store recarrega do backend (`fetchFilters`). Sintoma: usuário liga "Caminho do pai", a coluna aparece, navega, volta, ela some — o PATCH gravou OK no `display_properties` JSONB mas o load passa pelo helper que filtra fora. **Fix:** adicionar `parent_breadcrumb: displayProperties?.parent_breadcrumb ?? true` ao helper. Lição reutilizável: ao adicionar qualquer display property nova, atualizar TANTO `IIssueDisplayProperties` (type) QUANTO `getComputedDisplayProperties` (whitelist) — não basta o type.
+- **5 `get_default_display_properties()` espalhados, não 1**: além de `db/models/issue.py` (project user property), existem versões idênticas em `cycle.py`, `module.py`, `view.py` (saved views) e `workspace.py` (workspace user property + `view_props` nested). Cada uma define o default para registros novos do seu próprio JSONB. Pular qualquer uma faz a coluna nascer desligada em views daquele tipo.
+- **`get_default_display_properties()` é lazy — só vale para registros novos** (descoberto no deploy do CT 105 em 2026-05-27). Após subir a feature, o usuário não viu nada na tela: a coluna estava implementada, o backend devolvia `parent_chain` corretamente, mas o `WithDisplayPropertiesHOC` esconde tudo se `displayProperties.parent_breadcrumb` for falsy. Causa: o default novo só entra em `ProjectUserProperty` recém-criados; as 13 linhas que já existiam tinham `display_properties` sem o flag. **Duas saídas:**
+  1. Cada usuário liga manualmente: filtros → "Display properties" → clica "Caminho do pai" (a UI já lista o toggle porque eu adicionei o item em `ISSUE_DISPLAY_PROPERTIES` e `ISSUE_DISPLAY_PROPERTIES_KEYS`).
+  2. Backfill em massa no banco:
+     ```sql
+     UPDATE project_user_properties
+     SET display_properties = jsonb_set(display_properties, '{parent_breadcrumb}', 'true'::jsonb, true)
+     WHERE NOT (display_properties ? 'parent_breadcrumb');
+     ```
+     Aplicar **uma vez** após o deploy. Generaliza para qualquer display property nova: o default no model só protege registros novos; legados precisam ser tocados explicitamente.
 - **CTE em queries pesadas**: o `WITH RECURSIVE` é eficiente, mas em projetos com hierarquias muito profundas (10+ níveis) pode adicionar latência. Mitigação: o CTE filtra por `id = ANY(%s)` (só os ids da página atual), então o custo é proporcional ao tamanho da página × profundidade média.
 - **Issues raiz não geram query**: `attach_parent_chain` só dispara a CTE se ao menos uma issue da página tem `parent_id != null`. Listas onde todas as issues são raiz custam 0 queries adicionais.
 - **Public API (`apps/api/plane/api/serializers/issue.py`) não expõe `parent_chain`** — usa `exclude` em vez de `fields`, então só campos do model entram. Decisão consciente: consumidores do REST público não têm UI para isso. Se precisar no futuro, declarar `parent_chain` explicitamente lá.
