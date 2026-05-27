@@ -13,6 +13,7 @@ import { EIssueFilterType } from "@plane/constants";
 import type {
   IIssueDisplayFilterOptions,
   IIssueDisplayProperties,
+  TIssueDisplayPropertiesOrder,
   TIssueKanbanFilters,
   IIssueFilters,
   TIssueParams,
@@ -153,6 +154,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
     let richFilters: TWorkItemFilterExpression;
     let displayFilters: IIssueDisplayFilterOptions;
     let displayProperties: IIssueDisplayProperties;
+    let displayPropertiesOrder: TIssueDisplayPropertiesOrder | undefined;
     let kanbanFilters: TIssueKanbanFilters = {
       group_by: [],
       sub_group_by: [],
@@ -164,6 +166,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
       order_by: "-created_at",
     });
     displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+    displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
     kanbanFilters = {
       group_by: _filters?.kanban_filters?.group_by || [],
       sub_group_by: _filters?.kanban_filters?.sub_group_by || [],
@@ -178,6 +181,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
         order_by: "-created_at",
       });
       displayProperties = this.computedDisplayProperties(_filters?.display_properties);
+      displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
     }
 
     // override existing order by if ordered by manual sort_order
@@ -189,6 +193,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
       set(this.filters, [viewId, "richFilters"], richFilters);
       set(this.filters, [viewId, "displayFilters"], displayFilters);
       set(this.filters, [viewId, "displayProperties"], displayProperties);
+      set(this.filters, [viewId, "displayPropertiesOrder"], displayPropertiesOrder);
       set(this.filters, [viewId, "kanbanFilters"], kanbanFilters);
     });
   };
@@ -221,6 +226,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
         richFilters: issueFilters.richFilters,
         displayFilters: issueFilters.displayFilters as IIssueDisplayFilterOptions,
         displayProperties: issueFilters.displayProperties as IIssueDisplayProperties,
+        displayPropertiesOrder: issueFilters.displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
         kanbanFilters: issueFilters.kanbanFilters as TIssueKanbanFilters,
       };
 
@@ -281,6 +287,19 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
             if (["all-issues", "assigned", "created", "subscribed"].includes(viewId))
               this.handleIssuesLocalFilters.set(EIssuesStoreType.GLOBAL, type, workspaceSlug, undefined, viewId, {
                 display_properties: _filters.displayProperties,
+              });
+          });
+          break;
+        }
+        case EIssueFilterType.DISPLAY_PROPERTIES_ORDER: {
+          const newOrder = this.computedDisplayPropertiesOrder(filters);
+          _filters.displayPropertiesOrder = newOrder;
+
+          runInAction(() => {
+            set(this.filters, [viewId, "displayPropertiesOrder"], newOrder);
+            if (["all-issues", "assigned", "created", "subscribed"].includes(viewId))
+              this.handleIssuesLocalFilters.set(EIssuesStoreType.GLOBAL, type, workspaceSlug, undefined, viewId, {
+                display_properties_order: newOrder,
               });
           });
           break;
