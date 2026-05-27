@@ -141,6 +141,7 @@ class CycleUserProperties(ProjectBaseModel):
     display_filters = models.JSONField(default=get_default_display_filters)
     display_properties = models.JSONField(default=get_default_display_properties)
     rich_filters = models.JSONField(default=dict)
+    display_properties_order = models.JSONField(default=list)
 
     class Meta:
         unique_together = ["cycle", "user", "deleted_at"]
