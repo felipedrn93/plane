@@ -443,10 +443,14 @@ class IssueViewUserPropertyEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def get(self, request, slug, project_id, view_id):
+        workspace = Workspace.objects.get(slug=slug)
         prop, _ = IssueViewUserProperty.objects.get_or_create(
             user=request.user,
             view_id=view_id,
-            workspace__slug=slug,
+            defaults={
+                "workspace_id": workspace.id,
+                "project_id": project_id,
+            },
         )
         return Response(
             IssueViewUserPropertySerializer(prop).data,
@@ -455,10 +459,14 @@ class IssueViewUserPropertyEndpoint(BaseAPIView):
 
     @allow_permission([ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST])
     def patch(self, request, slug, project_id, view_id):
+        workspace = Workspace.objects.get(slug=slug)
         prop, _ = IssueViewUserProperty.objects.get_or_create(
             user=request.user,
             view_id=view_id,
-            workspace__slug=slug,
+            defaults={
+                "workspace_id": workspace.id,
+                "project_id": project_id,
+            },
         )
         serializer = IssueViewUserPropertySerializer(
             prop, data=request.data, partial=True
@@ -475,10 +483,13 @@ class WorkspaceIssueViewUserPropertyEndpoint(BaseAPIView):
         allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE"
     )
     def get(self, request, slug, view_id):
+        workspace = Workspace.objects.get(slug=slug)
         prop, _ = IssueViewUserProperty.objects.get_or_create(
             user=request.user,
             view_id=view_id,
-            workspace__slug=slug,
+            defaults={
+                "workspace_id": workspace.id,
+            },
         )
         return Response(
             IssueViewUserPropertySerializer(prop).data,
@@ -489,10 +500,13 @@ class WorkspaceIssueViewUserPropertyEndpoint(BaseAPIView):
         allowed_roles=[ROLE.ADMIN, ROLE.MEMBER, ROLE.GUEST], level="WORKSPACE"
     )
     def patch(self, request, slug, view_id):
+        workspace = Workspace.objects.get(slug=slug)
         prop, _ = IssueViewUserProperty.objects.get_or_create(
             user=request.user,
             view_id=view_id,
-            workspace__slug=slug,
+            defaults={
+                "workspace_id": workspace.id,
+            },
         )
         serializer = IssueViewUserPropertySerializer(
             prop, data=request.data, partial=True
