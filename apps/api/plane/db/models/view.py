@@ -5,6 +5,7 @@
 # Django imports
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 # Module import
 from .workspace import WorkspaceBaseModel
@@ -100,3 +101,34 @@ class IssueView(WorkspaceBaseModel):
     def __str__(self):
         """Return name of the View"""
         return f"{self.name} <{self.project.name}>"
+
+
+class IssueViewUserProperty(WorkspaceBaseModel):
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="view_user_properties",
+    )
+    view = models.ForeignKey(
+        "db.IssueView",
+        on_delete=models.CASCADE,
+        related_name="view_user_properties",
+    )
+    display_properties_order = models.JSONField(default=list)
+
+    class Meta:
+        verbose_name = "Issue View User Property"
+        verbose_name_plural = "Issue View User Properties"
+        db_table = "issue_view_user_properties"
+        ordering = ("-created_at",)
+        unique_together = ["user", "view", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "view"],
+                condition=Q(deleted_at__isnull=True),
+                name="view_user_property_unique_user_view_when_deleted_at_null",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.view.name} {self.user.email}"

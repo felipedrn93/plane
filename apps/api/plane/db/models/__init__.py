@@ -63,7 +63,7 @@ from .session import Session
 from .social_connection import SocialLoginConnection
 from .state import State, StateGroup, DEFAULT_STATES
 from .user import Account, Profile, User, BotTypeEnum
-from .view import IssueView
+from .view import IssueView, IssueViewUserProperty
 from .webhook import Webhook, WebhookLog
 from .workspace import (
     Workspace,
