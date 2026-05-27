@@ -178,6 +178,8 @@ export interface IIssueDisplayProperties {
   parent_breadcrumb?: boolean;
 }
 
+export type TIssueDisplayPropertiesOrder = (keyof IIssueDisplayProperties)[];
+
 export type TIssueKanbanFilters = {
   group_by: string[];
   sub_group_by: string[];
@@ -187,10 +189,15 @@ export interface IIssueFilters {
   richFilters: TWorkItemFilterExpression;
   displayFilters: IIssueDisplayFilterOptions | undefined;
   displayProperties: IIssueDisplayProperties | undefined;
+  displayPropertiesOrder?: TIssueDisplayPropertiesOrder;
   kanbanFilters: TIssueKanbanFilters | undefined;
 }
 
-export type TSupportedFilterForUpdate = IIssueDisplayFilterOptions | IIssueDisplayProperties | TIssueKanbanFilters;
+export type TSupportedFilterForUpdate =
+  | IIssueDisplayFilterOptions
+  | IIssueDisplayProperties
+  | TIssueDisplayPropertiesOrder
+  | TIssueKanbanFilters;
 
 export interface ISubWorkItemFilters extends Omit<IIssueFilters, "richFilters"> {
   filters: IIssueFilterOptions;
@@ -200,6 +207,7 @@ export interface IIssueFiltersResponse {
   rich_filters: TWorkItemFilterExpression;
   display_filters: IIssueDisplayFilterOptions;
   display_properties: IIssueDisplayProperties;
+  display_properties_order?: string[];
 }
 
 export interface IProjectUserPropertiesResponse extends IIssueFiltersResponse {
@@ -216,6 +224,15 @@ export interface IWorkspaceUserPropertiesResponse extends IIssueFiltersResponse 
   navigation_project_limit?: number;
   navigation_control_preference?: "ACCORDION" | "TABBED";
   // Note: show_limited_projects is derived from navigation_project_limit (0 = false, >0 = true)
+}
+
+export interface IIssueViewUserPropertiesResponse {
+  id: string;
+  user: string;
+  view: string;
+  workspace: string;
+  project: string | null;
+  display_properties_order: string[];
 }
 
 export interface IWorkspaceIssueFilterOptions {

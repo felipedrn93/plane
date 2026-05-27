@@ -35,12 +35,14 @@ export enum EIssueFilterType {
   FILTERS = "rich_filters",
   DISPLAY_FILTERS = "display_filters",
   DISPLAY_PROPERTIES = "display_properties",
+  DISPLAY_PROPERTIES_ORDER = "display_properties_order",
   KANBAN_FILTERS = "kanban_filters",
 }
 
 export type TSupportedFilterTypeForUpdate =
   | EIssueFilterType.DISPLAY_FILTERS
   | EIssueFilterType.DISPLAY_PROPERTIES
+  | EIssueFilterType.DISPLAY_PROPERTIES_ORDER
   | EIssueFilterType.KANBAN_FILTERS;
 
 export const ISSUE_DISPLAY_FILTERS_BY_LAYOUT: {
