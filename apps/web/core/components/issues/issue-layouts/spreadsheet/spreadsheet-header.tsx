@@ -25,6 +25,8 @@ interface Props {
   isEstimateEnabled: boolean;
   spreadsheetColumnsList: (keyof IIssueDisplayProperties)[];
   selectionHelpers: TSelectionHelper;
+  onReorder?: (from: number, to: number) => void;
+  isReorderEnabled?: boolean;
   isEpic?: boolean;
 }
 
@@ -37,6 +39,8 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
     isEstimateEnabled,
     spreadsheetColumnsList,
     selectionHelpers,
+    onReorder,
+    isReorderEnabled = false,
     isEpic = false,
   } = props;
   // router
@@ -76,14 +80,17 @@ export const SpreadsheetHeader = observer(function SpreadsheetHeader(props: Prop
           </div>
         </th>
 
-        {spreadsheetColumnsList.map((property) => (
+        {spreadsheetColumnsList.map((property, index) => (
           <SpreadsheetHeaderColumn
             key={property}
             property={property}
+            index={index}
             displayProperties={displayProperties}
             displayFilters={displayFilters}
             handleDisplayFilterUpdate={handleDisplayFilterUpdate}
             isEstimateEnabled={isEstimateEnabled}
+            onReorder={onReorder}
+            isReorderEnabled={isReorderEnabled}
             isEpic={isEpic}
           />
         ))}
