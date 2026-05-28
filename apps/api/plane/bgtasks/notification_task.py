@@ -668,6 +668,18 @@ def notifications(
             # Bulk create notifications
             Notification.objects.bulk_create(bulk_notifications, batch_size=100)
             EmailNotificationLog.objects.bulk_create(bulk_email_logs, batch_size=100, ignore_conflicts=True)
+
+            # Enqueue Web Push for assignment + mention notifications
+            from plane.bgtasks.web_push_task import (
+                PUSH_ENABLED_SENDERS,
+                send_push_notifications,
+            )
+
+            push_target_ids = [
+                str(n.id) for n in bulk_notifications if n.sender in PUSH_ENABLED_SENDERS
+            ]
+            if push_target_ids:
+                send_push_notifications.delay(push_target_ids)
         return
     except Exception as e:
         print(e)

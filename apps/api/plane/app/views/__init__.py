@@ -224,6 +224,7 @@ from .notification.base import (
     UnreadNotificationEndpoint,
     UserNotificationPreferenceEndpoint,
 )
+from .notification.push import PushSubscriptionEndpoint, PushVapidKeyEndpoint
 
 from .exporter.base import ExportIssuesEndpoint
 
