@@ -330,6 +330,8 @@ CELERY_IMPORTS = (
     "plane.bgtasks.issue_description_version_sync",
     # recurring issue tasks
     "plane.bgtasks.recurring_issue_task",
+    # web push tasks
+    "plane.bgtasks.web_push_task",
 )
 
 FILE_SIZE_LIMIT = int(os.environ.get("FILE_SIZE_LIMIT", 104857600))
