@@ -30,10 +30,14 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
    quando possui relação `blocked_by` (reverse FK `issue_relation`, ver `relation.py`) **cujo
    bloqueador** (`related_issue`) está em estado dos grupos `backlog/unstarted/started` — ou seja,
    ignora bloqueios já resolvidos (bloqueador `completed`/`cancelled`). Implementado como
-   `is_blocked = BooleanFilter(method="filter_is_blocked", distinct=True)`, cujo método retorna um
-   `Q` para "bloqueada" e `~Q` (exclude/subquery) para "não bloqueada". O `distinct=True` + o
-   `.distinct()` já presente nas querysets base de issues evitam duplicatas do join — mesmo padrão
-   dos filtros de assignee/label.
+   `is_blocked = BooleanFilter(method="filter_is_blocked")`, cujo método usa **`Exists`/`~Exists`**
+   (subconsulta correlacionada em `issue_relations.issue_id`) — `Q(Exists(...))` para "bloqueada" e
+   `~Q(Exists(...))` para "não bloqueada". Optou-se por `Exists` em vez de join + `~Q`: **não
+   multiplica linhas** (independe de `.distinct()` no queryset externo) e o caso negado vira um
+   `NOT EXISTS` barato. Isso é essencial na visão global "Seu trabalho"
+   (`WorkspaceUserProfileIssuesEndpoint`), cujo queryset **não** tem `.distinct()` e onde o
+   `~Q` por join travava ("Not blocked" rodando pra sempre), enquanto no projeto (conjunto pequeno)
+   era rápido.
 
 3. **Ordenação por `completed_at` não exigiu mudança no backend.** `order_issue_queryset` já trata
    campos arbitrários no branch `else` (`order_by("completed_at"/"-completed_at", "-created_at")`).

@@ -5,10 +5,10 @@
 import copy
 
 from django.db import models
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django_filters import FilterSet, filters
 
-from plane.db.models import Issue
+from plane.db.models import Issue, IssueRelation
 
 
 class UUIDInFilter(filters.BaseInFilter, filters.UUIDFilter):
@@ -190,18 +190,22 @@ class IssueFilterSet(BaseFilterSet):
           whose blocker is still open (state group backlog/unstarted/started)
         - is_blocked=false -> the complement (not actively blocked)
 
-        Relies on the issue querysets being distinct() (the join can multiply rows).
+        Uses EXISTS/NOT EXISTS (correlated subquery on issue_relations.issue_id)
+        instead of a relation join: it never multiplies rows (so it does not depend
+        on the outer queryset being distinct()) and the negated case stays a cheap
+        NOT EXISTS, which matters on workspace-wide views (e.g. "Your work").
         """
-        blocked_q = Q(
-            issue_relation__relation_type="blocked_by",
-            issue_relation__deleted_at__isnull=True,
-            issue_relation__related_issue__deleted_at__isnull=True,
-            issue_relation__related_issue__state__group__in=["backlog", "unstarted", "started"],
+        blocker_open = IssueRelation.objects.filter(
+            issue_id=OuterRef("pk"),
+            relation_type="blocked_by",
+            deleted_at__isnull=True,
+            related_issue__deleted_at__isnull=True,
+            related_issue__state__group__in=["backlog", "unstarted", "started"],
         )
         if value in (True, "true", "True", 1, "1"):
-            return blocked_q
+            return Q(Exists(blocker_open))
         if value in (False, "false", "False", 0, "0"):
-            return ~blocked_q
+            return ~Q(Exists(blocker_open))
         return Q()  # No filter
 
     # Filter methods with soft delete exclusion for relations
