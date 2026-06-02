@@ -867,6 +867,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "archived_at": instance.archived_at,
             "recurrence_pattern": instance.recurrence_pattern,
             # Computed fields
+            "is_blocked": bool(getattr(instance, "is_blocked", False)),
             "cycle_id": instance.cycle_id,
             "module_ids": self.get_module_ids(instance),
             "label_ids": self.get_label_ids(instance),

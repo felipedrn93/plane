@@ -97,6 +97,9 @@ export type TBaseIssue = {
   is_draft: boolean;
   is_epic?: boolean;
   is_intake?: boolean;
+  // True when the work item is actively blocked (has a blocked_by relation whose
+  // blocker is still open). Annotated server-side; drives the [BLOQUEADO] tag.
+  is_blocked?: boolean;
 
   recurrence_pattern: TRecurrencePattern | null;
   parent_chain?: TIssueParentChainNode[];

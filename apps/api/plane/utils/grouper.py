@@ -23,6 +23,7 @@ from plane.db.models import (
     ModuleIssue,
     IssueLabel,
 )
+from plane.utils.blocked import active_blocked_exists
 from plane.utils.exception_logger import log_exception
 from typing import Iterable, Optional, Dict, Tuple, Any, Union, List
 
@@ -89,6 +90,9 @@ def issue_queryset_grouper(
             continue
         default_annotations[key] = expression
 
+    # Active-block flag used by the [BLOQUEADO] tag in the UI (see required_fields below).
+    default_annotations["is_blocked"] = active_blocked_exists()
+
     return queryset.annotate(**default_annotations)
 
 
@@ -130,6 +134,7 @@ def issue_on_results(
         "archived_at",
         "state__group",
         "recurrence_pattern",
+        "is_blocked",
         # parent_chain is computed in Python via attach_parent_chain (single CTE).
         # Kept out of the .values() projection because it isn't a model column.
     ]

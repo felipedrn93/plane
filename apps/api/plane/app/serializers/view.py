@@ -44,6 +44,7 @@ class ViewIssueListSerializer(serializers.Serializer):
             "attachment_count": instance.attachment_count,
             "link_count": instance.link_count,
             "is_draft": instance.is_draft,
+            "is_blocked": bool(getattr(instance, "is_blocked", False)),
             "archived_at": instance.archived_at,
             "state__group": instance.state.group if instance.state else None,
             "assignee_ids": self.get_assignee_ids(instance),

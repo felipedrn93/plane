@@ -47,6 +47,7 @@ from plane.db.models import (
 )
 from plane.utils.issue_filters import issue_filters
 from plane.utils.grouper import search_issue_ids_by_text
+from plane.utils.blocked import active_blocked_exists
 from plane.utils.order_queryset import order_issue_queryset
 from plane.bgtasks.recent_visited_task import recent_visited_task
 from .. import BaseAPIView, BaseViewSet
@@ -195,6 +196,7 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
                 .annotate(count=Func(F("id"), function="Count"))
                 .values("count")
             )
+            .annotate(is_blocked=active_blocked_exists())
             .prefetch_related(
                 Prefetch(
                     "issue_assignee",

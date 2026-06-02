@@ -115,3 +115,47 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
   `-completed_at`).
 - O ícone `"CalendarDays"` de `SPREADSHEET_PROPERTY_DETAILS.completed_on` espelha `created_on`/
   `updated_on` (que usam a mesma string, ainda que o map de ícones tenha a chave `CalenderDays`).
+
+---
+
+## Atualização (2026-06-02): data de finalização nos demais layouts + tag [BLOQUEADO]
+
+### Data de finalização fora da planilha
+Antes `completed_on` só tinha renderizador na planilha. Agora também é exibida como *pill* somente
+leitura (`completed_at` é automático) na linha de propriedades dos cards (list/kanban/calendar/gantt),
+respeitando o toggle do menu **Exibir → Propriedades**.
+- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx` — *pill* `completed_on`
+  (ícone `CalendarCheck`, `renderFormattedDate(issue.completed_at)`), via `WithDisplayPropertiesHOC`.
+
+### Tag [BLOQUEADO] (badge vermelho ao lado do ID)
+Mostra um badge vermelho **BLOQUEADO** ao lado do identificador da tarefa sempre que há bloqueio ativo.
+Fica ao lado do **ID** (não do nome) porque no kanban o nome trunca e esconderia a marca.
+
+**Design:** o backend anota `is_blocked` (`Exists`) **uma única vez** em `issue_queryset_grouper`
+(`plane/utils/grouper.py`), que é o ponto comum dos 5 endpoints que usam `issue_on_results`
+(projeto/ciclo/módulo/"Seu trabalho"/arquivados); as views globais (`view/base.py` →
+`ViewIssueListSerializer`) recebem a anotação no próprio `apply_annotations`. A subconsulta é
+compartilhada com o filtro via `plane.utils.blocked.active_blocked_exists()`.
+
+**Performance:** a anotação é um `Exists` correlacionado calculado **só nas linhas da página**
+(paginação ~100), no índice `issue_relations.issue_id` — mesma classe de `sub_issues_count`/
+`link_count`/`attachment_count` já existentes. Impacto pequeno, proporcional à página, **não** ao
+workspace.
+
+**Arquivos:**
+- `apps/api/plane/utils/blocked.py` — **novo**, `active_blocked_exists()` + `ACTIVE_BLOCKER_STATE_GROUPS`.
+- `apps/api/plane/utils/filters/filterset.py` — `filter_is_blocked` refatorado para usar o helper (DRY).
+- `apps/api/plane/utils/grouper.py` — anota `is_blocked` em `issue_queryset_grouper` e adiciona
+  `"is_blocked"` em `issue_on_results.required_fields` (a *shadow allowlist* do `.values()`).
+- `apps/api/plane/app/views/view/base.py` — `apply_annotations` anota `is_blocked` (views globais).
+- `apps/api/plane/app/serializers/view.py` (`ViewIssueListSerializer`) e
+  `apps/api/plane/app/serializers/issue.py` (`IssueListDetailSerializer`) — expõem `is_blocked`
+  (`getattr` seguro).
+- `packages/types/src/issues/issue.ts` — `is_blocked?: boolean` em `TBaseIssue`.
+- `apps/web/ce/components/issues/issue-details/issue-identifier.tsx` — badge **BLOQUEADO**
+  (`bg-danger-primary`) após o `IdentifierText`, quando `issue.is_blocked` (modo store-data).
+
+**Pitfalls:** o badge só aparece quando o ID está visível (`displayProperties.key`), pois vive dentro
+do `IssueIdentifier`. O texto "BLOQUEADO" é fixo (não i18n), coerente com os demais rótulos do fork.
+`IssueSerializer` (CRUD/detalhe) **não** recebeu `is_blocked` (conflito `read_only_fields = fields`
+em ModelSerializer); o store preserva o valor vindo da listagem ao mesclar respostas de update.

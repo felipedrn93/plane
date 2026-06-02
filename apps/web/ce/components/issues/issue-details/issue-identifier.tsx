@@ -6,6 +6,7 @@
 
 import { observer } from "mobx-react";
 // plane imports
+import { Tooltip } from "@plane/propel/tooltip";
 import type { TIssueIdentifierProps, TIssueTypeIdentifier } from "@plane/types";
 // hooks
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -37,6 +38,13 @@ export const IssueIdentifier = observer(function IssueIdentifier(props: TIssueId
         variant={variant}
         size={size}
       />
+      {issue?.is_blocked && (
+        <Tooltip tooltipContent="Bloqueada por dependência em aberto" position="top">
+          <span className="flex-shrink-0 rounded-sm bg-danger-primary px-1 py-px text-[9px] font-bold uppercase leading-none tracking-wide text-on-color">
+            Bloqueado
+          </span>
+        </Tooltip>
+      )}
     </div>
   );
 });

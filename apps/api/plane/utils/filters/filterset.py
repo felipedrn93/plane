@@ -5,10 +5,11 @@
 import copy
 
 from django.db import models
-from django.db.models import Exists, OuterRef, Q
+from django.db.models import Q
 from django_filters import FilterSet, filters
 
-from plane.db.models import Issue, IssueRelation
+from plane.db.models import Issue
+from plane.utils.blocked import active_blocked_exists
 
 
 class UUIDInFilter(filters.BaseInFilter, filters.UUIDFilter):
@@ -194,18 +195,13 @@ class IssueFilterSet(BaseFilterSet):
         instead of a relation join: it never multiplies rows (so it does not depend
         on the outer queryset being distinct()) and the negated case stays a cheap
         NOT EXISTS, which matters on workspace-wide views (e.g. "Your work").
+        Shares the subquery with the ``is_blocked`` annotation (see
+        plane.utils.blocked.active_blocked_exists).
         """
-        blocker_open = IssueRelation.objects.filter(
-            issue_id=OuterRef("pk"),
-            relation_type="blocked_by",
-            deleted_at__isnull=True,
-            related_issue__deleted_at__isnull=True,
-            related_issue__state__group__in=["backlog", "unstarted", "started"],
-        )
         if value in (True, "true", "True", 1, "1"):
-            return Q(Exists(blocker_open))
+            return Q(active_blocked_exists())
         if value in (False, "false", "False", 0, "0"):
-            return ~Q(Exists(blocker_open))
+            return ~Q(active_blocked_exists())
         return Q()  # No filter
 
     # Filter methods with soft delete exclusion for relations

@@ -10,7 +10,7 @@ import { xor } from "lodash-es";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // icons
-import { Paperclip, Repeat } from "lucide-react";
+import { CalendarCheck, Paperclip, Repeat } from "lucide-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon, StartDatePropertyIcon, ViewsIcon, DueDatePropertyIcon } from "@plane/propel/icons";
@@ -20,6 +20,7 @@ import type { TIssue, IIssueDisplayProperties, TIssuePriorities } from "@plane/t
 import {
   cn,
   getDate,
+  renderFormattedDate,
   renderFormattedPayloadDate,
   generateWorkItemLink,
   shouldHighlightIssueDueDate,
@@ -322,6 +323,29 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
             labelClassName="text-caption-sm-regular"
           />
         </div>
+      </WithDisplayPropertiesHOC>
+
+      {/* completed date (read-only; completed_at is set automatically) */}
+      <WithDisplayPropertiesHOC
+        displayProperties={displayProperties}
+        displayPropertyKey="completed_on"
+        shouldRenderProperty={() => !!issue.completed_at}
+      >
+        <Tooltip
+          tooltipHeading={t("common.order_by.completed_date")}
+          tooltipContent={renderFormattedDate(issue.completed_at) ?? ""}
+          isMobile={isMobile}
+          renderByDefault={false}
+        >
+          <div
+            className="flex h-5 flex-shrink-0 items-center justify-center gap-1 overflow-hidden rounded-sm border-[0.5px] border-strong px-2 py-1"
+            onFocus={handleEventPropagation}
+            onClick={handleEventPropagation}
+          >
+            <CalendarCheck className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+            <span className="text-caption-sm-regular">{renderFormattedDate(issue.completed_at)}</span>
+          </div>
+        </Tooltip>
       </WithDisplayPropertiesHOC>
 
       {/* assignee */}
