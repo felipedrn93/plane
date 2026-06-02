@@ -42,6 +42,9 @@ export interface IProjectIssuesFilter extends IBaseIssueFilterStore {
     subGroupId: string | undefined
   ) => Partial<Record<TIssueParams, string | boolean>>;
   getIssueFilters(projectId: string): IIssueFilters | undefined;
+  // inline search (ephemeral, not persisted) — see mods/busca-inline-view.md
+  getSearchQuery: (entityId: string) => string;
+  updateSearchQuery: (workspaceSlug: string, projectId: string, query: string) => void;
   // action
   fetchFilters: (workspaceSlug: string, projectId: string) => Promise<void>;
   updateFilterExpression: (
@@ -70,6 +73,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     makeObservable(this, {
       // observables
       filters: observable,
+      searchQuery: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
@@ -77,6 +81,7 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
       fetchFilters: action,
       updateFilterExpression: action,
       updateFilters: action,
+      updateSearchQuery: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -115,11 +120,21 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
       userFilters?.richFilters,
       userFilters?.displayFilters,
-      filteredParams
+      filteredParams,
+      this.getSearchQuery(projectId)
     );
 
     return filteredRouteParams;
   }
+
+  /**
+   * @description sets the ephemeral inline-search query and refetches the list.
+   * Mirrors updateFilterExpression's refetch path; the query is NOT persisted.
+   */
+  updateSearchQuery: IProjectIssuesFilter["updateSearchQuery"] = (workspaceSlug, projectId, query) => {
+    this.setSearchQuery(projectId, query);
+    this.rootIssueStore.projectIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation");
+  };
 
   getFilterParams = computedFn(
     (

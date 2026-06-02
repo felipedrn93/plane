@@ -42,6 +42,9 @@ export interface ICycleIssuesFilter extends IBaseIssueFilterStore {
     subGroupId: string | undefined
   ) => Partial<Record<TIssueParams, string | boolean>>;
   getIssueFilters(cycleId: string): IIssueFilters | undefined;
+  // inline search (ephemeral, not persisted) — see mods/busca-inline-view.md
+  getSearchQuery: (entityId: string) => string;
+  updateSearchQuery: (workspaceSlug: string, cycleId: string, query: string) => void;
   // action
   fetchFilters: (workspaceSlug: string, projectId: string, cycleId: string) => Promise<void>;
   updateFilterExpression: (
@@ -72,12 +75,14 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
     makeObservable(this, {
       // observables
       filters: observable,
+      searchQuery: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
       // actions
       fetchFilters: action,
       updateFilters: action,
+      updateSearchQuery: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -120,11 +125,23 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
       userFilters?.richFilters,
       userFilters?.displayFilters,
-      filteredParams
+      filteredParams,
+      this.getSearchQuery(cycleId)
     );
 
     return filteredRouteParams;
   }
+
+  /**
+   * @description sets the ephemeral inline-search query and refetches the cycle.
+   * The query is NOT persisted; projectId comes from the root store.
+   */
+  updateSearchQuery: ICycleIssuesFilter["updateSearchQuery"] = (workspaceSlug, cycleId, query) => {
+    const projectId = this.rootIssueStore.projectId;
+    this.setSearchQuery(cycleId, query);
+    if (projectId)
+      this.rootIssueStore.cycleIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation", cycleId);
+  };
 
   getFilterParams = computedFn(
     (

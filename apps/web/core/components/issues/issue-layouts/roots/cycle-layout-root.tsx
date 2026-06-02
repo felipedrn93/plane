@@ -18,6 +18,7 @@ import { TransferIssuesModal } from "@/components/cycles/transfer-issues-modal";
 // hooks
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
@@ -110,6 +111,11 @@ export const CycleLayoutRoot = observer(function CycleLayoutRoot() {
                   canTransferIssues={canTransferIssues}
                   disabled={!isEmpty(cycleDetails?.progress_snapshot)}
                 />
+              )}
+              {issuesFilter && (
+                <div className="flex items-center justify-end px-3 pt-2">
+                  <WorkItemSearch filterStore={issuesFilter} workspaceSlug={workspaceSlug} entityId={cycleId} />
+                </div>
               )}
               {cycleWorkItemsFilter && (
                 <WorkItemFiltersRow

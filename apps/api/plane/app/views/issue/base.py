@@ -66,6 +66,7 @@ from plane.utils.global_paginator import paginate
 from plane.utils.grouper import (
     attach_parent_chain,
     attach_parent_chain_to_instances,
+    search_issue_ids_by_text,
     issue_group_values,
     issue_on_results,
     issue_queryset_grouper,
@@ -276,6 +277,11 @@ class IssueViewSet(BaseViewSet):
 
         # Apply legacy filters
         issue_queryset = issue_queryset.filter(**filters, **extra_filters)
+
+        # Apply inline search (name / identifier / parent path) — see mods/busca-inline-view.md
+        search_text = request.GET.get("search_text")
+        if search_text:
+            issue_queryset = issue_queryset.filter(id__in=search_issue_ids_by_text(project_id, search_text))
 
         # Keeping a copy of the queryset before applying annotations
         filtered_issue_queryset = copy.deepcopy(issue_queryset)

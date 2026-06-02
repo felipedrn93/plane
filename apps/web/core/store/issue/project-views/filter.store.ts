@@ -43,6 +43,9 @@ export interface IProjectViewIssuesFilter extends IBaseIssueFilterStore {
     subGroupId: string | undefined
   ) => Partial<Record<TIssueParams, string | boolean>>;
   getIssueFilters(viewId: string): IIssueFilters | undefined;
+  // inline search (ephemeral, not persisted) — see mods/busca-inline-view.md
+  getSearchQuery: (entityId: string) => string;
+  updateSearchQuery: (workspaceSlug: string, viewId: string, query: string) => void;
   // helper actions
   mutateFilters: (workspaceSlug: string, viewId: string, viewDetails: IProjectView) => void;
   // action
@@ -76,6 +79,7 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
     makeObservable(this, {
       // observables
       filters: observable,
+      searchQuery: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
@@ -83,6 +87,7 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
       fetchFilters: action,
       updateFilters: action,
       resetFilters: action,
+      updateSearchQuery: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -123,11 +128,28 @@ export class ProjectViewIssuesFilter extends IssueFilterHelperStore implements I
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
       userFilters?.richFilters,
       userFilters?.displayFilters,
-      filteredParams
+      filteredParams,
+      this.getSearchQuery(viewId)
     );
 
     return filteredRouteParams;
   }
+
+  /**
+   * @description sets the ephemeral inline-search query and refetches the view.
+   * The query is NOT persisted to the saved view; projectId comes from the root store.
+   */
+  updateSearchQuery: IProjectViewIssuesFilter["updateSearchQuery"] = (workspaceSlug, viewId, query) => {
+    const projectId = this.rootIssueStore.projectId;
+    this.setSearchQuery(viewId, query);
+    if (projectId)
+      this.rootIssueStore.projectViewIssues.fetchIssuesWithExistingPagination(
+        workspaceSlug,
+        projectId,
+        viewId,
+        "mutation"
+      );
+  };
 
   getFilterParams = computedFn(
     (

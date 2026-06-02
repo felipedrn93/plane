@@ -14,6 +14,7 @@ import { EIssuesStoreType, EIssueLayoutTypes } from "@plane/types";
 // hooks
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 import { useIssues } from "@/hooks/store/use-issues";
 import { useProjectView } from "@/hooks/store/use-project-view";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
@@ -101,6 +102,11 @@ export const ProjectViewLayoutRoot = observer(function ProjectViewLayoutRoot() {
       >
         {({ filter: projectViewWorkItemsFilter }) => (
           <div className="relative flex h-full w-full flex-col overflow-hidden">
+            {issuesFilter && (
+              <div className="flex items-center justify-end px-3 pt-2">
+                <WorkItemSearch filterStore={issuesFilter} workspaceSlug={workspaceSlug} entityId={viewId} />
+              </div>
+            )}
             {projectViewWorkItemsFilter && (
               <WorkItemFiltersRow
                 filter={projectViewWorkItemsFilter}

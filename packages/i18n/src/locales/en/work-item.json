@@ -29,6 +29,10 @@
       "column": "Parent path",
       "tooltip_full": "Full path"
     },
+    "search": {
+      "placeholder": "Search by name, parent path or ID…",
+      "clear": "Clear search"
+    },
     "recurrence": {
       "label": "Recurrence",
       "no_recurrence": "Does not repeat",

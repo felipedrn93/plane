@@ -226,6 +226,57 @@ def attach_parent_chain_to_instances(instances: Iterable[Any]) -> Iterable[Any]:
     return instances_list
 
 
+def search_issue_ids_by_text(project_id: Any, query: Optional[str]) -> List[str]:
+    """Ids of issues in ``project_id`` matching ``query`` by name/identifier,
+    plus every descendant of a match (so a hit on an ancestor surfaces the whole
+    sub-tree — i.e. "search by parent path").
+
+    Powers the inline search box. Matching is done with a single recursive CTE
+    that seeds from the (indexable) name/identifier matches and walks *down* the
+    ``Issue.parent`` chain to descendants. The resulting set
+    ``{matches} ∪ {descendants of matches}`` is exactly
+    ``{matches by name/id} ∪ {has an ancestor that matches}``.
+
+    Returns ``[]`` for an empty query or on failure, so the listing keeps working
+    without the search filter (same defensive contract as ``fetch_parent_chains``).
+    """
+    if not query or not str(query).strip():
+        return []
+    like = f"%{str(query).strip()}%"
+
+    # ``deleted_at IS NULL`` is checked on every hop so a soft-deleted ancestor
+    # doesn't bridge unrelated sub-trees (mirrors fetch_parent_chains).
+    sql = """
+        WITH RECURSIVE matched AS (
+            SELECT i.id
+            FROM issues i
+            JOIN projects p ON p.id = i.project_id
+            WHERE i.project_id = %(project_id)s
+              AND i.deleted_at IS NULL
+              AND (
+                i.name ILIKE %(like)s
+                OR (p.identifier || '-' || i.sequence_id::text) ILIKE %(like)s
+              )
+            UNION
+            SELECT c.id
+            FROM issues c
+            JOIN matched m ON c.parent_id = m.id
+            WHERE c.deleted_at IS NULL
+        )
+        SELECT id FROM matched;
+    """
+
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute(sql, {"project_id": str(project_id), "like": like})
+            rows = cursor.fetchall()
+    except Exception as exc:  # defensive: never break the listing because of search
+        log_exception(exc)
+        return []
+
+    return [str(row[0]) for row in rows]
+
+
 def issue_group_values(
     field: str,
     slug: str,

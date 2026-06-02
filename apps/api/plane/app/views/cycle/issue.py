@@ -27,6 +27,7 @@ from plane.utils.grouper import (
     issue_group_values,
     issue_on_results,
     issue_queryset_grouper,
+    search_issue_ids_by_text,
 )
 from plane.utils.issue_filters import issue_filters
 from plane.utils.order_queryset import order_issue_queryset
@@ -120,6 +121,11 @@ class CycleIssueViewSet(BaseViewSet):
 
         # Apply legacy filters
         issue_queryset = issue_queryset.filter(**filters)
+
+        # Apply inline search (name / identifier / parent path) — see mods/busca-inline-view.md
+        search_text = request.GET.get("search_text")
+        if search_text:
+            issue_queryset = issue_queryset.filter(id__in=search_issue_ids_by_text(project_id, search_text))
 
         # Total count queryset
         total_issue_queryset = copy.deepcopy(issue_queryset)

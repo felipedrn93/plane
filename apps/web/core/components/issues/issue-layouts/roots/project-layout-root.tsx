@@ -14,6 +14,7 @@ import { Spinner } from "@plane/ui";
 // components
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
@@ -78,6 +79,11 @@ export const ProjectLayoutRoot = observer(function ProjectLayoutRoot() {
       >
         {({ filter: projectWorkItemsFilter }) => (
           <div className="relative flex h-full w-full flex-col overflow-hidden">
+            {issuesFilter && (
+              <div className="flex items-center justify-end px-3 pt-2">
+                <WorkItemSearch filterStore={issuesFilter} workspaceSlug={workspaceSlug} entityId={projectId} />
+              </div>
+            )}
             {projectWorkItemsFilter && (
               <WorkItemFiltersRow
                 filter={projectWorkItemsFilter}

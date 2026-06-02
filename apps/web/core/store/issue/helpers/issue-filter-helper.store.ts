@@ -4,7 +4,8 @@
  * See the LICENSE file for details.
  */
 
-import { isEmpty } from "lodash-es";
+import { isEmpty, set } from "lodash-es";
+import { runInAction } from "mobx";
 // plane constants
 import type { EIssueFilterType } from "@plane/constants";
 import {
@@ -55,7 +56,8 @@ export interface IIssueFilterHelperStore {
   computedFilteredParams(
     richFilters: TWorkItemFilterExpression,
     displayFilters: IIssueDisplayFilterOptions | undefined,
-    acceptableParamsByLayout: TIssueParams[]
+    acceptableParamsByLayout: TIssueParams[],
+    searchQuery?: string
   ): Partial<Record<TIssueParams, string | boolean>>;
   computedFilters(filters: IIssueFilterOptions): IIssueFilterOptions;
   getFilterConditionBasedOnViews: (
@@ -71,7 +73,25 @@ export interface IIssueFilterHelperStore {
 }
 
 export class IssueFilterHelperStore implements IIssueFilterHelperStore {
+  /**
+   * Ephemeral inline-search query, keyed by entity id (projectId/viewId/cycleId/moduleId).
+   * NOT persisted to rich_filters and never touches saved views — it lives only in memory
+   * for the session (per entity). Made observable + threaded into params by each concrete
+   * filter store. See mods/busca-inline-view.md.
+   */
+  searchQuery: Record<string, string> = {};
+
   constructor() {}
+
+  /** Current inline-search query for an entity ("" when none). */
+  getSearchQuery = (entityId: string): string => this.searchQuery[entityId] ?? "";
+
+  /** Set the inline-search query for an entity. Call inside an action (e.g. updateSearchQuery). */
+  setSearchQuery = (entityId: string, query: string) => {
+    runInAction(() => {
+      set(this.searchQuery, [entityId], query);
+    });
+  };
 
   /**
    * @description This method is used to apply the display filters on the issues
@@ -96,7 +116,8 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
   computedFilteredParams = (
     richFilters: TWorkItemFilterExpression,
     displayFilters: IIssueDisplayFilterOptions | undefined,
-    acceptableParamsByLayout: TIssueParams[]
+    acceptableParamsByLayout: TIssueParams[],
+    searchQuery?: string
   ): Partial<Record<TIssueParams, string | boolean>> => {
     const computedDisplayFilters: Partial<Record<TIssueParams, undefined | string[] | boolean | string>> = {
       group_by: displayFilters?.group_by ? EIssueGroupByToServerOptions[displayFilters.group_by] : undefined,
@@ -120,6 +141,13 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
 
     // work item filters
     if (richFilters) issueFiltersParams.filters = JSON.stringify(richFilters);
+
+    // inline search box: ephemeral, never persisted to rich_filters. Added
+    // unconditionally (like `filters`/`layout`) so it bypasses the per-layout
+    // whitelist. Backend matches name / identifier / parent path — see
+    // mods/busca-inline-view.md
+    const trimmedSearchQuery = searchQuery?.trim();
+    if (trimmedSearchQuery) issueFiltersParams.search_text = trimmedSearchQuery;
 
     if (displayFilters?.layout) issueFiltersParams.layout = displayFilters?.layout;
 

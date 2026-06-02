@@ -15,6 +15,7 @@ import { Row, ERowVariant } from "@plane/ui";
 // hooks
 import { ProjectLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/project-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
 // local imports
@@ -81,6 +82,11 @@ export const ModuleLayoutRoot = observer(function ModuleLayoutRoot() {
       >
         {({ filter: moduleWorkItemsFilter }) => (
           <div className="relative flex h-full w-full flex-col overflow-hidden">
+            {issuesFilter && (
+              <div className="flex items-center justify-end px-3 pt-2">
+                <WorkItemSearch filterStore={issuesFilter} workspaceSlug={workspaceSlug} entityId={moduleId} />
+              </div>
+            )}
             {moduleWorkItemsFilter && (
               <WorkItemFiltersRow
                 filter={moduleWorkItemsFilter}

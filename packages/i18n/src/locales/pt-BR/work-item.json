@@ -29,6 +29,10 @@
       "column": "Caminho do pai",
       "tooltip_full": "Caminho completo"
     },
+    "search": {
+      "placeholder": "Buscar por nome, caminho do pai ou ID…",
+      "clear": "Limpar busca"
+    },
     "recurrence": {
       "label": "Recorrência",
       "no_recurrence": "Não repete",
