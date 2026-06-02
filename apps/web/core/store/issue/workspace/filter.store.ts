@@ -56,6 +56,9 @@ export interface IWorkspaceIssuesFilter extends TBaseFilterStore {
     groupId: string | undefined,
     subGroupId: string | undefined
   ) => Partial<Record<TIssueParams, string | boolean>>;
+  // inline search (ephemeral, not persisted) — see mods/busca-inline-view.md
+  getSearchQuery: (entityId: string) => string;
+  updateSearchQuery: (workspaceSlug: string, viewId: string, query: string) => void;
 }
 
 export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWorkspaceIssuesFilter {
@@ -71,12 +74,14 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
     makeObservable(this, {
       // observables
       filters: observable,
+      searchQuery: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
       // fetch actions
       fetchFilters: action,
       updateFilters: action,
+      updateSearchQuery: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -107,10 +112,20 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
       userFilters?.richFilters,
       userFilters?.displayFilters,
-      filteredParams
+      filteredParams,
+      this.getSearchQuery(viewId)
     );
 
     return filteredRouteParams;
+  };
+
+  /**
+   * @description sets the ephemeral inline-search query and refetches the global view.
+   * The query is NOT persisted to the saved view.
+   */
+  updateSearchQuery: IWorkspaceIssuesFilter["updateSearchQuery"] = (workspaceSlug, viewId, query) => {
+    this.setSearchQuery(viewId, query);
+    this.rootIssueStore.workspaceIssues.fetchIssuesWithExistingPagination(workspaceSlug, viewId, "mutation");
   };
 
   get issueFilters() {

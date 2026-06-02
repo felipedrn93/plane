@@ -226,23 +226,44 @@ def attach_parent_chain_to_instances(instances: Iterable[Any]) -> Iterable[Any]:
     return instances_list
 
 
-def search_issue_ids_by_text(project_id: Any, query: Optional[str]) -> List[str]:
-    """Ids of issues in ``project_id`` matching ``query`` by name/identifier,
-    plus every descendant of a match (so a hit on an ancestor surfaces the whole
-    sub-tree — i.e. "search by parent path").
+def search_issue_ids_by_text(
+    project_id: Any, query: Optional[str], workspace_slug: Optional[str] = None
+) -> List[str]:
+    """Ids of issues matching ``query`` by name/identifier, plus every descendant
+    of a match (so a hit on an ancestor surfaces the whole sub-tree — i.e. "search
+    by parent path").
 
-    Powers the inline search box. Matching is done with a single recursive CTE
-    that seeds from the (indexable) name/identifier matches and walks *down* the
-    ``Issue.parent`` chain to descendants. The resulting set
-    ``{matches} ∪ {descendants of matches}`` is exactly
-    ``{matches by name/id} ∪ {has an ancestor that matches}``.
+    Scope: pass ``project_id`` for a single project (work items / cycle / module /
+    project view) or, for cross-project workspace global views, pass
+    ``project_id=None`` together with ``workspace_slug``.
 
-    Returns ``[]`` for an empty query or on failure, so the listing keeps working
-    without the search filter (same defensive contract as ``fetch_parent_chains``).
+    Matching is **space-insensitive**: "clube unir" also matches "clubeunir" and
+    vice-versa (spaces are stripped from both the name/identifier and the query
+    before comparing), on top of the plain substring match.
+
+    Powers the inline search box. A single recursive CTE seeds from the
+    name/identifier matches and walks *down* the ``Issue.parent`` chain to
+    descendants — ``{matches} ∪ {descendants of matches}`` is exactly
+    ``{matches by name/id} ∪ {has an ancestor that matches}``. Returns ``[]`` for
+    an empty query, a missing scope, or on failure (the listing keeps working
+    without the search filter, same defensive contract as ``fetch_parent_chains``).
     """
     if not query or not str(query).strip():
         return []
-    like = f"%{str(query).strip()}%"
+    q = str(query).strip()
+    like = f"%{q}%"
+    like_nospace = f"%{q.replace(' ', '')}%"
+
+    if project_id is not None:
+        scope = "i.project_id = %(project_id)s"
+        params = {"project_id": str(project_id)}
+    elif workspace_slug:
+        scope = "i.workspace_id = (SELECT id FROM workspaces WHERE slug = %(workspace_slug)s)"
+        params = {"workspace_slug": workspace_slug}
+    else:
+        return []
+    params["like"] = like
+    params["like_nospace"] = like_nospace
 
     # ``deleted_at IS NULL`` is checked on every hop so a soft-deleted ancestor
     # doesn't bridge unrelated sub-trees (mirrors fetch_parent_chains).
@@ -251,11 +272,13 @@ def search_issue_ids_by_text(project_id: Any, query: Optional[str]) -> List[str]
             SELECT i.id
             FROM issues i
             JOIN projects p ON p.id = i.project_id
-            WHERE i.project_id = %(project_id)s
+            WHERE {scope}
               AND i.deleted_at IS NULL
               AND (
                 i.name ILIKE %(like)s
                 OR (p.identifier || '-' || i.sequence_id::text) ILIKE %(like)s
+                OR replace(i.name, ' ', '') ILIKE %(like_nospace)s
+                OR replace(p.identifier || '-' || i.sequence_id::text, ' ', '') ILIKE %(like_nospace)s
               )
             UNION
             SELECT c.id
@@ -264,11 +287,11 @@ def search_issue_ids_by_text(project_id: Any, query: Optional[str]) -> List[str]
             WHERE c.deleted_at IS NULL
         )
         SELECT id FROM matched;
-    """
+    """.format(scope=scope)
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(sql, {"project_id": str(project_id), "like": like})
+            cursor.execute(sql, params)
             rows = cursor.fetchall()
     except Exception as exc:  # defensive: never break the listing because of search
         log_exception(exc)

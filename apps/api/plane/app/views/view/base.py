@@ -46,6 +46,7 @@ from plane.db.models import (
     ModuleIssue,
 )
 from plane.utils.issue_filters import issue_filters
+from plane.utils.grouper import search_issue_ids_by_text
 from plane.utils.order_queryset import order_issue_queryset
 from plane.bgtasks.recent_visited_task import recent_visited_task
 from .. import BaseAPIView, BaseViewSet
@@ -230,6 +231,14 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         # Apply legacy filters
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = issue_queryset.filter(**filters)
+
+        # Apply inline search (name / identifier / parent path) — workspace-scoped
+        # because global views are cross-project. See mods/busca-inline-view.md
+        search_text = request.GET.get("search_text")
+        if search_text:
+            issue_queryset = issue_queryset.filter(
+                id__in=search_issue_ids_by_text(None, search_text, workspace_slug=slug)
+            )
 
         # Get common project permission filters
         permission_filters = self._get_project_permission_filters()

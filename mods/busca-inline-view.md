@@ -38,6 +38,12 @@ projeto, views customizadas, ciclos e módulos). A busca casa por três critéri
    cada issue (poucos ancestrais casam). Mesmo padrão de SQL cru de `fetch_parent_chains`.
 4. **Defensivo**: `search_issue_ids_by_text` é envolvido em `try/except` e devolve `[]` em falha
    ou query vazia — a listagem nunca quebra por causa da busca.
+5. **Busca ignorando espaço** (2026-06-02): além do substring normal, a CTE compara `name`/identifier
+   e a query com os espaços removidos (`replace(x, ' ', '')`). Assim "clube unir" também casa
+   "clubeunir" e vice-versa. Vale para todas as telas (está no helper compartilhado).
+6. **Escopo flexível**: o helper aceita `project_id` (projeto/ciclo/módulo/view de projeto) **ou**
+   `workspace_slug` com `project_id=None` (Visualizações **globais de workspace**, cross-project).
+   O `id__in` sempre intersecta com o queryset já escopado/permissionado, então o resultado é correto.
 5. **Componente agnóstico de store**: `WorkItemSearch` depende só de uma interface estrutural
    mínima (`getSearchQuery` + `updateSearchQuery`), satisfeita pelos quatro filter stores. Um
    único componente cobre as quatro telas.
@@ -70,9 +76,11 @@ Backend devolve a listagem normal, já reduzida ao conjunto que casa.
 **Backend**
 
 - `apps/api/plane/utils/grouper.py`
-  - Helper novo `search_issue_ids_by_text(project_id, query)` — `WITH RECURSIVE` que casa por
-    `name ILIKE` ou `identifier-sequence ILIKE` (seed) e desce para descendentes. Filtra
-    `deleted_at IS NULL` em cada hop. Retorna `[]` defensivamente.
+  - Helper novo `search_issue_ids_by_text(project_id, query, workspace_slug=None)` — `WITH RECURSIVE`
+    que casa por `name ILIKE`, `identifier-sequence ILIKE` **e** as variantes sem espaço
+    (`replace(x, ' ', '') ILIKE`) no seed, e desce para descendentes. Escopo por `project_id` ou,
+    se `None`, por `workspace_slug` (views globais). Filtra `deleted_at IS NULL` em cada hop.
+    Retorna `[]` defensivamente.
 - `apps/api/plane/app/views/issue/base.py`
   - `IssueViewSet.list`: lê `search_text`; se presente, `issue_queryset.filter(id__in=search_issue_ids_by_text(project_id, search_text))`
     **antes** do `deepcopy` (para que os counts de grupo também reflitam a busca). Cobre a view do
@@ -80,6 +88,8 @@ Backend devolve a listagem normal, já reduzida ao conjunto que casa.
   - Import do helper adicionado ao bloco `from plane.utils.grouper import (...)`.
 - `apps/api/plane/app/views/cycle/issue.py` → `CycleIssueViewSet.list`: mesmo trecho + import.
 - `apps/api/plane/app/views/module/issue.py` → `ModuleIssueViewSet.list`: mesmo trecho + import.
+- `apps/api/plane/app/views/view/base.py` → `WorkspaceViewIssuesViewSet.list` (views globais de
+  workspace): chama `search_issue_ids_by_text(None, search_text, workspace_slug=slug)` (cross-project) + import.
 
 **Frontend / Tipos**
 
@@ -96,7 +106,8 @@ Backend devolve a listagem normal, já reduzida ao conjunto que casa.
 - `apps/web/core/store/issue/project/filter.store.ts`,
   `apps/web/core/store/issue/project-views/filter.store.ts`,
   `apps/web/core/store/issue/cycle/filter.store.ts`,
-  `apps/web/core/store/issue/module/filter.store.ts`
+  `apps/web/core/store/issue/module/filter.store.ts`,
+  `apps/web/core/store/issue/workspace/filter.store.ts` (views globais)
   - Cada um: registra `searchQuery: observable` e `updateSearchQuery: action` no `makeObservable`;
     passa `this.getSearchQuery(id)` em `getAppliedFilters`; implementa `updateSearchQuery` (seta a
     query e chama `fetchIssuesWithExistingPagination(..., "mutation")` com a assinatura própria de
@@ -105,10 +116,13 @@ Backend devolve a listagem normal, já reduzida ao conjunto que casa.
 **Frontend / Componentes**
 
 - `apps/web/core/components/issues/issue-layouts/roots/project-layout-root.tsx`,
-  `roots/project-view-layout-root.tsx`, `roots/cycle-layout-root.tsx`, `roots/module-layout-root.tsx`
+  `roots/project-view-layout-root.tsx`, `roots/cycle-layout-root.tsx`, `roots/module-layout-root.tsx`,
+  `roots/all-issue-layout-root.tsx` (views globais de workspace)
   - Renderizam `<WorkItemSearch .../>` numa barra slim alinhada à direita, **acima** do
     `WorkItemFiltersRow` (fora do `RowTransition` colapsável dele, para ficar sempre visível),
-    passando `storeType`/`entityId` corretos (projectId/viewId/cycleId/moduleId).
+    passando `filterStore`/`entityId` corretos (projectId/viewId/cycleId/moduleId/globalViewId).
+    No root global o `issuesFilter` é destruturado, então passa um objeto inline
+    `{ getSearchQuery, updateSearchQuery }` (ambos arrow bound) como `filterStore`.
 
 **i18n**
 
@@ -167,11 +181,11 @@ pnpm --filter web dev
   fork). Se crescer muito, considerar índice `pg_trgm` em `issues.name`.
 - **Aplicar a busca ANTES do `copy.deepcopy(issue_queryset)`** no `IssueViewSet.list` — senão os
   counts por grupo (kanban/list agrupado) não refletem a busca.
-- **Views globais de workspace ("All issues") estão fora do escopo**: usam `view/base.py`
-  (`list(self, request, slug)`, sem `project_id`) e um filter store próprio
-  (`workspace/filter.store.ts`). Como a CTE atual é project-scoped, cobrir o cross-project exigiria
-  generalizar o helper (seed por workspace). Project views, ciclos e módulos são project-scoped e
-  já estão cobertos.
+- **Views globais de workspace ("All issues") agora cobertas** (2026-06-02): usam `view/base.py`
+  (`WorkspaceViewIssuesViewSet.list(self, request, slug)`, sem `project_id`), o store
+  `workspace/filter.store.ts` (EIssuesStoreType.GLOBAL) e o `all-issue-layout-root.tsx`. O helper
+  recebe `workspace_slug` (seed escopado por workspace); como `parent_id` nunca cruza projetos, o
+  walk-down de descendentes permanece dentro do projeto de cada match.
 - **Cycle/module: assinatura do refetch difere** — `fetchIssuesWithExistingPagination(slug,
   projectId, "mutation", cycleId/moduleId)` (loadType antes do id), enquanto project é
   `(slug, projectId, "mutation")` e project-view é `(slug, projectId, viewId, "mutation")`. Cada
@@ -179,7 +193,6 @@ pnpm --filter web dev
 
 ## Fora do escopo (v2)
 
-- Busca nas views globais de workspace ("All issues") — exige CTE workspace-scoped.
 - Realce (highlight) do termo casado no nome/breadcrumb da tarefa.
 - Reset automático da busca ao sair da view (hoje persiste por entidade na sessão).
 - Operadores avançados (ex.: `is:open`, `assignee:`) — isto é só busca textual; filtros estruturados

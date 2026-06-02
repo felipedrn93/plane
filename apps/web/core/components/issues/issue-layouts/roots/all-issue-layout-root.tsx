@@ -19,6 +19,7 @@ import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { WorkspaceActiveLayout } from "@/components/views/helper";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 // hooks
 import { useGlobalView } from "@/hooks/store/use-global-view";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -43,7 +44,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const searchParams = useSearchParams();
   // store hooks
   const {
-    issuesFilter: { filters, fetchFilters, updateFilterExpression },
+    issuesFilter: { filters, fetchFilters, updateFilterExpression, getSearchQuery, updateSearchQuery },
     issues: { clear, groupedIssueIds, fetchIssues, fetchNextIssues },
   } = useIssues(EIssuesStoreType.GLOBAL);
   const { fetchAllGlobalViews, getViewDetailsById } = useGlobalView();
@@ -148,6 +149,13 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
         {({ filter: globalWorkItemsFilter }) => (
           <div className="h-full overflow-hidden bg-surface-1">
             <div className="flex h-full w-full flex-col border-b border-strong">
+              <div className="flex items-center justify-end px-3 pt-2">
+                <WorkItemSearch
+                  filterStore={{ getSearchQuery, updateSearchQuery }}
+                  workspaceSlug={workspaceSlug}
+                  entityId={globalViewId}
+                />
+              </div>
               {globalWorkItemsFilter && (
                 <WorkItemFiltersRow
                   filter={globalWorkItemsFilter}
