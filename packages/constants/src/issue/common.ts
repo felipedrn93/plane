@@ -190,6 +190,10 @@ export const ISSUE_DISPLAY_PROPERTIES: {
     key: "due_date",
     titleTranslationKey: "common.order_by.due_date",
   },
+  {
+    key: "completed_on",
+    titleTranslationKey: "common.order_by.completed_date",
+  },
   { key: "labels", titleTranslationKey: "common.labels" },
   {
     key: "priority",

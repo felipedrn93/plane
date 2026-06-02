@@ -63,7 +63,8 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
 
 ### Constantes (`packages/constants`)
 - `src/issue/common.ts` — `ISSUE_ORDER_BY_OPTIONS` (+`-completed_at`); `ISSUE_DISPLAY_PROPERTIES_KEYS`,
-  `SPREADSHEET_PROPERTY_LIST`, `SPREADSHEET_PROPERTY_DETAILS` (+`completed_on`).
+  `SPREADSHEET_PROPERTY_LIST`, `SPREADSHEET_PROPERTY_DETAILS` (+`completed_on`); `ISSUE_DISPLAY_PROPERTIES`
+  (+`completed_on` → botão de toggle no menu **Exibir → Propriedades**, ao lado de start/due date).
 - `src/issue/filter.ts` — `ISSUE_DISPLAY_FILTERS_BY_PAGE`: `completed_at`+`is_blocked` nos `filters`
   e `-completed_at` nos `order_by` das páginas `issues`/`archived_issues`/`my_issues`/`profile_issues`.
 
