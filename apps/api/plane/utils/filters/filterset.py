@@ -157,6 +157,9 @@ class IssueFilterSet(BaseFilterSet):
     subscriber_id = filters.UUIDFilter(method="filter_subscriber_id")
     subscriber_id__in = UUIDInFilter(method="filter_subscriber_id_in", lookup_expr="in")
 
+    # Blocked filter: true -> only work items actively blocked, false -> only those not blocked
+    is_blocked = filters.BooleanFilter(method="filter_is_blocked", distinct=True)
+
     class Meta:
         model = Issue
         fields = {
@@ -164,6 +167,7 @@ class IssueFilterSet(BaseFilterSet):
             "target_date": ["exact", "range"],
             "created_at": ["exact", "range"],
             "updated_at": ["exact", "range"],
+            "completed_at": ["exact", "range"],
             "is_draft": ["exact"],
             "priority": ["exact", "in"],
         }
@@ -177,6 +181,27 @@ class IssueFilterSet(BaseFilterSet):
             return Q(archived_at__isnull=False)
         if value in (False, "false", "False", 0, "0"):
             return Q(archived_at__isnull=True)
+        return Q()  # No filter
+
+    def filter_is_blocked(self, queryset, name, value):
+        """
+        Convenience filter for active blocking:
+        - is_blocked=true  -> work items with a non-deleted "blocked_by" relation
+          whose blocker is still open (state group backlog/unstarted/started)
+        - is_blocked=false -> the complement (not actively blocked)
+
+        Relies on the issue querysets being distinct() (the join can multiply rows).
+        """
+        blocked_q = Q(
+            issue_relation__relation_type="blocked_by",
+            issue_relation__deleted_at__isnull=True,
+            issue_relation__related_issue__deleted_at__isnull=True,
+            issue_relation__related_issue__state__group__in=["backlog", "unstarted", "started"],
+        )
+        if value in (True, "true", "True", 1, "1"):
+            return blocked_q
+        if value in (False, "false", "False", 0, "0"):
+            return ~blocked_q
         return Q()  # No filter
 
     # Filter methods with soft delete exclusion for relations

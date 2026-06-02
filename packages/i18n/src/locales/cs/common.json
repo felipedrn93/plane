@@ -511,6 +511,7 @@
     "comment": "Komentář",
     "workspace_level": "Úroveň pracovního prostoru",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Řadit podle",
       "manual": "Ručně - Pořadí",
       "last_created": "Naposledy vytvořené",
@@ -522,6 +523,7 @@
       "updated_on": "Aktualizováno dne"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Vzestupně",
       "desc": "Sestupně",
       "created_on": "Vytvořeno dne",

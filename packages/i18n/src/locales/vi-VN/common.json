@@ -511,6 +511,7 @@
     "comment": "Bình luận",
     "workspace_level": "Cấp không gian làm việc",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Sắp xếp theo",
       "manual": "Thủ công - Xếp hạng",
       "last_created": "Mới tạo nhất",
@@ -522,6 +523,7 @@
       "updated_on": "Cập nhật vào"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Tăng dần",
       "desc": "Giảm dần",
       "created_on": "Thời gian tạo",

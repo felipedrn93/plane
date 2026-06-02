@@ -511,6 +511,7 @@
     "comment": "Коментар",
     "workspace_level": "Рівень робочого простору",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Сортувати за",
       "manual": "Вручну — Ранг",
       "last_created": "Останні створені",
@@ -522,6 +523,7 @@
       "updated_on": "Оновлено"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "За зростанням",
       "desc": "За спаданням",
       "created_on": "Створено",

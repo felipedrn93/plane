@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { AtSign, Briefcase } from "lucide-react";
+import { AtSign, Ban, Briefcase } from "lucide-react";
 // plane imports
 import { Logo } from "@plane/propel/emoji-icon-picker";
 import {
@@ -36,6 +36,8 @@ import type {
 import { Avatar } from "@plane/ui";
 import {
   getAssigneeFilterConfig,
+  getBlockedFilterConfig,
+  getCompletedAtFilterConfig,
   getCreatedAtFilterConfig,
   getCreatedByFilterConfig,
   getCycleFilterConfig,
@@ -349,6 +351,28 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
     [operatorConfigs]
   );
 
+  // completed at filter config
+  const completedAtFilterConfig = useMemo(
+    () =>
+      getCompletedAtFilterConfig<TWorkItemFilterProperty>("completed_at")({
+        isEnabled: true,
+        filterIcon: CalendarLayoutIcon,
+        ...operatorConfigs,
+      }),
+    [operatorConfigs]
+  );
+
+  // blocked filter config
+  const blockedFilterConfig = useMemo(
+    () =>
+      getBlockedFilterConfig<TWorkItemFilterProperty>("is_blocked")({
+        isEnabled: isFilterEnabled("is_blocked"),
+        filterIcon: Ban,
+        ...operatorConfigs,
+      }),
+    [isFilterEnabled, operatorConfigs]
+  );
+
   // project filter config
   const projectFilterConfig = useMemo(
     () =>
@@ -378,6 +402,8 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       targetDateFilterConfig,
       createdAtFilterConfig,
       updatedAtFilterConfig,
+      completedAtFilterConfig,
+      blockedFilterConfig,
       createdByFilterConfig,
       subscriberFilterConfig,
     ],
@@ -397,6 +423,8 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       target_date: targetDateFilterConfig,
       created_at: createdAtFilterConfig,
       updated_at: updatedAtFilterConfig,
+      completed_at: completedAtFilterConfig,
+      is_blocked: blockedFilterConfig,
     },
     isFilterEnabled,
     members: members ?? [],

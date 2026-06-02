@@ -10,3 +10,4 @@ Lista das alterações feitas neste fork do Plane em relação ao upstream open-
 | 4 | 2026-05-27 | Reordenar colunas da Spreadsheet por usuário (drag-and-drop persistente) | [mods/reordenar-colunas-spreadsheet.md](mods/reordenar-colunas-spreadsheet.md) |
 | 5 | 2026-05-28 | Notificações Web Push para atribuição e menção (Service Worker + VAPID) | [mods/notificacoes-web-push.md](mods/notificacoes-web-push.md) |
 | 6 | 2026-06-02 | Campo de busca inline na view/projeto (nome + caminho do pai + ID) | [mods/busca-inline-view.md](mods/busca-inline-view.md) |
+| 7 | 2026-06-02 | Filtro/ordenação por Data de finalização + filtro de Bloqueio (bloqueador em aberto) | [mods/filtro-data-finalizacao-bloqueio.md](mods/filtro-data-finalizacao-bloqueio.md) |

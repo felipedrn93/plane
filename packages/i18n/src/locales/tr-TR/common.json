@@ -511,6 +511,7 @@
     "comment": "Yorum",
     "workspace_level": "Çalışma Alanı Seviyesi",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Sırala",
       "manual": "Manuel - Sıra",
       "last_created": "Son oluşturulan",
@@ -522,6 +523,7 @@
       "updated_on": "Güncellenme tarihi"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Artan",
       "desc": "Azalan",
       "created_on": "Oluşturulma tarihi",

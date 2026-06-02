@@ -511,6 +511,7 @@
     "comment": "Komentarz",
     "workspace_level": "Poziom przestrzeni roboczej",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Sortuj według",
       "manual": "Ręcznie - Ranking",
       "last_created": "Last created",
@@ -522,6 +523,7 @@
       "updated_on": "Zaktualizowano dnia"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Rosnąco",
       "desc": "Malejąco",
       "created_on": "Utworzono dnia",

@@ -511,6 +511,7 @@
     "comment": "Komentar",
     "workspace_level": "Tingkat ruang kerja",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Urutkan berdasarkan",
       "manual": "Manual - Peringkat",
       "last_created": "Terakhir dibuat",
@@ -522,6 +523,7 @@
       "updated_on": "Diperbarui pada"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Menaik",
       "desc": "Menurun",
       "created_on": "Dibuat pada",

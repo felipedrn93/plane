@@ -511,6 +511,7 @@
     "comment": "Komentár",
     "workspace_level": "Úroveň pracovného priestoru",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Triediť podľa",
       "manual": "Manuálne - Poradie",
       "last_created": "Naposledy vytvorené",
@@ -522,6 +523,7 @@
       "updated_on": "Aktualizované dňa"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Vzostupne",
       "desc": "Zostupne",
       "created_on": "Vytvorené dňa",

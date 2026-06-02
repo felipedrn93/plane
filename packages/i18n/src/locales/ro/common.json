@@ -511,6 +511,7 @@
     "comment": "Comentariu",
     "workspace_level": "La nivel de spațiu de lucru",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Ordonează după",
       "manual": "Manual - Rang",
       "last_created": "Ultima creată",
@@ -522,6 +523,7 @@
       "updated_on": "Actualizat la"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Crescător",
       "desc": "Descrescător",
       "created_on": "Creată la",

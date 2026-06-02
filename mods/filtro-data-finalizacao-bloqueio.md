@@ -1,0 +1,112 @@
+# Filtro/ordenação por Data de finalização + filtro de Bloqueio
+
+**Data:** 2026-06-02
+**Autor:** felipedrn93
+**Branch:** preview
+
+## Contexto
+
+Faltavam dois recursos nos filtros de issues:
+
+1. **Data de finalização** (`Issue.completed_at`, preenchido quando a issue entra num estado do
+   grupo `completed`): poder **filtrar** por essa data, **ordenar** por ela e exibi-la como
+   **coluna/campo** na planilha (menu Exibir), no mesmo padrão de "Criada em"/"Atualizada em".
+2. **Bloqueio**: poder ver **apenas tarefas bloqueadas** ou **apenas não bloqueadas**.
+
+O Plane tem dois mecanismos de filtro rodando juntos: o legado `issue_filters()` (dict, param por
+campo) e o moderno **rich filters** (`IssueFilterSet` + `ComplexFilterBackend`, expressão JSON no
+param `filters`). A UI de filtros do usuário usa o **rich filters**; é nele que as novas
+propriedades foram registradas. A ordenação usa o param `order_by` → `order_issue_queryset`.
+
+## Decisões de design
+
+1. **Tudo no FilterSet compartilhado.** `IssueFilterSet` (em `plane/utils/filters/filterset.py`) é
+   usado por projeto, arquivados, ciclo, módulo, view e "minhas issues". Adicionar as propriedades
+   ali cobre **todas as telas de issues** de uma vez. `completed_at` entra em `Meta.fields` como
+   `["exact", "range"]` (igual a `created_at`/`updated_at`); o `BaseFilterSet.get_filters()` já gera
+   o `completed_at__exact` automaticamente.
+
+2. **Bloqueio = bloqueador ainda em aberto (bloqueio "ativo").** Uma issue é considerada bloqueada
+   quando possui relação `blocked_by` (reverse FK `issue_relation`, ver `relation.py`) **cujo
+   bloqueador** (`related_issue`) está em estado dos grupos `backlog/unstarted/started` — ou seja,
+   ignora bloqueios já resolvidos (bloqueador `completed`/`cancelled`). Implementado como
+   `is_blocked = BooleanFilter(method="filter_is_blocked", distinct=True)`, cujo método retorna um
+   `Q` para "bloqueada" e `~Q` (exclude/subquery) para "não bloqueada". O `distinct=True` + o
+   `.distinct()` já presente nas querysets base de issues evitam duplicatas do join — mesmo padrão
+   dos filtros de assignee/label.
+
+3. **Ordenação por `completed_at` não exigiu mudança no backend.** `order_issue_queryset` já trata
+   campos arbitrários no branch `else` (`order_by("completed_at"/"-completed_at", "-created_at")`).
+   No front, basta `completed_at` estar em `TIssueOrderByOptions` e `ISSUE_ORDER_BY_OPTIONS` e nos
+   arrays `order_by` das páginas.
+
+4. **UI do filtro de bloqueio = single-select** "Blocked"/"Not blocked" (operador `exact`,
+   valores `"true"`/`"false"`), renderizado pelo `SingleSelectFilterValueInput` já existente. O
+   adapter monta a condição `is_blocked__exact = "true"|"false"`, validada contra
+   `IssueFilterSet.base_filters`. O filtro de data de `completed_at` é cópia de `created_at`/
+   `updated_at` (operadores `exact`/`range`), com a mesma semântica/UX (paridade intencional).
+
+5. **"Data de finalização" como display property global** (`completed_on`), no padrão de
+   `created_on`/`updated_on`: aparece no seletor de colunas da planilha, renderiza
+   `issue.completed_at` e ordena pelo cabeçalho (`-completed_at`/`completed_at`). Default ligado
+   (`?? true`), igual aos irmãos de data.
+
+## Arquivos modificados
+
+### Backend (`apps/api`)
+- `plane/utils/filters/filterset.py` — `IssueFilterSet`: `completed_at` em `Meta.fields`;
+  `is_blocked` (`BooleanFilter`, `distinct=True`) + método `filter_is_blocked`.
+
+### Tipos (`packages/types`)
+- `src/view-props.ts` — `WORK_ITEM_FILTER_PROPERTY_KEYS` += `completed_at`, `is_blocked`;
+  `TIssueOrderByOptions` += `completed_at`/`-completed_at`; `IIssueDisplayProperties` += `completed_on`.
+
+### Constantes (`packages/constants`)
+- `src/issue/common.ts` — `ISSUE_ORDER_BY_OPTIONS` (+`-completed_at`); `ISSUE_DISPLAY_PROPERTIES_KEYS`,
+  `SPREADSHEET_PROPERTY_LIST`, `SPREADSHEET_PROPERTY_DETAILS` (+`completed_on`).
+- `src/issue/filter.ts` — `ISSUE_DISPLAY_FILTERS_BY_PAGE`: `completed_at`+`is_blocked` nos `filters`
+  e `-completed_at` nos `order_by` das páginas `issues`/`archived_issues`/`my_issues`/`profile_issues`.
+
+### Utils (`packages/utils`)
+- `src/work-item-filters/configs/filters/date.ts` — `getCompletedAtFilterConfig`.
+- `src/work-item-filters/configs/filters/blocked.ts` — **novo**, `getBlockedFilterConfig` (single-select).
+- `src/work-item-filters/configs/filters/index.ts` — export do `blocked`.
+- `src/work-item/base.ts` — `getComputedDisplayProperties`: default `completed_on ?? true`.
+
+### Web (`apps/web`)
+- `ce/hooks/work-item-filters/use-work-item-filters-config.tsx` — memos `completedAtFilterConfig`
+  (sempre habilitado, como as datas) e `blockedFilterConfig` (gated por `isFilterEnabled`); inclusão
+  em `configs[]` e `configMap`.
+- `core/components/issues/issue-layouts/spreadsheet/columns/completed-on-column.tsx` — **novo**
+  `SpreadsheetCompletedOnColumn`; export em `.../columns/index.ts`.
+- `ce/components/issues/issue-layouts/utils.tsx` — `completed_on: SpreadsheetCompletedOnColumn` em
+  `SPREADSHEET_COLUMNS`.
+
+### i18n (`packages/i18n`)
+- `src/locales/<lang>/common.json` (19 idiomas) — `common.order_by.completed_date` e
+  `common.sort.completed_on` (inglês como placeholder; `pt-BR` traduzido).
+
+## Como testar
+
+1. **Checagem**: `pnpm turbo run check --filter=web --filter=@plane/types --filter=@plane/constants --filter=@plane/utils`.
+2. **Backend (shell Django, sem credenciais)**: `IssueFilterSet.base_filters` contém `is_blocked`,
+   `is_blocked__exact`, `completed_at`, `completed_at__range`, `completed_at__exact`. Conferir que o
+   filtro de bloqueio devolve só issues com `blocked_by` cujo bloqueador está aberto, e a negação o
+   complemento (as contagens somam o total).
+3. **UI**: no painel de filtros (projeto/ciclo/módulo/view/minhas issues/perfil/arquivados) aparecem
+   "Completed at" (data) e "Blocked" (Blocked/Not blocked); o dropdown "Ordenar por" mostra
+   "Data de finalização"; a planilha tem a coluna "Finalizada em" no seletor de colunas, renderiza a
+   data e ordena pelo cabeçalho. Verificar os params enviados (`completed_at__range`,
+   `is_blocked__exact`, `order_by=-completed_at`).
+4. **Deploy CT 105**: rebuild `web` + `api` (FilterSet). `worker`/`beat-worker` não mudam (sem código
+   Celery). Sem migração nova (`completed_at` já é campo do `Issue`).
+
+## Pitfalls / fora de escopo
+
+- Não se mexeu no `issue_filters()` legado nem no `order_issue_queryset` (ordenação já funcionava).
+- O filtro de data de `completed_at` herda a mesma semântica de `created_at`/`updated_at` do
+  rich-filter (paridade intencional, não uma melhoria de UX de data).
+- `sub_work_items` não recebe os novos filtros (só herdou, inofensivamente, a opção de ordenação
+  `-completed_at`).
+- O ícone `"CalendarDays"` de `SPREADSHEET_PROPERTY_DETAILS.completed_on` espelha `created_on`/
+  `updated_on` (que usam a mesma string, ainda que o map de ícones tenha a chave `CalenderDays`).

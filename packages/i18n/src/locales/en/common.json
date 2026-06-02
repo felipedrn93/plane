@@ -511,6 +511,7 @@
     "comment": "Comment",
     "workspace_level": "Workspace level",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Order by",
       "manual": "Manual",
       "last_created": "Last created",
@@ -522,6 +523,7 @@
       "updated_on": "Updated on"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "Ascending",
       "desc": "Descending",
       "created_on": "Created on",

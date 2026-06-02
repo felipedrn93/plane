@@ -511,6 +511,7 @@
     "comment": "Kommentar",
     "workspace_level": "Arbeitsbereichsebene",
     "order_by": {
+      "completed_date": "Abschlussdatum",
       "label": "Sortieren nach",
       "manual": "Manuell - Rang",
       "last_created": "Zuletzt erstellt",
@@ -522,6 +523,7 @@
       "updated_on": "Aktualisiert am"
     },
     "sort": {
+      "completed_on": "Abgeschlossen am",
       "asc": "Aufsteigend",
       "desc": "Absteigend",
       "created_on": "Erstellt am",

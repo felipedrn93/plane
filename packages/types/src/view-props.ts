@@ -54,7 +54,9 @@ export type TIssueOrderByOptions =
   | "attachment_count"
   | "-attachment_count"
   | "sub_issues_count"
-  | "-sub_issues_count";
+  | "-sub_issues_count"
+  | "completed_at"
+  | "-completed_at";
 
 export type TIssueGroupingFilters = "active" | "backlog";
 
@@ -110,6 +112,8 @@ export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
   "project_id",
   "created_at",
   "updated_at",
+  "completed_at",
+  "is_blocked",
 ] as const;
 export type TWorkItemFilterProperty = (typeof WORK_ITEM_FILTER_PROPERTY_KEYS)[number];
 
@@ -173,6 +177,7 @@ export interface IIssueDisplayProperties {
   estimate?: boolean;
   created_on?: boolean;
   updated_on?: boolean;
+  completed_on?: boolean;
   modules?: boolean;
   cycle?: boolean;
   issue_type?: boolean;

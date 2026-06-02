@@ -511,6 +511,7 @@
     "comment": "Comentário",
     "workspace_level": "Nível do espaço de trabalho",
     "order_by": {
+      "completed_date": "Data de finalização",
       "label": "Ordenar por",
       "manual": "Manual - Classificação",
       "last_created": "Último criado",
@@ -522,6 +523,7 @@
       "updated_on": "Atualizado em"
     },
     "sort": {
+      "completed_on": "Finalizada em",
       "asc": "Ascendente",
       "desc": "Descendente",
       "created_on": "Criado em",

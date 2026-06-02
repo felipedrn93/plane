@@ -136,6 +136,7 @@ export const ISSUE_ORDER_BY_OPTIONS: {
   { key: "-updated_at", titleTranslationKey: "common.order_by.last_updated" },
   { key: "start_date", titleTranslationKey: "common.order_by.start_date" },
   { key: "target_date", titleTranslationKey: "common.order_by.due_date" },
+  { key: "-completed_at", titleTranslationKey: "common.order_by.completed_date" },
   { key: "-priority", titleTranslationKey: "common.priority" },
 ];
 
@@ -153,6 +154,7 @@ export const ISSUE_DISPLAY_PROPERTIES_KEYS: (keyof IIssueDisplayProperties)[] = 
   "estimate",
   "created_on",
   "updated_on",
+  "completed_on",
   "modules",
   "cycle",
   "issue_type",
@@ -227,6 +229,7 @@ export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
   "estimate",
   "created_on",
   "updated_on",
+  "completed_on",
   "link",
   "attachment_count",
   "sub_issue_count",
@@ -328,6 +331,14 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     ascendingOrderKey: "-updated_at",
     ascendingOrderTitle: "New",
     descendingOrderKey: "updated_at",
+    descendingOrderTitle: "Old",
+    icon: "CalendarDays",
+  },
+  completed_on: {
+    i18n_title: "common.sort.completed_on",
+    ascendingOrderKey: "-completed_at",
+    ascendingOrderTitle: "New",
+    descendingOrderKey: "completed_at",
     descendingOrderTitle: "Old",
     icon: "CalendarDays",
   },

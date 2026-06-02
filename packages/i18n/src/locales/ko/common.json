@@ -511,6 +511,7 @@
     "comment": "댓글",
     "workspace_level": "작업 공간 수준",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "정렬 기준",
       "manual": "수동 - 순위",
       "last_created": "마지막 생성",
@@ -522,6 +523,7 @@
       "updated_on": "업데이트일"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "오름차순",
       "desc": "내림차순",
       "created_on": "생성일",

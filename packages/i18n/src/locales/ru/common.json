@@ -511,6 +511,7 @@
     "comment": "Комментарий",
     "workspace_level": "Уровень рабочего пространства",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "Сортировать по",
       "manual": "Вручную — Ранг",
       "last_created": "Последние созданные",
@@ -522,6 +523,7 @@
       "updated_on": "Дата обновления"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "По возрастанию",
       "desc": "По убыванию",
       "created_on": "Дата создания",

@@ -511,6 +511,7 @@
     "comment": "评论",
     "workspace_level": "工作区级别",
     "order_by": {
+      "completed_date": "Completed date",
       "label": "排序方式",
       "manual": "手动 - 排名",
       "last_created": "最近创建",
@@ -522,6 +523,7 @@
       "updated_on": "更新时间"
     },
     "sort": {
+      "completed_on": "Completed on",
       "asc": "升序",
       "desc": "降序",
       "created_on": "创建时间",
