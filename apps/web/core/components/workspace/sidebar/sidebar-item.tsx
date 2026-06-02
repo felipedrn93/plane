@@ -65,10 +65,12 @@ export const SidebarItemBase = observer(function SidebarItemBase({
 
   const itemHref =
     item.key === "your_work" && data?.id ? joinUrlPath(slug, item.href, data?.id) : joinUrlPath(slug, item.href);
+  // "Seu trabalho" abre na aba "Atribuído" por padrão; o highlight segue casando com a base do perfil
+  const linkHref = item.key === "your_work" && data?.id ? joinUrlPath(itemHref, "assigned") : itemHref;
   const icon = getSidebarNavigationItemIcon(item.key);
 
   return (
-    <Link href={itemHref} onClick={handleLinkClick}>
+    <Link href={linkHref} onClick={handleLinkClick}>
       <SidebarNavItem isActive={item.highlight(pathname, itemHref)}>
         <div className="flex items-center gap-1.5 py-[1px]">
           {icon}

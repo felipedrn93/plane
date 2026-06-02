@@ -138,6 +138,8 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
     item.key === "your_work"
       ? `/${workspaceSlug.toString()}${item.href}${data?.id}`
       : `/${workspaceSlug.toString()}${item.href}`;
+  // "Seu trabalho" abre na aba "Atribuído" por padrão
+  const linkHref = item.key === "your_work" ? `${itemHref}/assigned` : itemHref;
   const isActive = itemHref === pathname;
 
   const pinNavigationItem = (key: string) => {
@@ -192,7 +194,7 @@ export const ExtendedSidebarItem = observer(function ExtendedSidebarItem(props: 
           </Tooltip>
         )}
         <SidebarNavItem isActive={isActive}>
-          <Link href={itemHref} onClick={() => handleLinkClick()} className="group flex-grow">
+          <Link href={linkHref} onClick={() => handleLinkClick()} className="group flex-grow">
             <div className="flex items-center gap-1.5 py-[1px]">
               {icon}
               <p className="text-13 leading-5 font-medium">{t(item.labelTranslationKey)}</p>
