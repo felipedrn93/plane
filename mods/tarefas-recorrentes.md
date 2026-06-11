@@ -2,6 +2,7 @@
 
 **Data:** 2026-05-24
 **Autor:** felipedrn93
+**Atualizado:** 2026-06-11 — cascata de subtarefas (ver seção "Cascata de subtarefas").
 
 ## Contexto
 
@@ -41,9 +42,9 @@ JSONField nullable no model `Issue`:
 **Backend**
 
 - `apps/api/plane/db/migrations/0122_issue_recurrence_pattern.py` — adiciona a coluna JSONB em `issues`.
-- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`. Usa `dateutil.rrule`. Re-exporta `validate_recurrence_pattern` de `plane.utils.recurrence_validator` para manter compatibilidade com os testes.
+- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`. Usa `dateutil.rrule`. Re-exporta `validate_recurrence_pattern` de `plane.utils.recurrence_validator` para manter compatibilidade com os testes. Desde 2026-06-11 inclui também os helpers da cascata de subtarefas (`shift_dates`, `_default_state_for_project`, `_copy_issue_relations`, `_emit_created_activity`).
 - `apps/api/plane/utils/recurrence_validator.py` — função `validate_recurrence_pattern` (schema do JSONB) extraída do `recurring_issue_task.py` para um módulo dependency-free. Necessário porque os serializers de Issue precisam validar o campo, e importar direto do `recurring_issue_task.py` (que importa `issue_activities_task`, que importa `IssueActivitySerializer` do pacote serializers) fechava um ciclo durante o boot do Django.
-- `apps/api/plane/tests/unit/bg_tasks/test_recurring_issue_task.py` — 16 testes pytest cobrindo cálculo de próxima data (diário, semanal com/sem weekdays + wrap, mensal monthday, mensal Nª/última weekday, anual), `compute_next_dates` (preserva delta start↔target) e validação do schema.
+- `apps/api/plane/tests/unit/bg_tasks/test_recurring_issue_task.py` — 16 testes pytest cobrindo cálculo de próxima data (diário, semanal com/sem weekdays + wrap, mensal monthday, mensal Nª/última weekday, anual), `compute_next_dates` (preserva delta start↔target) e validação do schema. Atualizado em 2026-06-11 com `TestShiftDates` (4 testes puros) e `TestRecurringIssueCascade` (2 testes `django_db`: cascata pai→subtarefas e regressão da subtarefa recorrente sob o mesmo pai).
 
 **Frontend**
 
@@ -105,6 +106,30 @@ JSONField nullable no model `Issue`:
 3. Usuário marca a issue como concluída (state vira grupo `completed`). `Issue.save()` detecta a transição e enfileira `create_next_recurring_issue.delay(issue_id)` via `transaction.on_commit`.
 4. O worker Celery executa a task: calcula `next_target_date` (e `next_start_date` preservando o delta) com `dateutil.rrule`, escolhe o state default do projeto, e cria uma nova `Issue` clonando name/description/priority/assignees/labels/parent/recurrence_pattern.
 5. A nova issue aparece na lista; ao ser concluída, gera a próxima, e assim por diante.
+
+## Cascata de subtarefas (atualização 2026-06-11)
+
+Estende a recorrência para **copiar as subtarefas junto com o pai**, cobrindo dois cenários:
+
+1. **Recorrência no pai → subtarefas acompanham.** Quando um pai recorrente é concluído e a próxima ocorrência é criada, todas as suas **subtarefas diretas** (`Issue.issue_objects.filter(parent_id=...)`) são clonadas sob a nova ocorrência. As datas de cada subtarefa são deslocadas pelo **mesmo delta** que o pai andou (`delta = novo_target_pai − target_pai_antigo`), preservando o intervalo relativo: pai dia 20 → dia 20 do próximo período, subtarefa dia 15 → dia 15.
+2. **Recorrência direto numa subtarefa → nova subtarefa filha do mesmo pai.** Já era o comportamento da task original (cria a nova ocorrência com `parent=issue.parent`); agora coberto por teste de regressão. Quando a issue recorrente é ela mesma uma subtarefa, a nova ocorrência herda o mesmo `parent`.
+
+### Implementação (`recurring_issue_task.py`)
+- `shift_dates(start_date, target_date, delta)` — helper puro: desloca ambas as datas por um `timedelta`, preservando `None`.
+- `_default_state_for_project(project)` e `_copy_issue_relations(source, new_issue)` — extraídos da criação do pai para reuso nas subtarefas (state default não-triage + cópia de assignees/labels via `bulk_create`).
+- `_emit_created_activity(new_issue, source)` — emite `issue.activity.created` (com `recurring_source_id`) para cada clone.
+- Depois de criar o novo pai, a task itera os filhos diretos e cria um clone de cada (`parent` = novo pai, datas deslocadas pelo delta, state default, `recurrence_pattern` do próprio filho preservado, assignees/labels copiados). Tudo dentro do mesmo `transaction.atomic`.
+
+### Decisões (confirmadas com o usuário)
+- **Datas:** mesmo deslocamento (delta) do pai — não reaplica o rrule do pai sobre a data da subtarefa (isso jogaria o dia 15 para o dia 20).
+- **Escopo:** copia **todas** as subtarefas diretas, mesmo as já concluídas; entram em estado inicial (grupo não-completed) e por isso **não** disparam recorrência própria na criação.
+- **Recorrência própria da subtarefa:** preservada na cópia.
+
+### Limitações
+- **Profundidade 1:** apenas filhos diretos são copiados; netos (subtarefas de subtarefas) não são recursados.
+- **Pai + filho ambos recorrentes:** se uma subtarefa tem recorrência própria **e** o pai também recorre, podem surgir subtarefas duplicadas (a subtarefa se recria sob o pai antigo via cenário 2 e também é copiada quando o pai recorre via cenário 1). Combinação não recomendada.
+- **Delta em meses de tamanhos diferentes:** o deslocamento é em dias corridos; em meses com tamanhos diferentes (ex.: jan→fev) a data da subtarefa pode variar ±1 dia em relação ao "mesmo dia do mês". Aceito nesta versão.
+- Comentários e anexos das subtarefas **não** são copiados.
 
 ## Como testar
 
@@ -174,7 +199,7 @@ Lições da implementação de `recurrence_pattern`. O Plane espalha o conhecime
 
 ## Fora do escopo (v2)
 
-- Cópia de sub-tasks, comentários e anexos para a nova instância.
+- Cópia de comentários e anexos para a nova instância. (Sub-tasks **passaram a ser copiadas** em 2026-06-11 — ver "Cascata de subtarefas".)
 - Manter `cycle`/`module` na nova issue (atualmente fica em branco).
 - Limite por número de ocorrências ou data-fim.
 - "Pular fim de semana" / próximo dia útil.

@@ -4,7 +4,7 @@ Lista das alterações feitas neste fork do Plane em relação ao upstream open-
 
 | # | Data | Modificação | Detalhes |
 |---|------|-------------|----------|
-| 1 | 2026-05-24 | Tarefas recorrentes (recurrence_pattern em Issue) | [mods/tarefas-recorrentes.md](mods/tarefas-recorrentes.md) |
+| 1 | 2026-05-24 | Tarefas recorrentes (recurrence_pattern em Issue) — + cascata de subtarefas (2026-06-11) | [mods/tarefas-recorrentes.md](mods/tarefas-recorrentes.md) |
 | 2 | 2026-05-26 | Limite de upload de anexos: 5 MB → 100 MB | [mods/limite-anexos-100mb.md](mods/limite-anexos-100mb.md) |
 | 3 | 2026-05-27 | Coluna "Caminho do pai" em listas e views (parent_chain) | [mods/parent-breadcrumb.md](mods/parent-breadcrumb.md) |
 | 4 | 2026-05-27 | Reordenar colunas da Spreadsheet por usuário (drag-and-drop persistente) | [mods/reordenar-colunas-spreadsheet.md](mods/reordenar-colunas-spreadsheet.md) |
