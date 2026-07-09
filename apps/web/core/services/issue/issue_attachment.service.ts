@@ -45,12 +45,13 @@ export class IssueAttachmentService extends APIService {
     projectId: string,
     issueId: string,
     file: File,
-    uploadProgressHandler?: AxiosRequestConfig["onUploadProgress"]
+    uploadProgressHandler?: AxiosRequestConfig["onUploadProgress"],
+    commentId?: string
   ): Promise<TIssueAttachment> {
     const fileMetaData = await getFileMetaDataForUpload(file);
     return this.post(
       `/api/assets/v2/workspaces/${workspaceSlug}/projects/${projectId}/${this.serviceType}/${issueId}/attachments/`,
-      fileMetaData
+      commentId ? { ...fileMetaData, comment_id: commentId } : fileMetaData
     )
       .then(async (response) => {
         const signedURLResponse: TIssueAttachmentUploadResponse = response?.data;

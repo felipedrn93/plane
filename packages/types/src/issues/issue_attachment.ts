@@ -14,6 +14,7 @@ export type TIssueAttachment = {
   };
   asset_url: string;
   issue_id: string;
+  comment: string | null;
   // required
   updated_at: string;
   updated_by: string;

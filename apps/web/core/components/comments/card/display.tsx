@@ -18,6 +18,7 @@ import { calculateTimeAgo, cn, getFileURL, renderFormattedDate, renderFormattedT
 // components
 import { LiteTextEditor } from "@/components/editor/lite-text";
 // local imports
+import { CommentAttachmentList } from "../attachments/comment-attachment-list";
 import { CommentReactions } from "../comment-reaction";
 import { CommentCardEditForm } from "./edit-form";
 import { EmojiReactionButton, EmojiReactionPicker } from "@plane/propel/emoji-reaction";
@@ -45,6 +46,7 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
     activityOperations,
     comment,
     disabled,
+    entityId,
     projectId,
     readOnlyEditorRef,
     showAccessSpecifier,
@@ -174,6 +176,15 @@ export const CommentCardDisplay = observer(function CommentCardDisplay(props: TC
             }}
             parentClassName="border-none"
           />
+          {projectId && (
+            <CommentAttachmentList
+              workspaceSlug={workspaceSlug}
+              projectId={projectId}
+              issueId={entityId}
+              commentId={comment.id}
+              disabled={disabled}
+            />
+          )}
           {shouldRenderReactions &&
             (renderFooter ? (
               renderFooter(

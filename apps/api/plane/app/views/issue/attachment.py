@@ -20,7 +20,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 # Module imports
 from .. import BaseAPIView
 from plane.app.serializers import IssueAttachmentSerializer
-from plane.db.models import FileAsset, Workspace
+from plane.db.models import FileAsset, IssueComment, Workspace
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.app.permissions import allow_permission, ROLE
 from plane.settings.storage import S3Storage
@@ -101,10 +101,19 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
         name = sanitize_filename(request.data.get("name")) or "unnamed"
         type = request.data.get("type", False)
         size = int(request.data.get("size", settings.FILE_SIZE_LIMIT))
+        comment_id = request.data.get("comment_id")
 
         if not type or type not in settings.ATTACHMENT_MIME_TYPES:
             return Response(
                 {"error": "Invalid file type.", "status": False},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if comment_id and not IssueComment.objects.filter(
+            pk=comment_id, issue_id=issue_id, project_id=project_id, workspace__slug=slug
+        ).exists():
+            return Response(
+                {"error": "Comment not found for this issue.", "status": False},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -126,6 +135,7 @@ class IssueAttachmentV2Endpoint(BaseAPIView):
             created_by=request.user,
             issue_id=issue_id,
             project_id=project_id,
+            comment_id=comment_id or None,
             entity_type=FileAsset.EntityTypeContext.ISSUE_ATTACHMENT,
         )
 

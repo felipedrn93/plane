@@ -31,7 +31,8 @@ export interface IIssueAttachmentStoreActions {
     workspaceSlug: string,
     projectId: string,
     issueId: string,
-    file: File
+    file: File,
+    commentId?: string
   ) => Promise<TIssueAttachment>;
   removeAttachment: (
     workspaceSlug: string,
@@ -53,6 +54,7 @@ export interface IIssueAttachmentStore extends IIssueAttachmentStoreActions {
   getAttachmentsByIssueId: (issueId: string) => string[] | undefined;
   getAttachmentById: (attachmentId: string) => TIssueAttachment | undefined;
   getAttachmentsCountByIssueId: (issueId: string) => number;
+  getAttachmentsByCommentId: (issueId: string, commentId: string) => string[];
 }
 
 export class IssueAttachmentStore implements IIssueAttachmentStore {
@@ -116,6 +118,12 @@ export class IssueAttachmentStore implements IIssueAttachmentStore {
     return attachments?.length ?? 0;
   };
 
+  getAttachmentsByCommentId = computedFn((issueId: string, commentId: string) => {
+    if (!issueId || !commentId) return [];
+    const attachmentIds = this.attachments[issueId] ?? [];
+    return attachmentIds.filter((id) => this.attachmentMap[id]?.comment === commentId);
+  });
+
   // actions
   addAttachments = (issueId: string, attachments: TIssueAttachment[]) => {
     if (attachments && attachments.length > 0) {
@@ -139,7 +147,13 @@ export class IssueAttachmentStore implements IIssueAttachmentStore {
     });
   }, 16);
 
-  createAttachment = async (workspaceSlug: string, projectId: string, issueId: string, file: File) => {
+  createAttachment = async (
+    workspaceSlug: string,
+    projectId: string,
+    issueId: string,
+    file: File,
+    commentId?: string
+  ) => {
     const tempId = uuidv4();
     try {
       // update attachment upload status
@@ -160,7 +174,8 @@ export class IssueAttachmentStore implements IIssueAttachmentStore {
         (progressEvent) => {
           const progressPercentage = Math.round((progressEvent.progress ?? 0) * 100);
           this.debouncedUpdateProgress(issueId, tempId, progressPercentage);
-        }
+        },
+        commentId
       );
 
       if (response && response.id) {

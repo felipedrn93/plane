@@ -14,7 +14,7 @@ import { useIssueDetail } from "@/hooks/store/use-issue-detail";
 import type { TAttachmentUploadStatus } from "@/store/issue/issue-details/attachment.store";
 
 export type TAttachmentOperations = {
-  create: (file: File) => Promise<void>;
+  create: (file: File, commentId?: string) => Promise<void>;
   remove: (attachmentId: string) => Promise<void>;
 };
 
@@ -39,9 +39,9 @@ export const useAttachmentOperations = (
 
   const attachmentOperations: TAttachmentOperations = useMemo(
     () => ({
-      create: async (file) => {
+      create: async (file, commentId) => {
         if (!workspaceSlug || !projectId || !issueId) throw new Error("Missing required fields");
-        const attachmentUploadPromise = createAttachment(workspaceSlug, projectId, issueId, file);
+        const attachmentUploadPromise = createAttachment(workspaceSlug, projectId, issueId, file, commentId);
         setPromiseToast(attachmentUploadPromise, {
           loading: "Uploading attachment...",
           success: {

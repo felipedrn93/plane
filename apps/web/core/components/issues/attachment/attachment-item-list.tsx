@@ -48,14 +48,14 @@ export const IssueAttachmentItemList = observer(function IssueAttachmentItemList
   const [isUploading, setIsUploading] = useState(false);
   // store hooks
   const {
-    attachment: { getAttachmentsByIssueId },
+    attachment: { getAttachmentsByIssueId, getAttachmentById },
     attachmentDeleteModalId,
     toggleDeleteAttachmentModal,
     fetchActivities,
   } = useIssueDetail(issueServiceType);
   const { operations: attachmentOperations, snapshot: attachmentSnapshot } = attachmentHelpers;
   const { create: createAttachment } = attachmentOperations;
-  const { uploadStatus } = attachmentSnapshot;
+  const { uploadStatus: attachmentUploadStatuses } = attachmentSnapshot;
   // file size
   const { maxFileSize } = useFileSize();
   // derived values
@@ -100,7 +100,7 @@ export const IssueAttachmentItemList = observer(function IssueAttachmentItemList
       });
       return;
     },
-    [createAttachment, maxFileSize, workspaceSlug, handleFetchPropertyActivities]
+    [createAttachment, maxFileSize, workspaceSlug, handleFetchPropertyActivities, t]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -112,12 +112,12 @@ export const IssueAttachmentItemList = observer(function IssueAttachmentItemList
 
   return (
     <>
-      {uploadStatus?.map((uploadStatus) => (
+      {attachmentUploadStatuses?.map((uploadStatus) => (
         <IssueAttachmentsUploadItem key={uploadStatus.id} uploadStatus={uploadStatus} />
       ))}
       {issueAttachments && (
         <>
-          {attachmentDeleteModalId && (
+          {attachmentDeleteModalId && !getAttachmentById(attachmentDeleteModalId)?.comment && (
             <IssueAttachmentDeleteModal
               isOpen={Boolean(attachmentDeleteModalId)}
               onClose={() => toggleDeleteAttachmentModal(null)}
