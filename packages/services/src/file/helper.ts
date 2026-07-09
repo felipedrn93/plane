@@ -103,6 +103,13 @@ const validateAndDetectFileType = async (file: File): Promise<string> => {
     console.warn("Error detecting file type from signature:", _error);
   }
 
+  // text-based files (txt, csv, md, json, ...) have no binary signature to sniff;
+  // fall back to the browser-reported type. The server still validates it against
+  // its own MIME allowlist, so this isn't a security regression.
+  if (file.type) {
+    return file.type;
+  }
+
   // fallback for unknown files
   return "";
 };
