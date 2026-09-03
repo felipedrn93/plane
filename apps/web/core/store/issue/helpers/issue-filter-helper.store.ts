@@ -195,6 +195,7 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
       case "assigned-overdue":
         return {
           home_assignment_scope: type,
+          sub_issue: "true",
         };
       case "created":
         return {

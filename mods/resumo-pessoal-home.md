@@ -25,6 +25,8 @@ atrasadas.
 - Os cartões de tarefas abrem as views estáticas `assigned-open` e `assigned-overdue`. O escopo é
   reaplicado obrigatoriamente pelo backend por meio de `home_assignment_scope`; portanto, filtros de
   visualização salvos pelo usuário não conseguem remover as condições essenciais.
+- Essas duas views sempre enviam `sub_issue=true`, independentemente da preferência pessoal da
+  visualização, para que tarefas atribuídas que sejam subitens também apareçam no destino do cartão.
 - A mesma função de queryset atende o endpoint e as listas, mantendo contagem e destino coerentes.
   Ela também reutiliza as regras de visibilidade por projeto da listagem global, inclusive para
   convidados.
@@ -78,5 +80,7 @@ docker compose up -d api web
 - "Em aberto" inclui tarefas atrasadas; "em atraso" é deliberadamente um subconjunto.
 - `target_date` é um campo de data. A comparação usa `timezone.localdate()` para não classificar uma
   tarefa que vence hoje como atrasada.
+- A preferência de ocultar subitens continua valendo nas demais views; ela só é sobrescrita nos dois
+  destinos fixos dos cartões.
 - Os outros locales não são exigidos neste fork porque a interface é fixada em `pt-BR`; `en` é
   mantido como fonte/fallback, conforme [mods/idioma-fixo-pt-br.md](idioma-fixo-pt-br.md).
