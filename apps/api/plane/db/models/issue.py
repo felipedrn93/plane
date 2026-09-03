@@ -74,6 +74,7 @@ def get_default_display_properties():
     return {
         "assignee": True,
         "attachment_count": False,
+        "client": True,
         "created_on": True,
         "cycle": False,
         "due_date": True,
@@ -120,6 +121,13 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         null=True,
         blank=True,
         related_name="parent_issue",
+    )
+    client = models.ForeignKey(
+        "db.Client",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="issues",
     )
     state = models.ForeignKey(
         "db.State",

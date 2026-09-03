@@ -43,3 +43,29 @@ class TestClientCompanyModel:
         ClientCompany.objects.create(workspace=workspace, client=client_a, name="Acme SP", cnpj="11222333000181")
         with pytest.raises(IntegrityError):
             ClientCompany.objects.create(workspace=workspace, client=client_b, name="Globex SP", cnpj="11222333000181")
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestIssueClientField:
+    def test_deleting_client_nulls_the_issue_field(self, workspace, create_user):
+        """Mesmo caso do soft delete: a task do Celery é quem aplica o SET_NULL."""
+        from plane.db.models import Issue, Project, State
+
+        client = Client.objects.create(workspace=workspace, name="Acme")
+        project = Project.objects.create(name="Proj", identifier="PROJ", workspace=workspace, created_by=create_user)
+        # Criar um Project pelo model não dispara os estados padrão (isso é feito
+        # na view de criação de projeto), então o estado é criado explicitamente.
+        state = State.objects.create(name="Backlog", group="backlog", project=project, workspace=workspace)
+        issue = Issue.objects.create(name="Tarefa", project=project, workspace=workspace, state=state, client=client)
+
+        client.delete()
+        soft_delete_related_objects(client._meta.app_label, client._meta.model_name, client.pk)
+        issue.refresh_from_db()
+
+        assert issue.client_id is None
+
+    def test_display_properties_default_includes_client(self):
+        from plane.db.models.issue import get_default_display_properties
+
+        assert get_default_display_properties()["client"] is True
