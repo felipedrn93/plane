@@ -231,7 +231,9 @@ export class CycleIssuesFilter extends IssueFilterHelperStore implements ICycleI
         richFilters: this.filters[cycleId].richFilters,
         displayFilters: this.filters[cycleId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[cycleId].displayProperties as IIssueDisplayProperties,
-        displayPropertiesOrder: this.filters[cycleId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
+        displayPropertiesOrder: this.filters[cycleId].displayPropertiesOrder as
+          | TIssueDisplayPropertiesOrder
+          | undefined,
         kanbanFilters: this.filters[cycleId].kanbanFilters as TIssueKanbanFilters,
       };
 

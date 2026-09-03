@@ -35,10 +35,7 @@ const extractKeys = (sub: PushSubscription) => {
 };
 
 const isSupported = () =>
-  typeof window !== "undefined" &&
-  "serviceWorker" in navigator &&
-  "PushManager" in window &&
-  "Notification" in window;
+  typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 
 const getRegistration = async (): Promise<ServiceWorkerRegistration> => {
   const existing = await navigator.serviceWorker.getRegistration(SW_URL);

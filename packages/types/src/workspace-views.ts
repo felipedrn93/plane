@@ -25,6 +25,11 @@ export interface IWorkspaceView {
   rich_filters: TWorkItemFilterExpression;
   display_filters: IIssueDisplayFilterOptions;
   display_properties: IIssueDisplayProperties;
+  // FORK: ordem das colunas da spreadsheet, persistida por usuário. O backend já
+  // serve o campo (IssueView.display_properties_order), mas a interface não tinha
+  // sido atualizada — ver mods/reordenar-colunas-spreadsheet.md. Opcional porque
+  // views criadas antes da migração não trazem o campo.
+  display_properties_order?: string[];
   query: any;
   query_data: IWorkspaceViewProps;
   project: string;

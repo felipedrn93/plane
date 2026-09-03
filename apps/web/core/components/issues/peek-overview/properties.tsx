@@ -197,9 +197,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={RecurrenceIcon} label={t("issue.recurrence.label")}>
           <RecurrenceDropdown
             value={issue.recurrence_pattern}
-            onChange={(val) =>
-              issueOperations.update(workspaceSlug, projectId, issueId, { recurrence_pattern: val })
-            }
+            onChange={(val) => issueOperations.update(workspaceSlug, projectId, issueId, { recurrence_pattern: val })}
             disabled={disabled}
             targetDate={issue.target_date}
             className="w-full"

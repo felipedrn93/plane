@@ -217,7 +217,9 @@ export class ProjectIssuesFilter extends IssueFilterHelperStore implements IProj
         richFilters: this.filters[projectId].richFilters,
         displayFilters: this.filters[projectId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[projectId].displayProperties as IIssueDisplayProperties,
-        displayPropertiesOrder: this.filters[projectId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
+        displayPropertiesOrder: this.filters[projectId].displayPropertiesOrder as
+          | TIssueDisplayPropertiesOrder
+          | undefined,
         kanbanFilters: this.filters[projectId].kanbanFilters as TIssueKanbanFilters,
       };
 

@@ -11,11 +11,7 @@ import { usePopper } from "react-popper";
 import { Repeat } from "lucide-react";
 import { useTranslation } from "@plane/i18n";
 import { Tooltip } from "@plane/propel/tooltip";
-import type {
-  TRecurrenceFrequency,
-  TRecurrencePattern,
-  TRecurrenceWeekday,
-} from "@plane/types";
+import type { TRecurrenceFrequency, TRecurrencePattern, TRecurrenceWeekday } from "@plane/types";
 import { cn, getDate } from "@plane/utils";
 import { useDropdown } from "@/hooks/use-dropdown";
 
@@ -60,31 +56,22 @@ function setposValue(key: SetposKey): number {
 }
 
 function unitKey(frequency: TRecurrenceFrequency): "day" | "week" | "month" | "year" {
-  return frequency === "daily"
-    ? "day"
-    : frequency === "weekly"
-      ? "week"
-      : frequency === "monthly"
-        ? "month"
-        : "year";
+  return frequency === "daily" ? "day" : frequency === "weekly" ? "week" : frequency === "monthly" ? "month" : "year";
 }
 
-function formatSummary(pattern: TRecurrencePattern, t: (key: string, params?: Record<string, unknown>) => string): string {
+function formatSummary(
+  pattern: TRecurrencePattern,
+  t: (key: string, params?: Record<string, unknown>) => string
+): string {
   const interval = Math.max(1, pattern.interval ?? 1);
   if (pattern.frequency === "weekly" && pattern.by_weekday?.length) {
-    const days = pattern.by_weekday
-      .map((d) => t(`issue.recurrence.weekday.short.${d}`))
-      .join("/");
+    const days = pattern.by_weekday.map((d) => t(`issue.recurrence.weekday.short.${d}`)).join("/");
     return t("issue.recurrence.summary.weekly_with_days", { count: interval, days });
   }
   if (pattern.frequency === "monthly" && pattern.by_monthday) {
     return t("issue.recurrence.summary.monthly_on_day", { count: interval, day: pattern.by_monthday });
   }
-  if (
-    pattern.frequency === "monthly" &&
-    pattern.by_setpos !== undefined &&
-    pattern.by_weekday?.length
-  ) {
+  if (pattern.frequency === "monthly" && pattern.by_setpos !== undefined && pattern.by_weekday?.length) {
     return t("issue.recurrence.summary.monthly_on_setpos", {
       count: interval,
       position: t(`issue.recurrence.setpos.${setposKey(pattern.by_setpos)}`),
@@ -136,9 +123,10 @@ function nextOccurrence(anchor: Date, pattern: TRecurrencePattern): Date | null 
     }
     if (pattern.by_monthday) {
       const target = new Date(base.getFullYear(), base.getMonth() + interval, 1);
-      const day = pattern.by_monthday === -1
-        ? new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
-        : Math.min(pattern.by_monthday, new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate());
+      const day =
+        pattern.by_monthday === -1
+          ? new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate()
+          : Math.min(pattern.by_monthday, new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate());
       return new Date(target.getFullYear(), target.getMonth(), day);
     }
     const fallback = new Date(base);
@@ -186,15 +174,7 @@ function formatPreviewDate(d: Date, locale: string | undefined): string {
 }
 
 export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Props) {
-  const {
-    value,
-    onChange,
-    disabled = false,
-    targetDate,
-    className,
-    buttonClassName,
-    buttonContainerClassName,
-  } = props;
+  const { value, onChange, disabled = false, targetDate, className, buttonClassName, buttonContainerClassName } = props;
   const { t, currentLocale } = useTranslation();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -260,7 +240,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
       });
     } else {
       const anchor = getDate(targetDate);
-      const weekday = anchor ? (WEEKDAYS[(anchor.getDay() + 6) % 7]) : "MO";
+      const weekday = anchor ? WEEKDAYS[(anchor.getDay() + 6) % 7] : "MO";
       onChange({
         ...pattern,
         by_monthday: undefined,
@@ -275,10 +255,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
 
   return (
     <div ref={dropdownRef} className={cn("relative w-full", className)}>
-      <Tooltip
-        disabled={!!targetDate || disabled}
-        tooltipContent={t("issue.recurrence.needs_target_date")}
-      >
+      <Tooltip disabled={!!targetDate || disabled} tooltipContent={t("issue.recurrence.needs_target_date")}>
         <span className={cn("flex w-full", buttonContainerClassName)}>
           <button
             ref={setReferenceElement}
@@ -288,7 +265,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
             onKeyDown={handleKeyDown}
             className={cn(
               "group flex h-7.5 w-full items-center gap-2 rounded px-2 text-left text-body-xs-medium",
-              "hover:bg-layer-2 focus-visible:bg-layer-2 outline-none",
+              "outline-none hover:bg-layer-2 focus-visible:bg-layer-2",
               isDisabled && "cursor-not-allowed opacity-60",
               !isEnabled && "text-placeholder",
               buttonClassName
@@ -307,7 +284,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
             ref={setPopperElement}
             style={styles.popper}
             {...attributes.popper}
-            className="z-30 my-1 w-72 rounded-md border border-strong bg-layer-1 p-3 shadow-lg focus:outline-none"
+            className="shadow-lg z-30 my-1 w-72 rounded-md border border-strong bg-layer-1 p-3 focus:outline-none"
           >
             <div className="flex items-center justify-between gap-2 pb-2">
               <span className="text-body-xs-medium text-primary">{t("issue.recurrence.label")}</span>
@@ -316,7 +293,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
                   type="checkbox"
                   checked={isEnabled}
                   onChange={(e) => (e.target.checked ? enable() : disableRecurrence())}
-                  className="size-3.5 accent-primary"
+                  className="accent-primary size-3.5"
                 />
                 {t("issue.recurrence.enable")}
               </label>
@@ -409,9 +386,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
                       <select
                         value={setposKey(pattern.by_setpos)}
                         disabled={pattern.by_setpos === undefined}
-                        onChange={(e) =>
-                          onChange({ ...pattern, by_setpos: setposValue(e.target.value as SetposKey) })
-                        }
+                        onChange={(e) => onChange({ ...pattern, by_setpos: setposValue(e.target.value as SetposKey) })}
                         className="h-6 rounded border border-strong bg-layer-1 px-1"
                       >
                         {SETPOS_KEYS.map((k) => (
@@ -423,9 +398,7 @@ export const RecurrenceDropdown = observer(function RecurrenceDropdown(props: Pr
                       <select
                         value={pattern.by_weekday?.[0] ?? "MO"}
                         disabled={pattern.by_setpos === undefined}
-                        onChange={(e) =>
-                          onChange({ ...pattern, by_weekday: [e.target.value as TRecurrenceWeekday] })
-                        }
+                        onChange={(e) => onChange({ ...pattern, by_weekday: [e.target.value as TRecurrenceWeekday] })}
                         className="h-6 rounded border border-strong bg-layer-1 px-1"
                       >
                         {WEEKDAYS.map((d) => (

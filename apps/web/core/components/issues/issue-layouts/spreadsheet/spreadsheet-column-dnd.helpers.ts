@@ -8,11 +8,7 @@ import type { IIssueDisplayProperties } from "@plane/types";
 
 export type TSpreadsheetColumnKey = keyof IIssueDisplayProperties;
 
-export function moveColumn(
-  list: TSpreadsheetColumnKey[],
-  from: number,
-  to: number
-): TSpreadsheetColumnKey[] {
+export function moveColumn(list: TSpreadsheetColumnKey[], from: number, to: number): TSpreadsheetColumnKey[] {
   if (from === to || from < 0 || to < 0 || from >= list.length || to >= list.length) {
     return list;
   }

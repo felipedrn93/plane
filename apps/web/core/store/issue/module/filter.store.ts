@@ -140,7 +140,12 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
     const projectId = this.rootIssueStore.projectId;
     this.setSearchQuery(moduleId, query);
     if (projectId)
-      this.rootIssueStore.moduleIssues.fetchIssuesWithExistingPagination(workspaceSlug, projectId, "mutation", moduleId);
+      this.rootIssueStore.moduleIssues.fetchIssuesWithExistingPagination(
+        workspaceSlug,
+        projectId,
+        "mutation",
+        moduleId
+      );
   };
 
   getFilterParams = computedFn(
@@ -236,7 +241,9 @@ export class ModuleIssuesFilter extends IssueFilterHelperStore implements IModul
         richFilters: this.filters[moduleId].richFilters,
         displayFilters: this.filters[moduleId].displayFilters as IIssueDisplayFilterOptions,
         displayProperties: this.filters[moduleId].displayProperties as IIssueDisplayProperties,
-        displayPropertiesOrder: this.filters[moduleId].displayPropertiesOrder as TIssueDisplayPropertiesOrder | undefined,
+        displayPropertiesOrder: this.filters[moduleId].displayPropertiesOrder as
+          | TIssueDisplayPropertiesOrder
+          | undefined,
         kanbanFilters: this.filters[moduleId].kanbanFilters as TIssueKanbanFilters,
       };
 

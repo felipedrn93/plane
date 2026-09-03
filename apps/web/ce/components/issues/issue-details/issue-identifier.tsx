@@ -40,7 +40,7 @@ export const IssueIdentifier = observer(function IssueIdentifier(props: TIssueId
       />
       {issue?.is_blocked && (
         <Tooltip tooltipContent="Bloqueada por dependência em aberto" position="top">
-          <span className="flex-shrink-0 rounded-sm bg-danger-primary px-1 py-px text-[9px] font-bold uppercase leading-none tracking-wide text-on-color">
+          <span className="flex-shrink-0 rounded-sm bg-danger-primary px-1 py-px text-[9px] leading-none font-bold tracking-wide text-on-color uppercase">
             Bloqueado
           </span>
         </Tooltip>

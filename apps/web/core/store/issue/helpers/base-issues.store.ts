@@ -162,6 +162,8 @@ const ISSUE_ORDERBY_KEY: Record<TIssueOrderByOptions, keyof TIssue> = {
   "-issue_cycle__cycle__name": "cycle_id",
   target_date: "target_date",
   "-target_date": "target_date",
+  completed_at: "completed_at",
+  "-completed_at": "completed_at",
   estimate_point__key: "estimate_point",
   "-estimate_point__key": "estimate_point",
   start_date: "start_date",

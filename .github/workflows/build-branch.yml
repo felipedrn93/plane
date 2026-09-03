@@ -30,10 +30,15 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches:
-      - main
-      - canary
+  # FORK: o gatilho de push foi removido de propósito. Este workflow publica as
+  # imagens Docker no DockerHub da makeplane e falha logo no `docker login`, já
+  # que o fork não tem (nem deve ter) essas credenciais. O CT 105 compila do
+  # código-fonte com `docker compose build`, então nada aqui é necessário.
+  # Continua disponível via `workflow_dispatch` caso um dia se configure um
+  # registry próprio — aí basta devolver o bloco abaixo:
+  #   push:
+  #     branches:
+  #       - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

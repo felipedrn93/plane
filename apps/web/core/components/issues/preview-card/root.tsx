@@ -62,9 +62,7 @@ export const WorkItemPreviewCard = observer(function WorkItemPreviewCard(props: 
           <p className="text-11 font-medium">{stateName}</p>
         </div>
       </div>
-      {hasParentChain && (
-        <ParentBreadcrumb chain={workItem.parent_chain} workspaceSlug={workspaceSlug?.toString()} />
-      )}
+      {hasParentChain && <ParentBreadcrumb chain={workItem.parent_chain} workspaceSlug={workspaceSlug?.toString()} />}
       <div>
         <h6 className="text-13 wrap-break-word">{workItem.name}</h6>
       </div>

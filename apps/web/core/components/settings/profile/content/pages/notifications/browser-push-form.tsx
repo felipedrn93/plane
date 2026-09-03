@@ -17,7 +17,8 @@ export const BrowserPushSettingsForm = observer(function BrowserPushSettingsForm
     else await unsubscribe();
   };
 
-  let description = "Receba uma notificação do navegador quando uma tarefa for atribuída a você ou alguém te mencionar — mesmo com o Plane fechado.";
+  let description =
+    "Receba uma notificação do navegador quando uma tarefa for atribuída a você ou alguém te mencionar — mesmo com o Plane fechado.";
   if (!supported) description = "Seu navegador não suporta notificações push.";
   else if (permission === "denied")
     description = "Permissão de notificação bloqueada. Reabilite nas configurações do site no navegador para ativar.";

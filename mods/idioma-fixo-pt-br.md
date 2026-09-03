@@ -66,5 +66,5 @@ EOF
 
 - **A migração é destrutiva para a preferência individual.** Ela sobrescreve o idioma de todos os perfis; o `backward` não restaura os valores antigos (eles se perdem). Aceitável porque o fork só oferece pt-BR, mas não reverta esperando recuperar as escolhas.
 - **`pnpm --filter @plane/i18n run check:format` acusa ~548 arquivos no checkout Windows.** É artefato de CRLF (`core.autocrlf`), não formatação de verdade — o CI usa LF e não reclama. **Não** rode `fix:format` para "resolver": ele reescreveria o pacote inteiro. O hook de pre-commit já normaliza os arquivos que você tocou.
-- **Dois erros de tipo pré-existentes no `web`** continuam reprovando `check:types` e não têm relação com esta mod: `base-issues.store.ts:145` (falta `completed_at`/`-completed_at` no `Record<TIssueOrderByOptions, ...>`, da mod de filtro de finalização) e `filter.store.ts:199` (`display_properties_order` ausente em `IWorkspaceView`, da mod de reordenar colunas). O `check:format` do `apps/web` também está vermelho. Precisam de correção própria.
+- **Os dois erros de tipo e o `check:format` do `web`** que apareceram junto com esta mod foram corrigidos em commit separado — ver [mods/divida-ci-web.md](divida-ci-web.md). Não tinham relação com o i18n.
 - **Fora de escopo:** o e-mail transacional e os textos gerados pelo backend não passam por este i18n; continuam como estavam.

@@ -47,11 +47,7 @@ export const ParentBreadcrumb = observer(function ParentBreadcrumb(props: Props)
 
   const shouldCollapse = chain.length > collapseAfter;
   const visible: Array<{ node: TIssueParentChainNode; collapsed?: false } | { collapsed: true }> = shouldCollapse
-    ? [
-        { node: chain[0] },
-        { collapsed: true },
-        { node: chain[chain.length - 1] },
-      ]
+    ? [{ node: chain[0] }, { collapsed: true }, { node: chain[chain.length - 1] }]
     : chain.map((node) => ({ node }));
 
   const fullPath = chain.map((n) => n.name).join(" > ");

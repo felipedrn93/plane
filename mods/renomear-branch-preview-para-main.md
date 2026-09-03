@@ -23,7 +23,7 @@ O fork nasceu de `upstream/preview` e manteve o nome da branch de pré-release d
 
 ## Arquivos modificados
 
-- `.github/workflows/build-branch.yml` — push trigger `preview` → `main`
+- `.github/workflows/build-branch.yml` — push trigger `preview` → `main` e, na sequência, removido: o workflow publica imagens no DockerHub da makeplane e falha no `docker login` por falta de credenciais no fork. Sobrou só `workflow_dispatch`
 - `.github/workflows/codeql.yml` — push/PR triggers `["preview", "canary", "master"]` → `["main", "canary", "master"]`
 - `.github/workflows/copyright-check.yml` — PR base `preview` → `main`
 - `.github/workflows/i18n-sync-check.yml` — PR base e push trigger `preview` → `main`

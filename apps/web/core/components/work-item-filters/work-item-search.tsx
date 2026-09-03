@@ -56,10 +56,7 @@ export const WorkItemSearch = observer(function WorkItemSearch(props: TWorkItemS
 
   return (
     <div
-      className={cn(
-        "flex h-7 items-center gap-1.5 rounded-sm border border-subtle bg-surface-2 px-2 w-56",
-        className
-      )}
+      className={cn("flex h-7 w-56 items-center gap-1.5 rounded-sm border border-subtle bg-surface-2 px-2", className)}
     >
       <Search className="h-3.5 w-3.5 flex-shrink-0 text-tertiary" aria-hidden="true" />
       <input
@@ -73,7 +70,7 @@ export const WorkItemSearch = observer(function WorkItemSearch(props: TWorkItemS
           }
         }}
         placeholder={t("issue.search.placeholder")}
-        className="w-full bg-transparent text-xs text-secondary placeholder:text-placeholder focus:outline-none"
+        className="text-xs w-full bg-transparent text-secondary placeholder:text-placeholder focus:outline-none"
       />
       {value !== "" && (
         <button
