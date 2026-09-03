@@ -58,7 +58,9 @@ export class ClientStore implements IClientStore {
   }
 
   get clients(): TClient[] {
-    return Object.values(this.clientMap).toSorted((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    const clients = Object.values(this.clientMap);
+    clients.sort((a, b) => a.name.localeCompare(b.name, "pt-BR"));
+    return clients;
   }
 
   get activeClients(): TClient[] {
