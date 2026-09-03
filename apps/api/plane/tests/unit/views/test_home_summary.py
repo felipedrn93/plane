@@ -19,7 +19,11 @@ def test_filter_home_assignment_scope_applies_open_filters():
 
     result = filter_home_assignment_scope(queryset, user, ASSIGNED_OPEN_SCOPE)
 
-    queryset.filter.assert_called_once_with(assignees__in=[user], target_date__isnull=False)
+    queryset.filter.assert_called_once_with(
+        issue_assignee__assignee_id=user.id,
+        issue_assignee__deleted_at__isnull=True,
+        target_date__isnull=False,
+    )
     queryset.filter.return_value.exclude.assert_called_once_with(state__group__in=["completed", "cancelled"])
     assert result == queryset.filter.return_value.exclude.return_value.distinct.return_value
 

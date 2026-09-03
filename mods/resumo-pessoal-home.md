@@ -28,6 +28,8 @@ atrasadas.
 - A mesma função de queryset atende o endpoint e as listas, mantendo contagem e destino coerentes.
   Ela também reutiliza as regras de visibilidade por projeto da listagem global, inclusive para
   convidados.
+- A atribuição é validada pela relação ativa (`IssueAssignee.deleted_at IS NULL`), para não contar
+  usuários que já foram removidos da tarefa.
 - O cartão de menções seleciona a aba Menções no store antes de navegar para `/notifications`.
 - Não há migração de banco de dados.
 

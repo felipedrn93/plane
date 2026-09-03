@@ -35,7 +35,8 @@ def workspace_issue_permission_filters(user):
 def filter_home_assignment_scope(queryset, user, scope):
     """Apply the fixed filters used by the home summary cards and their views."""
     queryset = queryset.filter(
-        assignees__in=[user],
+        issue_assignee__assignee_id=user.id,
+        issue_assignee__deleted_at__isnull=True,
         target_date__isnull=False,
     ).exclude(state__group__in=["completed", "cancelled"])
 
