@@ -116,4 +116,6 @@ scripts/
 packages/i18n/src/types/keys.generated.ts
 
 meu proxmox/
-*/*.stackdump
+# Crash dumps do Git Bash/msys no Windows. Era `*/*.stackdump`, que so pega
+# um nivel de pasta — a raiz e apps/api/ escapavam e um chegou a ser commitado.
+*.stackdump
