@@ -7,6 +7,12 @@
 // Usage:
 //   tsx packages/i18n/scripts/sync-check.ts          # Report only
 //   tsx packages/i18n/scripts/sync-check.ts --ci     # Exit 1 if issues found
+//
+// FORK: upstream exige que os 19 locales estejam 100% sincronizados com `en`.
+// Este fork e usado internamente apenas em portugues (ver SUPPORTED_LANGUAGES em
+// src/constants/language.ts), entao so `pt-BR` reprova o CI. Os demais locales
+// continuam sendo relatados, para nao esconder o gap caso um dia se queira
+// contribuir de volta para o upstream.
 
 import type { LocaleData } from "./lib/locale-io.js";
 import { LOCALES_DIR, listLocales, loadLocale } from "./lib/locale-io.js";
@@ -14,6 +20,16 @@ import { LOCALES_DIR, listLocales, loadLocale } from "./lib/locale-io.js";
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * FORK: locales cujo gap reprova o CI. Os que ficam de fora aparecem no relatorio
+ * como informativo. Para voltar ao comportamento do upstream, use `null`.
+ */
+const ENFORCED_LOCALES: string[] | null = ["pt-BR"];
+
+function isEnforced(locale: string): boolean {
+  return ENFORCED_LOCALES === null || ENFORCED_LOCALES.includes(locale);
+}
 
 /** Format a number with commas (e.g. 7712 -> "7,712"). */
 function fmt(n: number): string {
@@ -163,13 +179,17 @@ function main() {
   console.log(`  en:    ${fmt(enData.allKeys.size)} keys (source)\n`);
 
   for (const comp of comparisons) {
-    const status = comp.missingKeys.length === 0 ? "✓" : "✗";
+    const enforced = isEnforced(comp.locale);
+    const inSync = comp.missingKeys.length === 0;
+    // ✓ ok | ✗ reprova o CI | · gap conhecido, nao exigido neste fork
+    const status = inSync ? "✓" : enforced ? "✗" : "·";
     const missingStr = comp.missingKeys.length > 0 ? ` — ${fmt(comp.missingKeys.length)} missing` : "";
     const staleStr = comp.staleKeys.length > 0 ? `, ${fmt(comp.staleKeys.length)} stale` : "";
+    const notEnforcedStr = !inSync && !enforced ? " (nao exigido neste fork)" : "";
     console.log(
-      `  ${status} ${comp.locale.padEnd(10)} ${fmt(comp.totalKeys)} keys (${comp.coverage.toFixed(1)}%)${missingStr}${staleStr}`
+      `  ${status} ${comp.locale.padEnd(10)} ${fmt(comp.totalKeys)} keys (${comp.coverage.toFixed(1)}%)${missingStr}${staleStr}${notEnforcedStr}`
     );
-    if (comp.missingKeys.length > 0) {
+    if (comp.missingKeys.length > 0 && enforced) {
       hasFailure = true;
     }
   }
@@ -193,7 +213,7 @@ function main() {
   }
 
   // Missing keys detail
-  const withMissing = comparisons.filter((c) => c.missingKeys.length > 0);
+  const withMissing = comparisons.filter((c) => c.missingKeys.length > 0 && isEnforced(c.locale));
   if (withMissing.length > 0) {
     console.log("\n--- Missing Keys Detail ---\n");
     for (const comp of withMissing) {
@@ -210,7 +230,7 @@ function main() {
   }
 
   // Stale keys detail
-  const withStale = comparisons.filter((c) => c.staleKeys.length > 0);
+  const withStale = comparisons.filter((c) => c.staleKeys.length > 0 && isEnforced(c.locale));
   if (withStale.length > 0) {
     console.log("--- Stale Keys Detail ---\n");
     for (const comp of withStale) {
@@ -233,7 +253,11 @@ function main() {
   }
 
   if (!hasFailure) {
-    console.log("\nAll locales are in sync with English. No issues found.");
+    console.log(
+      ENFORCED_LOCALES === null
+        ? "\nAll locales are in sync with English. No issues found."
+        : `\nLocales exigidos (${ENFORCED_LOCALES.join(", ")}) em sincronia com o ingles. Nenhum problema bloqueante.`
+    );
   }
 }
 
