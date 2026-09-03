@@ -801,6 +801,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "parent_id",
             "parent_chain",
             "cycle_id",
+            "client_id",
             "module_ids",
             "label_ids",
             "assignee_ids",
@@ -869,6 +870,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             # Computed fields
             "is_blocked": bool(getattr(instance, "is_blocked", False)),
             "cycle_id": instance.cycle_id,
+            "client_id": instance.client_id,
             "module_ids": self.get_module_ids(instance),
             "label_ids": self.get_label_ids(instance),
             "assignee_ids": self.get_assignee_ids(instance),

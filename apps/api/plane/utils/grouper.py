@@ -11,6 +11,7 @@ from django.db.models.functions import Coalesce
 
 # Module imports
 from plane.db.models import (
+    Client,
     Cycle,
     Issue,
     Label,
@@ -123,6 +124,7 @@ def issue_on_results(
         "project_id",
         "parent_id",
         "cycle_id",
+        "client_id",
         "sub_issues_count",
         "created_at",
         "updated_at",
@@ -345,6 +347,10 @@ def issue_group_values(
         queryset = Cycle.objects.filter(workspace__slug=slug).values_list("id", flat=True)
         if project_id:
             return list(queryset.filter(project_id=project_id)) + ["None"]
+        return list(queryset) + ["None"]
+
+    if field == "client_id":
+        queryset = Client.objects.filter(workspace__slug=slug, is_active=True).values_list("id", flat=True)
         return list(queryset) + ["None"]
 
     if field == "project_id":
