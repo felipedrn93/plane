@@ -150,6 +150,7 @@ export interface IIssueFilterOptions {
   subscriber?: string[] | null;
   target_date?: string[] | null;
   issue_type?: string[] | null;
+  client?: string[] | null;
 }
 
 export interface IIssueDisplayFilterOptions {
@@ -183,6 +184,7 @@ export interface IIssueDisplayProperties {
   cycle?: boolean;
   issue_type?: boolean;
   parent_breadcrumb?: boolean;
+  client?: boolean;
 }
 
 export type TIssueDisplayPropertiesOrder = (keyof IIssueDisplayProperties)[];
