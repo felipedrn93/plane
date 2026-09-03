@@ -2,7 +2,7 @@
 
 **Data:** 2026-05-28
 **Autor:** felipedrn93
-**Branch:** preview (commit `54f3cc418`)
+**Branch:** main (commit `54f3cc418`)
 **Plano:** [/Users/felip/.claude/plans/este-um-fork-nifty-parrot.md](../../../../.claude/plans/este-um-fork-nifty-parrot.md)
 
 ## Contexto
@@ -87,12 +87,12 @@ class PushSubscription(BaseModel):
 
 ## Endpoints
 
-| Verbo | URL | Permissão | Body | Status |
-|-------|-----|-----------|------|--------|
-| GET | `/api/users/me/push-subscriptions/vapid-key/` | autenticado | — | `{public_key: "..."}` |
-| GET | `/api/users/me/push-subscriptions/` | autenticado | — | lista subs do user |
-| POST | `/api/users/me/push-subscriptions/` | autenticado | `{endpoint, keys:{p256dh,auth}, user_agent?}` | `201` (update_or_create por endpoint) |
-| DELETE | `/api/users/me/push-subscriptions/` | autenticado | `{endpoint}` (também aceita `?endpoint=`) | `204` |
+| Verbo  | URL                                           | Permissão   | Body                                          | Status                                |
+| ------ | --------------------------------------------- | ----------- | --------------------------------------------- | ------------------------------------- |
+| GET    | `/api/users/me/push-subscriptions/vapid-key/` | autenticado | —                                             | `{public_key: "..."}`                 |
+| GET    | `/api/users/me/push-subscriptions/`           | autenticado | —                                             | lista subs do user                    |
+| POST   | `/api/users/me/push-subscriptions/`           | autenticado | `{endpoint, keys:{p256dh,auth}, user_agent?}` | `201` (update_or_create por endpoint) |
+| DELETE | `/api/users/me/push-subscriptions/`           | autenticado | `{endpoint}` (também aceita `?endpoint=`)     | `204`                                 |
 
 ## Fluxo end-to-end
 

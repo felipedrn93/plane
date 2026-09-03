@@ -2,7 +2,7 @@
 
 **Data:** 2026-07-09
 **Autor:** felipedrn93
-**Branch:** preview
+**Branch:** main
 **Plano:** [/Users/felip/.claude/plans/atualmente-ao-anexar-um-adaptive-journal.md](../../../../.claude/plans/atualmente-ao-anexar-um-adaptive-journal.md)
 
 ## Contexto

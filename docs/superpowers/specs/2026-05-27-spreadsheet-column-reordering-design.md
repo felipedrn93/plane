@@ -1,7 +1,7 @@
 # Spreadsheet Column Reordering — Design Spec
 
 **Data:** 2026-05-27
-**Autor:** Felipe (fork felipedrn93/plane @ branch preview)
+**Autor:** Felipe (fork felipedrn93/plane @ branch main (à época `preview`))
 **Status:** Aprovado para implementação
 
 ## Resumo
@@ -15,12 +15,14 @@ Hoje a ordem das colunas da Spreadsheet vem de uma constante hardcoded (`SPREADS
 ## Escopo
 
 **Dentro:**
+
 - Spreadsheet view em todos os contextos: project, cycle, module, workspace, project view custom.
 - Drag-and-drop no cabeçalho de coluna.
 - Persistência backend por usuário e por contexto.
 - Coluna sticky de título (Title) permanece como primeira, não-reordenável.
 
 **Fora (explícito):**
+
 - List view, Kanban, Gantt, Calendar.
 - Spreadsheets de profile, archived, workspace-draft.
 - Reordenar a coluna sticky de Title.
@@ -47,13 +49,13 @@ display_properties_order = models.JSONField(default=list)
 
 Models afetados:
 
-| Model | Arquivo | Cobre |
-|---|---|---|
-| `ProjectUserProperty` | `apps/api/plane/db/models/project.py` | spreadsheet de projeto |
-| `CycleUserProperties` | `apps/api/plane/db/models/cycle.py` | spreadsheet de cycle |
-| `ModuleUserProperties` | `apps/api/plane/db/models/module.py` | spreadsheet de module |
-| `WorkspaceUserProperties` | `apps/api/plane/db/models/workspace.py` | spreadsheet workspace-level |
-| **`IssueViewUserProperty` (NOVA tabela)** | `apps/api/plane/db/models/view.py` | spreadsheets de Views custom — per-user (o `IssueView.display_properties` atual é compartilhado entre usuários; criamos tabela separada para a ordem per-user) |
+| Model                                     | Arquivo                                 | Cobre                                                                                                                                                          |
+| ----------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ProjectUserProperty`                     | `apps/api/plane/db/models/project.py`   | spreadsheet de projeto                                                                                                                                         |
+| `CycleUserProperties`                     | `apps/api/plane/db/models/cycle.py`     | spreadsheet de cycle                                                                                                                                           |
+| `ModuleUserProperties`                    | `apps/api/plane/db/models/module.py`    | spreadsheet de module                                                                                                                                          |
+| `WorkspaceUserProperties`                 | `apps/api/plane/db/models/workspace.py` | spreadsheet workspace-level                                                                                                                                    |
+| **`IssueViewUserProperty` (NOVA tabela)** | `apps/api/plane/db/models/view.py`      | spreadsheets de Views custom — per-user (o `IssueView.display_properties` atual é compartilhado entre usuários; criamos tabela separada para a ordem per-user) |
 
 **Nova model `IssueViewUserProperty`** (em `apps/api/plane/db/models/view.py`):
 
@@ -78,6 +80,7 @@ class IssueViewUserProperty(WorkspaceBaseModel):
 ```
 
 **Migrations:** uma migration única `0XXX_add_display_properties_order.py` que:
+
 - Adiciona campo `display_properties_order` em `ProjectUserProperty`, `CycleUserProperties`, `ModuleUserProperties`, `WorkspaceUserProperties` (default `[]`, `null=False`).
 - Cria nova tabela `IssueViewUserProperty` com schema acima.
 - Sem data migration (registros antigos ficam com `[]` → comportamento idêntico ao atual).
@@ -85,6 +88,7 @@ class IssueViewUserProperty(WorkspaceBaseModel):
 **Serializers:** adicionar `display_properties_order` no `Meta.fields` (ou explicitamente nos `read_only_fields`/payload dos endpoints `*UserProperty`).
 
 **Semântica do campo:**
+
 - `[]` → frontend usa `SPREADSHEET_PROPERTY_LIST` na ordem default.
 - `["priority","assignee","state"]` → renderiza nessa ordem; chaves do default ausentes são anexadas no fim na ordem default.
 - Backend não valida conteúdo. Frontend filtra chaves inválidas e remove duplicatas.
@@ -99,7 +103,7 @@ export type TIssueDisplayPropertiesOrder = (keyof IIssueDisplayProperties)[];
 export interface IIssueFilters {
   // ... existentes
   displayProperties: IIssueDisplayProperties;
-  displayPropertiesOrder: TIssueDisplayPropertiesOrder;  // novo
+  displayPropertiesOrder: TIssueDisplayPropertiesOrder; // novo
 }
 ```
 
@@ -110,7 +114,7 @@ export enum EIssueFilterType {
   FILTERS = "filters",
   DISPLAY_FILTERS = "display_filters",
   DISPLAY_PROPERTIES = "display_properties",
-  DISPLAY_PROPERTIES_ORDER = "display_properties_order",  // novo
+  DISPLAY_PROPERTIES_ORDER = "display_properties_order", // novo
   KANBAN_FILTERS = "kanban_filters",
 }
 ```
@@ -148,6 +152,7 @@ computedDisplayPropertiesOrder(savedOrder?: unknown): TIssueDisplayPropertiesOrd
 ```
 
 Garante:
+
 - `[]` → default puro
 - chaves inválidas filtradas
 - duplicatas removidas
@@ -223,6 +228,7 @@ const spreadsheetColumnsList = isWorkspaceLevel
 Continua iterando `spreadsheetColumnsList` no map. Cada `<SpreadsheetHeaderColumn>` se torna draggable/dropTarget via novo wrapper. A coluna sticky de seleção/título NÃO é draggable.
 
 **`SpreadsheetHeaderColumn`** ganha:
+
 - `useRef` no `<th>` e botão drag handle no `<HeaderColumn>` (ou no próprio `<th>`).
 - `useEffect` que chama `combine(draggable({...}), dropTargetForElements({...}))` igual ao pattern de `LabelDndHOC`.
 - `getInitialData` retorna `{ propertyKey, index }`.
@@ -240,12 +246,7 @@ function handleColumnReorder(from: number, to: number) {
   const [moved] = newOrder.splice(from, 1);
   newOrder.splice(to, 0, moved);
   // O store sanitiza e dispara o PATCH (optimistic + rollback no catch)
-  issuesFilter.updateFilters(
-    workspaceSlug,
-    contextId,
-    EIssueFilterType.DISPLAY_PROPERTIES_ORDER,
-    newOrder
-  );
+  issuesFilter.updateFilters(workspaceSlug, contextId, EIssueFilterType.DISPLAY_PROPERTIES_ORDER, newOrder);
 }
 ```
 
@@ -283,16 +284,16 @@ MobX reativo → SpreadsheetView re-renderiza
 
 ## Casos de borda
 
-| Caso | Comportamento |
-|---|---|
-| Usuário nunca reordenou (`[]` no banco) | `computedDisplayPropertiesOrder([])` retorna `SPREADSHEET_PROPERTY_LIST` puro |
-| Nova propriedade adicionada ao Plane após o save | Aparece no fim, na posição definida em `SPREADSHEET_PROPERTY_LIST` |
-| Propriedade removida do Plane | Filtrada fora pelo helper; nunca renderiza chave inexistente |
-| Optimistic update falha (rede/permissão) | `catch` chama `fetchFilters` que repuxa do servidor → UI volta ao estado real |
-| Cycle/module sem `cycle_view`/`module_view` no projeto | Filtro de hoje (`spreadsheet-view.tsx` linhas 72–78) aplicado APÓS a ordem |
-| Duas abas reordenando simultaneamente | Last-write-wins (igual `display_properties` atual). Sem locking. |
-| View custom criada nova (sem registro de user properties ainda) | Backend retorna `[]` → cai no caso default |
-| Resposta da API vem com `display_properties_order` corrompido (tipo errado) | `computedDisplayPropertiesOrder` retorna default sem quebrar |
+| Caso                                                                        | Comportamento                                                                 |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Usuário nunca reordenou (`[]` no banco)                                     | `computedDisplayPropertiesOrder([])` retorna `SPREADSHEET_PROPERTY_LIST` puro |
+| Nova propriedade adicionada ao Plane após o save                            | Aparece no fim, na posição definida em `SPREADSHEET_PROPERTY_LIST`            |
+| Propriedade removida do Plane                                               | Filtrada fora pelo helper; nunca renderiza chave inexistente                  |
+| Optimistic update falha (rede/permissão)                                    | `catch` chama `fetchFilters` que repuxa do servidor → UI volta ao estado real |
+| Cycle/module sem `cycle_view`/`module_view` no projeto                      | Filtro de hoje (`spreadsheet-view.tsx` linhas 72–78) aplicado APÓS a ordem    |
+| Duas abas reordenando simultaneamente                                       | Last-write-wins (igual `display_properties` atual). Sem locking.              |
+| View custom criada nova (sem registro de user properties ainda)             | Backend retorna `[]` → cai no caso default                                    |
+| Resposta da API vem com `display_properties_order` corrompido (tipo errado) | `computedDisplayPropertiesOrder` retorna default sem quebrar                  |
 
 ## Endpoints
 

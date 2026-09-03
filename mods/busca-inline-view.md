@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-02
 **Autor:** felipedrn93
-**Branch:** preview
+**Branch:** main
 
 ## Contexto
 
@@ -44,10 +44,10 @@ projeto, views customizadas, ciclos e módulos). A busca casa por três critéri
 6. **Escopo flexível**: o helper aceita `project_id` (projeto/ciclo/módulo/view de projeto) **ou**
    `workspace_slug` com `project_id=None` (Visualizações **globais de workspace**, cross-project).
    O `id__in` sempre intersecta com o queryset já escopado/permissionado, então o resultado é correto.
-5. **Componente agnóstico de store**: `WorkItemSearch` depende só de uma interface estrutural
+7. **Componente agnóstico de store**: `WorkItemSearch` depende só de uma interface estrutural
    mínima (`getSearchQuery` + `updateSearchQuery`), satisfeita pelos quatro filter stores. Um
    único componente cobre as quatro telas.
-6. **Debounce de 300ms** (hook `useDebounce` já existente) antes de disparar o re-fetch.
+8. **Debounce de 300ms** (hook `useDebounce` já existente) antes de disparar o re-fetch.
 
 ## Esquema do parâmetro
 
@@ -99,7 +99,7 @@ Backend devolve a listagem normal, já reduzida ao conjunto que casa.
 
 - `apps/web/core/store/issue/helpers/issue-filter-helper.store.ts`
   - Base `IssueFilterHelperStore`: observable `searchQuery: Record<string,string>` + `getSearchQuery`
-    + `setSearchQuery` (compartilhados pelos quatro stores concretos).
+    - `setSearchQuery` (compartilhados pelos quatro stores concretos).
   - `computedFilteredParams` ganha 4º arg opcional `searchQuery`; se presente, seta
     `issueFiltersParams.search_text` **incondicionalmente** (igual a `filters`/`layout` — bypassa a
     whitelist `acceptableParamsByLayout`, então nenhum `handleIssueQueryParamsByLayout` muda).
@@ -151,6 +151,7 @@ python manage.py shell --settings=plane.settings.local
 ```
 
 Com a cadeia `A (raiz) → Y (parent=A) → X (parent=Y)`:
+
 - `search_issue_ids_by_text(pid, "A")` deve incluir `A`, `Y`, `X` (descendentes de A).
 - `search_issue_ids_by_text(pid, "X")` deve incluir só `X`.
 - Buscar o identificador `PROJ-<seq de A>` deve incluir A e descendentes.
@@ -187,7 +188,7 @@ pnpm --filter web dev
   recebe `workspace_slug` (seed escopado por workspace); como `parent_id` nunca cruza projetos, o
   walk-down de descendentes permanece dentro do projeto de cada match.
 - **Cycle/module: assinatura do refetch difere** — `fetchIssuesWithExistingPagination(slug,
-  projectId, "mutation", cycleId/moduleId)` (loadType antes do id), enquanto project é
+projectId, "mutation", cycleId/moduleId)` (loadType antes do id), enquanto project é
   `(slug, projectId, "mutation")` e project-view é `(slug, projectId, viewId, "mutation")`. Cada
   `updateSearchQuery` encapsula a sua.
 

@@ -10,7 +10,7 @@ Generate a pull request description based on the project's PR template at `.gith
 
 ## Steps
 
-1. **Determine the base branch**: Prefer the PR's actual `baseRefName` (via `gh pr view <PR> --json baseRefName`) when a PR exists. Otherwise default by intent — feature PRs target `preview`, release PRs target `master`. If still ambiguous, ask the user.
+1. **Determine the base branch**: Prefer the PR's actual `baseRefName` (via `gh pr view <PR> --json baseRefName`) when a PR exists. Otherwise default by intent — feature PRs target `main`, release PRs target `master`. If still ambiguous, ask the user.
 
 2. **Analyze changes**: Run the following to understand what changed:
    - `git log <base>...HEAD --oneline` to see all commits on this branch

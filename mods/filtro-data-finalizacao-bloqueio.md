@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-02
 **Autor:** felipedrn93
-**Branch:** preview
+**Branch:** main
 
 ## Contexto
 
@@ -58,14 +58,17 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
 ## Arquivos modificados
 
 ### Backend (`apps/api`)
+
 - `plane/utils/filters/filterset.py` — `IssueFilterSet`: `completed_at` em `Meta.fields`;
   `is_blocked` (`BooleanFilter`, `distinct=True`) + método `filter_is_blocked`.
 
 ### Tipos (`packages/types`)
+
 - `src/view-props.ts` — `WORK_ITEM_FILTER_PROPERTY_KEYS` += `completed_at`, `is_blocked`;
   `TIssueOrderByOptions` += `completed_at`/`-completed_at`; `IIssueDisplayProperties` += `completed_on`.
 
 ### Constantes (`packages/constants`)
+
 - `src/issue/common.ts` — `ISSUE_ORDER_BY_OPTIONS` (+`-completed_at`); `ISSUE_DISPLAY_PROPERTIES_KEYS`,
   `SPREADSHEET_PROPERTY_LIST`, `SPREADSHEET_PROPERTY_DETAILS` (+`completed_on`); `ISSUE_DISPLAY_PROPERTIES`
   (+`completed_on` → botão de toggle no menu **Exibir → Propriedades**, ao lado de start/due date).
@@ -73,12 +76,14 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
   e `-completed_at` nos `order_by` das páginas `issues`/`archived_issues`/`my_issues`/`profile_issues`.
 
 ### Utils (`packages/utils`)
+
 - `src/work-item-filters/configs/filters/date.ts` — `getCompletedAtFilterConfig`.
 - `src/work-item-filters/configs/filters/blocked.ts` — **novo**, `getBlockedFilterConfig` (single-select).
 - `src/work-item-filters/configs/filters/index.ts` — export do `blocked`.
 - `src/work-item/base.ts` — `getComputedDisplayProperties`: default `completed_on ?? true`.
 
 ### Web (`apps/web`)
+
 - `ce/hooks/work-item-filters/use-work-item-filters-config.tsx` — memos `completedAtFilterConfig`
   (sempre habilitado, como as datas) e `blockedFilterConfig` (gated por `isFilterEnabled`); inclusão
   em `configs[]` e `configMap`.
@@ -88,6 +93,7 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
   `SPREADSHEET_COLUMNS`.
 
 ### i18n (`packages/i18n`)
+
 - `src/locales/<lang>/common.json` (19 idiomas) — `common.order_by.completed_date` e
   `common.sort.completed_on` (inglês como placeholder; `pt-BR` traduzido).
 
@@ -121,13 +127,16 @@ propriedades foram registradas. A ordenação usa o param `order_by` → `order_
 ## Atualização (2026-06-02): data de finalização nos demais layouts + tag [BLOQUEADO]
 
 ### Data de finalização fora da planilha
-Antes `completed_on` só tinha renderizador na planilha. Agora também é exibida como *pill* somente
+
+Antes `completed_on` só tinha renderizador na planilha. Agora também é exibida como _pill_ somente
 leitura (`completed_at` é automático) na linha de propriedades dos cards (list/kanban/calendar/gantt),
 respeitando o toggle do menu **Exibir → Propriedades**.
-- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx` — *pill* `completed_on`
+
+- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx` — _pill_ `completed_on`
   (ícone `CalendarCheck`, `renderFormattedDate(issue.completed_at)`), via `WithDisplayPropertiesHOC`.
 
 ### Tag [BLOQUEADO] (badge vermelho ao lado do ID)
+
 Mostra um badge vermelho **BLOQUEADO** ao lado do identificador da tarefa sempre que há bloqueio ativo.
 Fica ao lado do **ID** (não do nome) porque no kanban o nome trunca e esconderia a marca.
 
@@ -143,10 +152,11 @@ compartilhada com o filtro via `plane.utils.blocked.active_blocked_exists()`.
 workspace.
 
 **Arquivos:**
+
 - `apps/api/plane/utils/blocked.py` — **novo**, `active_blocked_exists()` + `ACTIVE_BLOCKER_STATE_GROUPS`.
 - `apps/api/plane/utils/filters/filterset.py` — `filter_is_blocked` refatorado para usar o helper (DRY).
 - `apps/api/plane/utils/grouper.py` — anota `is_blocked` em `issue_queryset_grouper` e adiciona
-  `"is_blocked"` em `issue_on_results.required_fields` (a *shadow allowlist* do `.values()`).
+  `"is_blocked"` em `issue_on_results.required_fields` (a _shadow allowlist_ do `.values()`).
 - `apps/api/plane/app/views/view/base.py` — `apply_annotations` anota `is_blocked` (views globais).
 - `apps/api/plane/app/serializers/view.py` (`ViewIssueListSerializer`) e
   `apps/api/plane/app/serializers/issue.py` (`IssueListDetailSerializer`) — expõem `is_blocked`

@@ -2,7 +2,7 @@
 
 **Data:** 2026-06-02
 **Autor:** felipedrn93
-**Branch:** preview
+**Branch:** main
 
 ## Contexto
 
@@ -103,7 +103,7 @@ heredoc — **não** usar `python -c`): após o PATCH, conferir que a linha de
 
 ## Deploy (CT 105)
 
-Após merge em `preview`: `git pull` no `/opt/plane`, então
+Após merge em `main`: `git pull` no `/opt/plane`, então
 `docker compose build api web && docker compose up -d api web`. **Sem migração**. `worker`/
 `beat-worker` **não** precisam ser reconstruídos (a mudança é em view, não em task Celery).
 

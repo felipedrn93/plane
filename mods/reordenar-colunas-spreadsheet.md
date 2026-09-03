@@ -2,7 +2,7 @@
 
 **Data:** 2026-05-27
 **Autor:** felipedrn93
-**Branch:** preview (commits `17d7628ef`..`b0a4a3bd4`)
+**Branch:** main (commits `17d7628ef`..`b0a4a3bd4`)
 **Spec / plano:** [docs/superpowers/specs/2026-05-27-spreadsheet-column-reordering-design.md](../docs/superpowers/specs/2026-05-27-spreadsheet-column-reordering-design.md) · [docs/superpowers/plans/2026-05-27-spreadsheet-column-reordering.md](../docs/superpowers/plans/2026-05-27-spreadsheet-column-reordering.md)
 
 ## Contexto
@@ -29,7 +29,23 @@ Esta modificação adiciona drag-and-drop horizontal nos cabeçalhos das colunas
 `display_properties_order`: JSONB, array de strings, default `[]`. Cada string é uma chave de `IIssueDisplayProperties` (subset reordenável):
 
 ```json
-["state", "priority", "parent_breadcrumb", "assignee", "labels", "start_date", "due_date", "estimate", "created_on", "updated_on", "link", "attachment_count", "sub_issue_count", "modules", "cycle"]
+[
+  "state",
+  "priority",
+  "parent_breadcrumb",
+  "assignee",
+  "labels",
+  "start_date",
+  "due_date",
+  "estimate",
+  "created_on",
+  "updated_on",
+  "link",
+  "attachment_count",
+  "sub_issue_count",
+  "modules",
+  "cycle"
+]
 ```
 
 - `[]` (default) → frontend usa ordem de `SPREADSHEET_PROPERTY_LIST` puro.
@@ -145,14 +161,14 @@ MobX → SpreadsheetView re-renderiza com nova ordem (header + cada row)
 
 ## Endpoints
 
-| Verbo | URL | Endpoint class | Body PATCH |
-|-------|-----|----------------|------------|
-| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/user-properties/` | `ProjectUserDisplayPropertyEndpoint` (já existia) | `{display_properties_order: [...]}` |
-| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/cycles/<cid>/user-properties/` | `CycleUserPropertiesEndpoint` (já existia) | idem |
-| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/modules/<mid>/user-properties/` | `ModuleUserPropertiesEndpoint` (já existia) | idem |
-| GET/PATCH | `/api/workspaces/<slug>/user-properties/` | `WorkspaceUserPropertiesEndpoint` (já existia) | idem |
-| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/views/<vid>/user-properties/` | **`IssueViewUserPropertyEndpoint` (novo)** | idem |
-| GET/PATCH | `/api/workspaces/<slug>/views/<vid>/user-properties/` | **`WorkspaceIssueViewUserPropertyEndpoint` (novo)** | idem |
+| Verbo     | URL                                                                    | Endpoint class                                      | Body PATCH                          |
+| --------- | ---------------------------------------------------------------------- | --------------------------------------------------- | ----------------------------------- |
+| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/user-properties/`               | `ProjectUserDisplayPropertyEndpoint` (já existia)   | `{display_properties_order: [...]}` |
+| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/cycles/<cid>/user-properties/`  | `CycleUserPropertiesEndpoint` (já existia)          | idem                                |
+| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/modules/<mid>/user-properties/` | `ModuleUserPropertiesEndpoint` (já existia)         | idem                                |
+| GET/PATCH | `/api/workspaces/<slug>/user-properties/`                              | `WorkspaceUserPropertiesEndpoint` (já existia)      | idem                                |
+| GET/PATCH | `/api/workspaces/<slug>/projects/<pid>/views/<vid>/user-properties/`   | **`IssueViewUserPropertyEndpoint` (novo)**          | idem                                |
+| GET/PATCH | `/api/workspaces/<slug>/views/<vid>/user-properties/`                  | **`WorkspaceIssueViewUserPropertyEndpoint` (novo)** | idem                                |
 
 Os 4 endpoints pré-existentes expõem o campo novo automaticamente porque seus serializers usam `fields = "__all__"`.
 
