@@ -52,10 +52,17 @@ CI: abrir um PR de teste contra `main` e confirmar que copyright-check, i18n-syn
 
 ## Pitfalls
 
-- **CT 105 quebra até ser ajustado.** `/opt/plane` rastreia `origin/preview`, que não existe mais — o próximo `git pull origin preview` falha. Correção no CT:
+- **CT 105 quebra até ser ajustado.** `/opt/plane` é um clone **shallow single-branch**: `remote.origin.fetch` era `+refs/heads/preview:refs/remotes/origin/preview`, então `git fetch` falha com `fatal: couldn't find remote ref refs/heads/preview` — não basta renomear a branch local, é preciso reescrever o refspec. Receita aplicada (2026-09-03):
   ```bash
-  cd /opt/plane && git fetch origin && git branch -m preview main && git branch -u origin/main main
+  cd /opt/plane
+  git config remote.origin.fetch "+refs/heads/main:refs/remotes/origin/main"
+  git fetch origin
+  git branch -m preview main
+  git branch -u origin/main main
+  git update-ref -d refs/remotes/origin/preview
+  git merge --ff-only origin/main
   ```
+  Sem rebuild: o commit só toca docs/CI. Containers seguiram de pé (`curl http://127.0.0.1:8080/api/instances/` → 200).
 - **Clones/worktrees locais antigos** precisam do mesmo tratamento (`git fetch origin --prune` + rename local).
 - **Não confundir com `upstream/preview`**: ao abrir PR para o upstream, a base continua sendo `preview` lá.
 - Referências a "preview" na UI (`preview-card`, hover preview, `feature-preview` Helm/Docker) não têm relação com a branch — não mexer.
