@@ -811,6 +811,8 @@
     "other": "Other"
   },
   "default_global_view": {
+    "assigned_open": "My open work items",
+    "assigned_overdue": "My overdue work items",
     "all_issues": "All work items",
     "assigned": "Assigned",
     "created": "Created",

@@ -811,6 +811,8 @@
     "other": "Outro"
   },
   "default_global_view": {
+    "assigned_open": "Minhas tarefas em aberto",
+    "assigned_overdue": "Minhas tarefas em atraso",
     "all_issues": "Todos os itens de trabalho",
     "assigned": "Atribuído",
     "created": "Criado",

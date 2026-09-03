@@ -7,7 +7,7 @@
 import { orderBy, clone, set } from "lodash-es";
 import { action, computed, makeObservable, observable, runInAction } from "mobx";
 // plane imports
-import type { THomeWidgetKeys, TWidgetEntityData } from "@plane/types";
+import type { THomeWidgetKeys, TWidgetEntityData, TWorkspaceHomeSummary } from "@plane/types";
 // plane web services
 import { WorkspaceService } from "@/services/workspace.service";
 // store
@@ -20,6 +20,7 @@ export interface IHomeStore {
   showWidgetSettings: boolean;
   widgetsMap: Record<string, TWidgetEntityData>;
   widgets: THomeWidgetKeys[];
+  homeSummary: TWorkspaceHomeSummary | undefined;
   // computed
   isAnyWidgetEnabled: boolean;
   orderedWidgets: THomeWidgetKeys[];
@@ -28,6 +29,7 @@ export interface IHomeStore {
   // actions
   toggleWidgetSettings: (value?: boolean) => void;
   fetchWidgets: (workspaceSlug: string) => Promise<void>;
+  fetchHomeSummary: (workspaceSlug: string) => Promise<TWorkspaceHomeSummary>;
   reorderWidget: (
     workspaceSlug: string,
     widgetKey: string,
@@ -43,6 +45,7 @@ export class HomeStore implements IHomeStore {
   loading = false;
   widgetsMap: Record<string, TWidgetEntityData> = {};
   widgets: THomeWidgetKeys[] = [];
+  homeSummary: TWorkspaceHomeSummary | undefined = undefined;
   // stores
   quickLinks: IWorkspaceLinkStore;
   // services
@@ -55,12 +58,14 @@ export class HomeStore implements IHomeStore {
       showWidgetSettings: observable,
       widgetsMap: observable,
       widgets: observable,
+      homeSummary: observable.ref,
       // computed
       isAnyWidgetEnabled: computed,
       orderedWidgets: computed,
       // actions
       toggleWidgetSettings: action,
       fetchWidgets: action,
+      fetchHomeSummary: action,
       reorderWidget: action,
       toggleWidget: action,
     });
@@ -97,6 +102,19 @@ export class HomeStore implements IHomeStore {
     } catch (error) {
       console.error("Failed to fetch widgets");
       this.loading = false;
+      throw error;
+    }
+  };
+
+  fetchHomeSummary = async (workspaceSlug: string): Promise<TWorkspaceHomeSummary> => {
+    try {
+      const summary = await this.workspaceService.fetchHomeSummary(workspaceSlug);
+      runInAction(() => {
+        this.homeSummary = summary;
+      });
+      return summary;
+    } catch (error) {
+      console.error("Failed to fetch the workspace home summary", error);
       throw error;
     }
   };

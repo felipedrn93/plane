@@ -175,28 +175,28 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
       sub_group_by: [],
     };
 
-    const _filters = this.handleIssuesLocalFilters.get(EIssuesStoreType.GLOBAL, workspaceSlug, undefined, viewId);
-    displayFilters = this.computedDisplayFilters(_filters?.display_filters, {
+    const localFilters = this.handleIssuesLocalFilters.get(EIssuesStoreType.GLOBAL, workspaceSlug, undefined, viewId);
+    displayFilters = this.computedDisplayFilters(localFilters?.display_filters, {
       layout: EIssueLayoutTypes.SPREADSHEET,
       order_by: "-created_at",
     });
-    displayProperties = this.computedDisplayProperties(_filters?.display_properties);
-    displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
+    displayProperties = this.computedDisplayProperties(localFilters?.display_properties);
+    displayPropertiesOrder = this.computedDisplayPropertiesOrder(localFilters?.display_properties_order);
     kanbanFilters = {
-      group_by: _filters?.kanban_filters?.group_by || [],
-      sub_group_by: _filters?.kanban_filters?.sub_group_by || [],
+      group_by: localFilters?.kanban_filters?.group_by || [],
+      sub_group_by: localFilters?.kanban_filters?.sub_group_by || [],
     };
 
     // Get the view details if the view is not a static view
     if (STATIC_VIEW_TYPES.includes(viewId) === false) {
-      const _filters = await this.issueFilterService.getViewDetails(workspaceSlug, viewId);
-      richFilters = _filters?.rich_filters;
-      displayFilters = this.computedDisplayFilters(_filters?.display_filters, {
+      const viewFilters = await this.issueFilterService.getViewDetails(workspaceSlug, viewId);
+      richFilters = viewFilters?.rich_filters;
+      displayFilters = this.computedDisplayFilters(viewFilters?.display_filters, {
         layout: EIssueLayoutTypes.SPREADSHEET,
         order_by: "-created_at",
       });
-      displayProperties = this.computedDisplayProperties(_filters?.display_properties);
-      displayPropertiesOrder = this.computedDisplayPropertiesOrder(_filters?.display_properties_order);
+      displayProperties = this.computedDisplayProperties(viewFilters?.display_properties);
+      displayPropertiesOrder = this.computedDisplayPropertiesOrder(viewFilters?.display_properties_order);
     }
 
     // override existing order by if ordered by manual sort_order
@@ -281,7 +281,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
 
           this.rootIssueStore.workspaceIssues.fetchIssuesWithExistingPagination(workspaceSlug, viewId, "mutation");
 
-          if (["all-issues", "assigned", "created", "subscribed"].includes(viewId))
+          if (STATIC_VIEW_TYPES.includes(viewId))
             this.handleIssuesLocalFilters.set(EIssuesStoreType.GLOBAL, type, workspaceSlug, undefined, viewId, {
               display_filters: _filters.displayFilters,
             });
@@ -299,7 +299,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
                 updatedDisplayProperties[_key as keyof IIssueDisplayProperties]
               );
             });
-            if (["all-issues", "assigned", "created", "subscribed"].includes(viewId))
+            if (STATIC_VIEW_TYPES.includes(viewId))
               this.handleIssuesLocalFilters.set(EIssuesStoreType.GLOBAL, type, workspaceSlug, undefined, viewId, {
                 display_properties: _filters.displayProperties,
               });
@@ -312,7 +312,7 @@ export class WorkspaceIssuesFilter extends IssueFilterHelperStore implements IWo
 
           runInAction(() => {
             set(this.filters, [viewId, "displayPropertiesOrder"], newOrder);
-            if (["all-issues", "assigned", "created", "subscribed"].includes(viewId))
+            if (STATIC_VIEW_TYPES.includes(viewId))
               this.handleIssuesLocalFilters.set(EIssuesStoreType.GLOBAL, type, workspaceSlug, undefined, viewId, {
                 display_properties_order: newOrder,
               });

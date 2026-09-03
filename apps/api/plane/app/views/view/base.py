@@ -24,6 +24,11 @@ from rest_framework.response import Response
 
 # Module imports
 from plane.app.permissions import allow_permission, ROLE
+from plane.app.views.workspace.home_summary import (
+    HOME_ASSIGNMENT_SCOPES,
+    filter_home_assignment_scope,
+    workspace_issue_permission_filters,
+)
 from plane.app.serializers import (
     IssueViewSerializer,
     IssueViewUserPropertySerializer,
@@ -151,22 +156,7 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         Get common project permission filters for guest users and role-based access control.
         Returns Q object for filtering issues based on user role and project settings.
         """
-        return Q(
-            Q(
-                project__project_projectmember__role=5,
-                project__guest_view_all_features=True,
-            )
-            | Q(
-                project__project_projectmember__role=5,
-                project__guest_view_all_features=False,
-                created_by=self.request.user,
-            )
-            |
-            # For other roles (role > 5), show all issues
-            Q(project__project_projectmember__role__gt=5),
-            project__project_projectmember__member=self.request.user,
-            project__project_projectmember__is_active=True,
-        )
+        return workspace_issue_permission_filters(self.request.user)
 
     def apply_annotations(self, issues):
         return (
@@ -233,6 +223,11 @@ class WorkspaceViewIssuesViewSet(BaseViewSet):
         # Apply legacy filters
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = issue_queryset.filter(**filters)
+
+        # Fork-only fixed views opened from the home summary cards.
+        home_assignment_scope = request.GET.get("home_assignment_scope")
+        if home_assignment_scope in HOME_ASSIGNMENT_SCOPES:
+            issue_queryset = filter_home_assignment_scope(issue_queryset, request.user, home_assignment_scope)
 
         # Apply inline search (name / identifier / parent path) — workspace-scoped
         # because global views are cross-project. See mods/busca-inline-view.md

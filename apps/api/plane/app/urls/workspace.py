@@ -34,6 +34,7 @@ from plane.app.views import (
     QuickLinkViewSet,
     UserRecentVisitViewSet,
     WorkspaceHomePreferenceViewSet,
+    WorkspaceHomeSummaryEndpoint,
     WorkspaceStickyViewSet,
     WorkspaceUserPreferenceViewSet,
 )
@@ -61,6 +62,11 @@ urlpatterns = [
             }
         ),
         name="workspace",
+    ),
+    path(
+        "workspaces/<str:slug>/home-summary/",
+        WorkspaceHomeSummaryEndpoint.as_view(),
+        name="workspace-home-summary",
     ),
     path(
         "workspaces/<str:slug>/invitations/",

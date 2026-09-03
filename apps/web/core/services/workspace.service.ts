@@ -26,6 +26,7 @@ import type {
   IWorkspaceSidebarNavigationItem,
   IWorkspaceSidebarNavigation,
   IWorkspaceUserPropertiesResponse,
+  TWorkspaceHomeSummary,
 } from "@plane/types";
 // services
 import { APIService } from "@/services/api.service";
@@ -48,6 +49,14 @@ export class WorkspaceService extends APIService {
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response;
+      });
+  }
+
+  async fetchHomeSummary(workspaceSlug: string): Promise<TWorkspaceHomeSummary> {
+    return this.get(`/api/workspaces/${workspaceSlug}/home-summary/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
       });
   }
 

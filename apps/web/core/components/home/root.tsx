@@ -17,6 +17,7 @@ import { HomePeekOverviewsRoot } from "@/plane-web/components/home";
 import { TourRoot } from "@/plane-web/components/onboarding/tour/root";
 // local imports
 import { DashboardWidgets } from "./home-dashboard-widgets";
+import { HomeSummaryCards } from "./summary-cards";
 import { UserGreetingsView } from "./user-greetings";
 
 export const WorkspaceHomeView = observer(function WorkspaceHomeView() {
@@ -57,6 +58,7 @@ export const WorkspaceHomeView = observer(function WorkspaceHomeView() {
         <ContentWrapper className="mx-auto scrollbar-hide gap-6 bg-surface-1 px-page-x">
           <div className="mx-auto w-full max-w-[800px]">
             {currentUser && <UserGreetingsView user={currentUser} />}
+            {workspaceSlug && <HomeSummaryCards workspaceSlug={workspaceSlug.toString()} />}
             <DashboardWidgets />
           </div>
         </ContentWrapper>

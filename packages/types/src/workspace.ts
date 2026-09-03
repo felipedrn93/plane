@@ -42,6 +42,11 @@ export interface IWorkspaceLite {
   slug: string;
 }
 
+export type TWorkspaceHomeSummary = {
+  assigned_open_count: number;
+  assigned_overdue_count: number;
+};
+
 export interface IWorkspaceMemberInvitation {
   accepted: boolean;
   email: string;

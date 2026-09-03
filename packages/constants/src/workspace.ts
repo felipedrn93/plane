@@ -181,6 +181,14 @@ export const DEFAULT_GLOBAL_VIEWS_LIST: {
     i18n_label: "default_global_view.assigned",
   },
   {
+    key: "assigned-open",
+    i18n_label: "default_global_view.assigned_open",
+  },
+  {
+    key: "assigned-overdue",
+    i18n_label: "default_global_view.assigned_overdue",
+  },
+  {
     key: "created",
     i18n_label: "default_global_view.created",
   },

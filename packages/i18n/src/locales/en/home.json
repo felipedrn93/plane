@@ -37,6 +37,12 @@
       "title": "Quicklink",
       "title_plural": "Quicklinks"
     },
+    "summary": {
+      "title": "Your work summary",
+      "assigned_open": "Open work items assigned to me",
+      "assigned_overdue": "Overdue work items assigned to me",
+      "unread_mentions": "Unread mentions"
+    },
     "recents": {
       "title": "Recents",
       "empty": {

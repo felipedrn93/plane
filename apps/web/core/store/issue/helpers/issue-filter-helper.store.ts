@@ -81,8 +81,6 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
    */
   searchQuery: Record<string, string> = {};
 
-  constructor() {}
-
   /** Current inline-search query for an entity ("" when none). */
   getSearchQuery = (entityId: string): string => this.searchQuery[entityId] ?? "";
 
@@ -192,6 +190,11 @@ export class IssueFilterHelperStore implements IIssueFilterHelperStore {
       case "assigned":
         return {
           assignees: currentUserId,
+        };
+      case "assigned-open":
+      case "assigned-overdue":
+        return {
+          home_assignment_scope: type,
         };
       case "created":
         return {

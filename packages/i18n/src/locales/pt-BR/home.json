@@ -37,6 +37,12 @@
       "title": "Link rápido",
       "title_plural": "Links rápidos"
     },
+    "summary": {
+      "title": "Resumo do seu trabalho",
+      "assigned_open": "Tarefas em aberto sob minha responsabilidade",
+      "assigned_overdue": "Tarefas em atraso sob minha responsabilidade",
+      "unread_mentions": "Menções não lidas"
+    },
     "recents": {
       "title": "Recentes",
       "empty": {

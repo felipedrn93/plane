@@ -6,4 +6,5 @@
 
 export * from "./widgets";
 export * from "./home-dashboard-widgets";
+export * from "./summary-cards";
 export * from "./root";
