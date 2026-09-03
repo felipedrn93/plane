@@ -425,6 +425,21 @@ def filter_logged_by(params, issue_filter, method, prefix=""):
     return issue_filter
 
 
+def filter_client(params, issue_filter, method, prefix=""):
+    if method == "GET":
+        clients = [item for item in params.get("client").split(",") if item != "null"]
+        if "None" in clients:
+            issue_filter[f"{prefix}client_id__isnull"] = True
+            clients = [item for item in clients if item != "None"]
+        clients = filter_valid_uuids(clients)
+        if len(clients) and "" not in clients:
+            issue_filter[f"{prefix}client_id__in"] = clients
+    else:
+        if params.get("client", None) and len(params.get("client")) and params.get("client") != "null":
+            issue_filter[f"{prefix}client_id__in"] = params.get("client")
+    return issue_filter
+
+
 def issue_filters(query_params, method, prefix=""):
     issue_filter = {}
 
@@ -449,6 +464,7 @@ def issue_filters(query_params, method, prefix=""):
         "project": filter_project,
         "cycle": filter_cycle,
         "module": filter_module,
+        "client": filter_client,
         "intake_status": filter_intake_status,
         "inbox_status": filter_inbox_status,
         "sub_issue": filter_sub_issue_toggle,
