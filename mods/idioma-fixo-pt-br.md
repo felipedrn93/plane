@@ -55,7 +55,9 @@ Na UI, após o deploy:
 No backend:
 
 ```bash
-docker compose exec api python manage.py migrate     # aplica a 0126
+# a migracao NAO sobe com o api: quem aplica e o servico one-shot `migrator`,
+# que e uma imagem separada e precisa ser rebuildada junto
+docker compose build api migrator && docker compose up migrator
 docker compose exec -T api python manage.py shell <<'EOF'
 from plane.db.models import Profile
 print(Profile.objects.exclude(language="pt-BR").count())   # esperado: 0
