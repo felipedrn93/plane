@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+from .client import ClientCompanyViewSet, ClientViewSet
+
 from .project.base import (
     ProjectViewSet,
     ProjectIdentifierEndpoint,
