@@ -20,3 +20,4 @@ export * from "./updated-on-column";
 export * from "./module-column";
 export * from "./cycle-column";
 export * from "./parent-breadcrumb-column";
+export * from "./client-column";

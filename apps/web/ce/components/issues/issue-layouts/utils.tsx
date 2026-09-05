@@ -5,7 +5,7 @@
  */
 
 import type { FC } from "react";
-import { CalendarDays, LayersIcon, ListTree, Paperclip } from "lucide-react";
+import { Building2, CalendarDays, LayersIcon, ListTree, Paperclip } from "lucide-react";
 // types
 import { ISSUE_GROUP_BY_OPTIONS } from "@plane/constants";
 import type { ISvgIcons } from "@plane/propel/icons";
@@ -31,6 +31,7 @@ import type {
 // components
 import {
   SpreadsheetAssigneeColumn,
+  SpreadsheetClientColumn,
   SpreadsheetAttachmentColumn,
   SpreadsheetCompletedOnColumn,
   SpreadsheetCreatedOnColumn,
@@ -95,6 +96,7 @@ export const SpreadSheetPropertyIconMap: Record<string, FC<ISvgIcons>> = {
   Paperclip: Paperclip,
   LayersIcon: LayersIcon,
   ParentBreadcrumbIcon: ListTree as unknown as FC<ISvgIcons>,
+  ClientIcon: Building2 as unknown as FC<ISvgIcons>,
 };
 
 export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpreadsheetColumn } = {
@@ -106,6 +108,7 @@ export const SPREADSHEET_COLUMNS: { [key in keyof IIssueDisplayProperties]: TSpr
   labels: SpreadsheetLabelColumn,
   modules: SpreadsheetModuleColumn,
   cycle: SpreadsheetCycleColumn,
+  client: SpreadsheetClientColumn,
   link: SpreadsheetLinkColumn,
   parent_breadcrumb: SpreadsheetParentBreadcrumbColumn,
   priority: SpreadsheetPriorityColumn,

@@ -33,9 +33,10 @@ export enum EIssueGroupByToServerOptions {
   "cycle" = "cycle_id",
   "module" = "issue_module__module_id",
   "target_date" = "target_date",
+  // oxlint ancora o aviso de valor duplicado na primeira ocorrencia, entao o disable fica aqui
+  // eslint-disable-next-line typescript/no-duplicate-enum-values
   "project" = "project_id",
   "created_by" = "created_by",
-  // eslint-disable-next-line @typescript-eslint/no-duplicate-enum-values
   "team_project" = "project_id",
 }
 
@@ -159,6 +160,7 @@ export const ISSUE_DISPLAY_PROPERTIES_KEYS: (keyof IIssueDisplayProperties)[] = 
   "cycle",
   "issue_type",
   "parent_breadcrumb",
+  "client",
 ];
 
 export const SUB_ISSUES_DISPLAY_PROPERTIES_KEYS: (keyof IIssueDisplayProperties)[] = [
@@ -219,6 +221,7 @@ export const ISSUE_DISPLAY_PROPERTIES: {
     key: "parent_breadcrumb",
     titleTranslationKey: "issue.parent_breadcrumb.column",
   },
+  { key: "client", titleTranslationKey: "clients.title" },
 ];
 
 export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
@@ -238,6 +241,7 @@ export const SPREADSHEET_PROPERTY_LIST: (keyof IIssueDisplayProperties)[] = [
   "attachment_count",
   "sub_issue_count",
   "parent_breadcrumb",
+  "client",
 ];
 
 export const SPREADSHEET_PROPERTY_DETAILS: {
@@ -379,6 +383,16 @@ export const SPREADSHEET_PROPERTY_DETAILS: {
     descendingOrderKey: "sort_order",
     descendingOrderTitle: "Manual",
     icon: "ParentBreadcrumbIcon",
+  },
+  client: {
+    // Ordenacao server-side por nome de cliente ainda nao e suportada;
+    // as duas chaves caem no sort manual, deixando o menu do header inerte.
+    i18n_title: "clients.title",
+    ascendingOrderKey: "sort_order",
+    ascendingOrderTitle: "Manual",
+    descendingOrderKey: "sort_order",
+    descendingOrderTitle: "Manual",
+    icon: "ClientIcon",
   },
 };
 
