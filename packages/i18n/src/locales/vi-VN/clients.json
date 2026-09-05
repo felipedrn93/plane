@@ -1,0 +1,34 @@
+{
+  "clients": {
+    "title": "Clients",
+    "client": "Client",
+    "new_client": "New client",
+    "edit_client": "Edit client",
+    "name": "Client name",
+    "name_is_required": "Client name is required.",
+    "companies": "Companies",
+    "no_companies": "No companies registered.",
+    "company_name": "Company name",
+    "company_name_is_required": "Company name is required.",
+    "cnpj": "Tax ID",
+    "add_company": "Add company",
+    "remove_company": "Remove company",
+    "invalid_cnpj": "Invalid tax ID.",
+    "duplicate_cnpj": "This tax ID is already registered in this workspace.",
+    "duplicate_name": "A client with this name already exists in this workspace.",
+    "issue_count": "Work items",
+    "view_issues": "View {count, plural, one {# work item} other {# work items}}",
+    "empty": "No clients registered yet.",
+    "not_found": "Client not found.",
+    "back_to_list": "Back to the client list",
+    "show_inactive": "Show inactive",
+    "delete_blocked": "This client is linked to work items. Deactivate it instead of deleting.",
+    "deactivate": "Deactivate",
+    "none": "None",
+    "status": {
+      "label": "Status",
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  }
+}

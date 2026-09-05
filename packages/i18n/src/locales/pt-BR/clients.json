@@ -1,0 +1,34 @@
+{
+  "clients": {
+    "title": "Clientes",
+    "client": "Cliente",
+    "new_client": "Novo cliente",
+    "edit_client": "Editar cliente",
+    "name": "Nome do cliente",
+    "name_is_required": "O nome do cliente é obrigatório.",
+    "companies": "Empresas",
+    "no_companies": "Nenhuma empresa cadastrada.",
+    "company_name": "Nome da empresa",
+    "company_name_is_required": "O nome da empresa é obrigatório.",
+    "cnpj": "CNPJ",
+    "add_company": "Adicionar empresa",
+    "remove_company": "Remover empresa",
+    "invalid_cnpj": "CNPJ inválido.",
+    "duplicate_cnpj": "Este CNPJ já está cadastrado neste workspace.",
+    "duplicate_name": "Já existe um cliente com esse nome neste workspace.",
+    "issue_count": "Tarefas",
+    "view_issues": "Ver {count, plural, one {# tarefa} other {# tarefas}}",
+    "empty": "Nenhum cliente cadastrado ainda.",
+    "not_found": "Cliente não encontrado.",
+    "back_to_list": "Voltar para a lista de clientes",
+    "show_inactive": "Mostrar inativos",
+    "delete_blocked": "Este cliente está vinculado a tarefas. Inative-o em vez de excluir.",
+    "deactivate": "Inativar",
+    "none": "Nenhum",
+    "status": {
+      "label": "Status",
+      "active": "Ativo",
+      "inactive": "Inativo"
+    }
+  }
+}
