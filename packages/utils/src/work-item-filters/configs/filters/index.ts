@@ -5,6 +5,7 @@
  */
 
 export * from "./blocked";
+export * from "./client";
 export * from "./cycle";
 export * from "./date";
 export * from "./label";

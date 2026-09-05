@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useMemo } from "react";
-import { AtSign, Ban, Briefcase } from "lucide-react";
+import { AtSign, Ban, Briefcase, Building2 } from "lucide-react";
 // plane imports
 import { Logo } from "@plane/propel/emoji-icon-picker";
 import {
@@ -37,6 +37,7 @@ import { Avatar } from "@plane/ui";
 import {
   getAssigneeFilterConfig,
   getBlockedFilterConfig,
+  getClientFilterConfig,
   getCompletedAtFilterConfig,
   getCreatedAtFilterConfig,
   getCreatedByFilterConfig,
@@ -57,6 +58,7 @@ import {
 } from "@plane/utils";
 // store hooks
 import { useCycle } from "@/hooks/store/use-cycle";
+import { useClient } from "@/hooks/store/use-client";
 import { useLabel } from "@/hooks/store/use-label";
 import { useMember } from "@/hooks/store/use-member";
 import { useModule } from "@/hooks/store/use-module";
@@ -96,6 +98,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
   // store hooks
   const { loader: projectLoader, getProjectById } = useProject();
   const { getCycleById } = useCycle();
+  const { activeClients } = useClient();
   const { getLabelById } = useLabel();
   const { getModuleById } = useModule();
   const { getStateById } = useProjectState();
@@ -200,6 +203,20 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
         ...operatorConfigs,
       }),
     [isFilterEnabled, project?.cycle_view, cycles, operatorConfigs]
+  );
+
+  // client filter config
+  // clientes sao de workspace, entao a lista vem direto do store em vez de ser plumbada pelos HOCs
+  const clientFilterConfig = useMemo(
+    () =>
+      getClientFilterConfig<TWorkItemFilterProperty>("client_id")({
+        isEnabled: isFilterEnabled("client_id"),
+        filterIcon: Building2,
+        getOptionIcon: () => <Building2 className="h-3 w-3 flex-shrink-0" />,
+        clients: activeClients,
+        ...operatorConfigs,
+      }),
+    [isFilterEnabled, activeClients, operatorConfigs]
   );
 
   // module filter config
@@ -397,6 +414,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       mentionFilterConfig,
       labelFilterConfig,
       cycleFilterConfig,
+      clientFilterConfig,
       moduleFilterConfig,
       startDateFilterConfig,
       targetDateFilterConfig,
@@ -413,6 +431,7 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
       state_id: stateFilterConfig,
       label_id: labelFilterConfig,
       cycle_id: cycleFilterConfig,
+      client_id: clientFilterConfig,
       module_id: moduleFilterConfig,
       assignee_id: assigneeFilterConfig,
       mention_id: mentionFilterConfig,

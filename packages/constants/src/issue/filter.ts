@@ -25,6 +25,7 @@ export enum EServerGroupByToFilterOptions {
   "state__group" = "state_group",
   "assignees__id" = "assignees",
   "cycle_id" = "cycle",
+  "client_id" = "client",
   "issue_module__module_id" = "module",
   "target_date" = "target_date",
   "project_id" = "project",
@@ -147,6 +148,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       "state_group",
       "state_id",
       "cycle_id",
+      "client_id",
       "module_id",
       "assignee_id",
       "created_by_id",
@@ -160,7 +162,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       list: {
         display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
         display_filters: {
-          group_by: ["state", "cycle", "module", "priority", "labels", "assignees", "created_by", null],
+          group_by: ["state", "cycle", "client", "module", "priority", "labels", "assignees", "created_by", null],
           order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "-completed_at"],
           type: ["active", "backlog"],
         },
@@ -180,6 +182,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       "created_by_id",
       "subscriber_id",
       "project_id",
+      "client_id",
       "start_date",
       "target_date",
       "completed_at",
@@ -215,6 +218,7 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       "state_group",
       "state_id",
       "cycle_id",
+      "client_id",
       "module_id",
       "assignee_id",
       "mention_id",
@@ -229,8 +233,16 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       list: {
         display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
         display_filters: {
-          group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", null],
-          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "target_date", "-completed_at"],
+          group_by: ["state", "priority", "cycle", "client", "module", "labels", "assignees", "created_by", null],
+          order_by: [
+            "sort_order",
+            "-created_at",
+            "-updated_at",
+            "start_date",
+            "-priority",
+            "target_date",
+            "-completed_at",
+          ],
           type: ["active", "backlog"],
         },
         extra_options: {
@@ -241,9 +253,17 @@ export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
       kanban: {
         display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
         display_filters: {
-          group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by"],
-          sub_group_by: ["state", "priority", "cycle", "module", "labels", "assignees", "created_by", null],
-          order_by: ["sort_order", "-created_at", "-updated_at", "start_date", "-priority", "target_date", "-completed_at"],
+          group_by: ["state", "priority", "cycle", "client", "module", "labels", "assignees", "created_by"],
+          sub_group_by: ["state", "priority", "cycle", "client", "module", "labels", "assignees", "created_by", null],
+          order_by: [
+            "sort_order",
+            "-created_at",
+            "-updated_at",
+            "start_date",
+            "-priority",
+            "target_date",
+            "-completed_at",
+          ],
           type: ["active", "backlog"],
         },
         extra_options: {

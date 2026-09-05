@@ -20,6 +20,7 @@ export type TIssueGroupByOptions =
   | "project"
   | "assignees"
   | "cycle"
+  | "client"
   | "module"
   | "target_date"
   | "team_project"
@@ -72,6 +73,7 @@ export type TIssueParams =
   | "subscriber"
   | "labels"
   | "cycle"
+  | "client"
   | "module"
   | "start_date"
   | "target_date"
@@ -109,6 +111,7 @@ export const WORK_ITEM_FILTER_PROPERTY_KEYS = [
   "label_id",
   "state_id",
   "cycle_id",
+  "client_id",
   "module_id",
   "project_id",
   "created_at",

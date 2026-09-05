@@ -8,6 +8,7 @@ import type { CSSProperties } from "react";
 import { extractInstruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
 import { clone, isNil, pull, uniq, concat } from "lodash-es";
 import scrollIntoView from "smooth-scroll-into-view-if-needed";
+import { Building2 } from "lucide-react";
 // plane types
 import { EIconSize, ISSUE_PRIORITIES, STATE_GROUPS } from "@plane/constants";
 import { Logo } from "@plane/propel/emoji-icon-picker";
@@ -114,6 +115,7 @@ export const getGroupByColumns = ({
   > = {
     project: getProjectColumns,
     cycle: getCycleColumns,
+    client: getClientColumns,
     module: getModuleColumns,
     state: getStateColumns,
     "state_detail.group": getStateGroupColumns,
@@ -179,6 +181,23 @@ const getCycleColumns = (): IGroupByColumn[] | undefined => {
     payload: {},
   });
   return cycles;
+};
+
+const getClientColumns = (): IGroupByColumn[] | undefined => {
+  const { activeClients } = store.client;
+  const clients: IGroupByColumn[] = activeClients.map((client) => ({
+    id: client.id,
+    name: client.name,
+    icon: <Building2 className="h-3.5 w-3.5 flex-shrink-0" />,
+    payload: { client_id: client.id },
+  }));
+  clients.push({
+    id: "None",
+    name: "None",
+    icon: <Building2 className="h-3.5 w-3.5 flex-shrink-0" />,
+    payload: {},
+  });
+  return clients;
 };
 
 const getModuleColumns = (): IGroupByColumn[] | undefined => {

@@ -31,6 +31,7 @@ export enum EIssueGroupByToServerOptions {
   "state_detail.group" = "state__group",
   "assignees" = "assignees__id",
   "cycle" = "cycle_id",
+  "client" = "client_id",
   "module" = "issue_module__module_id",
   "target_date" = "target_date",
   // oxlint ancora o aviso de valor duplicado na primeira ocorrencia, entao o disable fica aqui
@@ -47,6 +48,7 @@ export enum EIssueGroupBYServerToProperty {
   "state__group" = "state__group",
   "assignees__id" = "assignee_ids",
   "cycle_id" = "cycle_id",
+  "client_id" = "client_id",
   "issue_module__module_id" = "module_ids",
   "target_date" = "target_date",
   "project_id" = "project_id",
@@ -125,6 +127,7 @@ export const ISSUE_GROUP_BY_OPTIONS: {
   { key: "labels", titleTranslationKey: "common.labels" },
   { key: "assignees", titleTranslationKey: "common.assignees" },
   { key: "created_by", titleTranslationKey: "common.created_by" },
+  { key: "client", titleTranslationKey: "clients.title" },
   { key: null, titleTranslationKey: "common.none" },
 ];
 
@@ -403,6 +406,7 @@ export const FILTER_TO_ISSUE_MAP: Partial<Record<keyof IIssueFilterOptions, keyo
   labels: "label_ids",
   priority: "priority",
   cycle: "cycle_id",
+  client: "client_id",
   module: "module_ids",
   project: "project_id",
   state: "state_id",

@@ -119,6 +119,7 @@ export interface ViewFlags {
 export type GroupByColumnTypes =
   | "project"
   | "cycle"
+  | "client"
   | "module"
   | "state"
   | "state_detail.group"

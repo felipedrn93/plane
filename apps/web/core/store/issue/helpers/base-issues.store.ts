@@ -123,6 +123,7 @@ export const ISSUE_GROUP_BY_KEY: Record<TIssueDisplayFilterOptions, keyof TIssue
   assignees: "assignee_ids",
   target_date: "target_date",
   cycle: "cycle_id",
+  client: "client_id",
   module: "module_ids",
   team_project: "project_id",
 };
@@ -130,6 +131,7 @@ export const ISSUE_GROUP_BY_KEY: Record<TIssueDisplayFilterOptions, keyof TIssue
 export const ISSUE_FILTER_DEFAULT_DATA: Record<TIssueDisplayFilterOptions, keyof TIssue> = {
   project: "project_id",
   cycle: "cycle_id",
+  client: "client_id",
   module: "module_ids",
   state: "state_id",
   "state_detail.group": "state__group", // state_detail.group is only being used for state_group display,
