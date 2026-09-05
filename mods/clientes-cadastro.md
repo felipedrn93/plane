@@ -110,8 +110,10 @@ Client (workspace)                ClientCompany (client)
 ## Como testar
 
 ```bash
-# backend (dentro do container ou de uma venv com pytest-django)
-cd apps/api && python run_tests.py -u
+# backend — precisa do stack local no ar; o Python do host nao tem pytest-django
+docker compose -f docker-compose-local.yml up -d plane-db plane-redis plane-mq plane-minio
+docker exec plane-test sh -c 'cd /code && python -m pytest -m unit -q'
+# baseline em 2026-09-05: 168 passaram, 5 falharam (pre-existentes, ver Pitfalls), 105 deselecionadas
 python -m ruff check plane/ && python -m ruff format --check plane/
 
 # frontend
@@ -142,6 +144,8 @@ Roteiro manual, com `pnpm dev`:
 - **Group by por cliente toca seis lugares tipados.** Além de `TIssueGroupByOptions`, o TypeScript exige `GroupByColumnTypes`, `TIssueParams`, `EIssueGroupByToServerOptions`, `EIssueGroupBYServerToProperty` e `EServerGroupByToFilterOptions` — sem os três últimos o `issue-filter-helper.store.ts` não compila.
 - **O menu de agrupamento é gateado por página.** `ISSUE_GROUP_BY_OPTIONS` só define os rótulos; quem decide o que aparece em cada tela é `ISSUE_DISPLAY_FILTERS_BY_PAGE[*].layoutOptions[*].display_filters.group_by`. O mesmo vale para os filtros, no array `filters` de cada página.
 - **O pre-commit é mais estrito que o CI.** O hook roda `oxlint --deny-warnings` nos arquivos staged, enquanto o `check:lint` do web aceita até 11957 warnings. Tocar em arquivos legados com warnings pré-existentes (`base-issues.store.ts` tem 15) trava o commit sem que a mudança tenha introduzido nada — ver [divida-ci-web.md](divida-ci-web.md).
+- **A suíte unitária do backend já chega com 5 falhas.** `utils/test_url.py` (3 casos de limite de comprimento em `contains_url`), `bg_tasks/test_copy_s3_objects.py` e `bg_tasks/test_work_item_link_task.py` reprovam desde antes desta mod — os arquivos de teste e os módulos que eles exercitam estão idênticos ao commit anterior à feature. Não confundir com regressão.
+- **O container de teste não é um serviço do compose.** É o `plane-test` (imagem `plane-api`, `sleep infinity`, `/code` montado do host), criado à mão e com `requirements/test.txt` instalado no runtime — a imagem `plane-api` e o `Dockerfile.dev` só instalam `requirements/local.txt`, sem `pytest`. Se o container for removido, é preciso recriar e reinstalar. No Git Bash, `docker exec -w /code` falha com `Cwd must be an absolute path` (conversão de path do MSYS); usar `docker exec plane-test sh -c 'cd /code && ...'`.
 - **Os locales não são um `translations.json` único.** Cada idioma é uma pasta com um arquivo por namespace, e um namespace novo precisa ser registrado em `packages/i18n/src/constants/namespaces.ts`; `pnpm --filter @plane/i18n run check:types` regenera `types/keys.generated.ts`.
 
 ## Fora de escopo
