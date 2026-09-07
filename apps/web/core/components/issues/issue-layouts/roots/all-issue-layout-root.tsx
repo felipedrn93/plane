@@ -13,6 +13,7 @@ import { GLOBAL_VIEW_TRACKER_ELEMENTS, ISSUE_DISPLAY_FILTERS_BY_PAGE } from "@pl
 import { EmptyStateDetailed } from "@plane/propel/empty-state";
 import type { EIssueLayoutTypes } from "@plane/types";
 import { EIssuesStoreType, STATIC_VIEW_TYPES } from "@plane/types";
+import { getRichFiltersFromSearchParams, mergeRouteFiltersIntoExpression } from "@plane/utils";
 // assets
 // components
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
@@ -52,6 +53,8 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const viewDetails = globalViewId ? getViewDetailsById(globalViewId) : undefined;
   const workItemFilters = globalViewId ? filters?.[globalViewId] : undefined;
   const activeLayout: EIssueLayoutTypes | undefined = workItemFilters?.displayFilters?.layout;
+  // Filtros vindos da query string (ex.: /workspace-views/all-issues/?client_id=<uuid>)
+  const routeConditions = useMemo(() => getRichFiltersFromSearchParams(searchParams), [searchParams]);
   // Determine initial work item filters based on view type and availability
   const initialWorkItemFilters = useMemo(() => {
     if (!globalViewId) return undefined;
@@ -65,18 +68,12 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
       displayFilters: workItemFilters?.displayFilters,
       displayProperties: workItemFilters?.displayProperties,
       kanbanFilters: workItemFilters?.kanbanFilters,
-      richFilters: viewDetails?.rich_filters ?? {},
+      richFilters: mergeRouteFiltersIntoExpression(viewDetails?.rich_filters ?? {}, routeConditions),
     };
-  }, [globalViewId, viewDetails, workItemFilters]);
+  }, [globalViewId, viewDetails, workItemFilters, routeConditions]);
 
   // Custom hooks
   useWorkspaceIssueProperties(workspaceSlug);
-
-  // Route filters
-  const routeFilters: { [key: string]: string } = {};
-  searchParams.forEach((value: string, key: string) => {
-    routeFilters[key] = value;
-  });
 
   // Fetch next pages callback
   const fetchNextPages = useCallback(() => {
@@ -171,7 +168,6 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
                 toggleLoading={toggleLoading}
                 workspaceSlug={workspaceSlug}
                 globalViewId={globalViewId}
-                routeFilters={routeFilters}
                 fetchNextPages={fetchNextPages}
                 globalViewsLoading={globalViewsLoading}
                 issuesLoading={issuesLoading}

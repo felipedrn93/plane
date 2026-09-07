@@ -26,7 +26,10 @@ Esta mod acrescenta um cadastro de **Clientes** no menu do workspace — cada cl
 
 Decisões tomadas durante a implementação, que divergem do plano original:
 
-10. **A "aba Tarefas" do detalhe virou um botão "Ver N tarefas"** que leva a `/{slug}/workspace-views/all-issues/?client={clientId}`. O `AllIssueLayoutRoot` é acoplado ao `globalViewId` da rota e ao `useGlobalView`; embutir a lista na página de cliente exigiria refatorar um componente central de todas as views globais. A view global já lê filtros da query string (`routeFilters`), então o link entrega o mesmo resultado sem esse risco.
+10. **A "aba Tarefas" do detalhe virou um botão "Ver N tarefas"** que leva a `/{slug}/workspace-views/all-issues/?client_id={clientId}`. O `AllIssueLayoutRoot` é acoplado ao `globalViewId` da rota e ao `useGlobalView`; embutir a lista na página de cliente exigiria refatorar um componente central de todas as views globais.
+
+    **Correção posterior:** a primeira versão do botão usava `?client=` acreditando que a view global já lia filtros da query string pelo `routeFilters`. **Não lia.** O `routeFilters` era montado no `AllIssueLayoutRoot`, repassado por `views/helper.tsx` e chegava ao `WorkspaceSpreadsheetRoot` apenas como declaração de tipo — nunca era lido. Era código morto desde a migração para rich filters, e a requisição saía com `filters={}`. Foi preciso implementar a capacidade de verdade (ver `getRichFiltersFromSearchParams`, abaixo).
+
 11. **O filtro foi implementado no caminho de _rich filters_**, não no `components/issues/filters/filters-selection/` que o plano citava — esse par (`filters/header/filters/cycle.tsx` + `applied-filters/cycle.tsx`) virou código órfão depois da migração e não tem nenhum importador. O chip do filtro aplicado é genérico (`components/rich-filters/filters-row`), então não precisou de componente próprio.
 12. **A lista de clientes do filtro vem direto de `useClient().activeClients`**, e não plumbada pelos HOCs (`project-level.tsx` / `workspace-level.tsx`) como acontece com ciclos e módulos — clientes são de workspace, não de projeto.
 13. **O dropdown seguiu o padrão do `dropdowns/cycle`** (`ComboDropDown` + `DropdownButton` + `Combobox.Options` com `position: fixed` e `usePopper`). O plano pedia `createPortal`, mas o `position: fixed` do combobox resolve o mesmo problema do peek overview (ver Pitfalls) e mantém o componente idêntico aos vizinhos.
@@ -57,6 +60,7 @@ Client (workspace)                ClientCompany (client)
 - `packages/types/src/client.ts` — `TClient`, `TClientCompany`.
 - `packages/services/src/client/` — `ClientService`.
 - `packages/utils/src/work-item-filters/configs/filters/client.ts` — config do filtro rich.
+- `packages/utils/src/work-item-filters/route-filters.ts` — converte a query string em condições de rich filter.
 - `apps/web/core/store/client.store.ts`, `apps/web/core/hooks/store/use-client.ts`.
 - `apps/web/app/(all)/[workspaceSlug]/(projects)/clients/` — `layout.tsx`, `header.tsx`, `page.tsx`, `[clientId]/page.tsx`.
 - `apps/web/core/components/clients/` — `clients-list-root.tsx`, `client-form-modal.tsx`, `client-detail-root.tsx`, `cnpj.ts`, `index.ts`.
@@ -98,6 +102,7 @@ Client (workspace)                ClientCompany (client)
 - `apps/web/core/components/issues/issue-layouts/utils.tsx` — `getClientColumns` no `groupByColumnMap`.
 - `apps/web/ce/components/issues/issue-layouts/utils.tsx` — coluna e ícone da planilha.
 - `apps/web/ce/hooks/work-item-filters/use-work-item-filters-config.tsx` — `clientFilterConfig`.
+- `apps/web/core/components/issues/issue-layouts/roots/all-issue-layout-root.tsx` — filtros da query string entram no `initialWorkItemFilters`; `views/helper.tsx` e `spreadsheet/roots/workspace-root.tsx` perderam a prop `routeFilters`, que era código morto.
 
 ## Fluxo end-to-end
 
@@ -122,6 +127,12 @@ pnpm turbo run check:lint --filter=web     # 1001 warnings, 0 errors (mesmo base
 pnpm --filter @plane/i18n run check:sync
 ```
 
+O util de filtro por URL tem 11 casos em `packages/utils/tests/route-filters.test.ts`:
+
+```bash
+pnpm --filter @plane/utils run test
+```
+
 Roteiro manual, com `pnpm dev`:
 
 1. A sidebar mostra "Clientes" logo abaixo de "Página Inicial".
@@ -137,7 +148,7 @@ Roteiro manual, com `pnpm dev`:
 
 ## Pitfalls
 
-- **Shadow allowlists de campos de issue.** Um campo novo na `Issue` precisa aparecer em *todos* os lugares que listam campos explicitamente: serializers, as projeções `.values()` de `views/issue/base.py` e `sub_issue.py`, e o `addIssueToStore` de `issue.store.ts` no front. Faltando o último, o dropdown mostra "Nenhum" mesmo com o valor salvo no banco — mesmo sintoma do `recurrence_pattern` em [tarefas-recorrentes.md](tarefas-recorrentes.md#pitfalls--todos-os-lugares-onde-um-campo-novo-de-issue-precisa-aparecer).
+- **Shadow allowlists de campos de issue.** Um campo novo na `Issue` precisa aparecer em _todos_ os lugares que listam campos explicitamente: serializers, as projeções `.values()` de `views/issue/base.py` e `sub_issue.py`, e o `addIssueToStore` de `issue.store.ts` no front. Faltando o último, o dropdown mostra "Nenhum" mesmo com o valor salvo no banco — mesmo sintoma do `recurrence_pattern` em [tarefas-recorrentes.md](tarefas-recorrentes.md#pitfalls--todos-os-lugares-onde-um-campo-novo-de-issue-precisa-aparecer).
 - **`client_id` é escalar e NÃO entra no `FIELD_MAPPER` do `plane/utils/grouper.py`.** Esse mapa existe só para campos de array (`label_ids`, `assignee_ids`, `module_ids`). Escalares como `state_id`, `cycle_id` e `client_id` só precisam entrar em `required_fields` e ganhar um branch em `issue_group_values`.
 - **O item de sidebar precisa estar em dois lugares.** Além de `WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS(_LINKS)` nos constants, a chave tem que entrar no array `staticItems` de `core/components/workspace/sidebar/sidebar-item.tsx` — sem isso o item simplesmente não renderiza.
 - **Painel do dropdown no peek overview.** O peek é uma sidebar de 400px com `overflow-hidden`: um `Popover` do Headless UI salta para a borda direita da página. É preciso `usePopper` com o painel fora do fluxo (`position: fixed`, como o `dropdowns/cycle`, ou `createPortal`).
@@ -146,6 +157,7 @@ Roteiro manual, com `pnpm dev`:
 - **O pre-commit é mais estrito que o CI.** O hook roda `oxlint --deny-warnings` nos arquivos staged, enquanto o `check:lint` do web aceita até 11957 warnings. Tocar em arquivos legados com warnings pré-existentes (`base-issues.store.ts` tem 15) trava o commit sem que a mudança tenha introduzido nada — ver [divida-ci-web.md](divida-ci-web.md).
 - **A suíte unitária do backend já chega com 5 falhas.** `utils/test_url.py` (3 casos de limite de comprimento em `contains_url`), `bg_tasks/test_copy_s3_objects.py` e `bg_tasks/test_work_item_link_task.py` reprovam desde antes desta mod — os arquivos de teste e os módulos que eles exercitam estão idênticos ao commit anterior à feature. Não confundir com regressão.
 - **O container de teste não é um serviço do compose.** É o `plane-test` (imagem `plane-api`, `sleep infinity`, `/code` montado do host), criado à mão e com `requirements/test.txt` instalado no runtime — a imagem `plane-api` e o `Dockerfile.dev` só instalam `requirements/local.txt`, sem `pytest`. Se o container for removido, é preciso recriar e reinstalar. No Git Bash, `docker exec -w /code` falha com `Cwd must be an absolute path` (conversão de path do MSYS); usar `docker exec plane-test sh -c 'cd /code && ...'`.
+- **`routeFilters` era código morto — filtro por URL não existia.** Antes desta mod, `?qualquer_coisa=` na view global não tinha efeito: a prop trafegava por três componentes e nunca era lida. Quem filtra hoje é `getRichFiltersFromSearchParams`, que aceita só as propriedades de coleção (`client_id`, `state_id`, `cycle_id`, …), monta condições `<prop>__in` e as combina com os filtros salvos da view via `mergeRouteFiltersIntoExpression`. Um grupo de rich filters **não aninha** (`TWorkItemFilterAndGroup` guarda condições, não grupos), por isso o merge trata três casos: expressão vazia, grupo `and` existente e condição solta.
 - **Os locales não são um `translations.json` único.** Cada idioma é uma pasta com um arquivo por namespace, e um namespace novo precisa ser registrado em `packages/i18n/src/constants/namespaces.ts`; `pnpm --filter @plane/i18n run check:types` regenera `types/keys.generated.ts`.
 
 ## Fora de escopo

@@ -94,8 +94,8 @@ export const ClientDetailRoot = observer(function ClientDetailRoot(props: Props)
           </div>
           <div className="flex items-center gap-2">
             {/* o layout global de work items e acoplado ao globalViewId da rota, entao em vez de embutir
-                a lista aqui, mandamos para a view "all-issues" ja filtrada pela query string (routeFilters) */}
-            <Link href={`/${workspaceSlug}/workspace-views/all-issues/?client=${clientId}`}>
+                a lista aqui, mandamos para a view "all-issues" ja filtrada pela query string */}
+            <Link href={`/${workspaceSlug}/workspace-views/all-issues/?client_id=${clientId}`}>
               <Button variant="secondary" size="sm">
                 {t("clients.view_issues", { count: client.issue_count })}
               </Button>
