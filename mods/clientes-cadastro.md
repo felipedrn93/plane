@@ -146,6 +146,12 @@ Roteiro manual, com `pnpm dev`:
 9. `/clients/<id>` lista as empresas com CNPJ mascarado e o botão "Ver N tarefas" leva à view global filtrada.
 10. Excluir "Acme" com tarefas vinculadas → bloqueio com a opção de inativar.
 
+## Limite da verificação automatizada
+
+Tudo que não depende de renderizar linhas de work item foi verificado com o app rodando: sidebar, telas de cliente, máscara e validação de CNPJ, CNPJ duplicado, contagem de tarefas, linha "Cliente" no painel da tarefa, chip do filtro, e as entradas "Clientes" em *Agrupar por* e *Propriedades*. O filtro por URL foi confirmado no log da API (`filters={"client_id__in":"<uuid>"}`, 3 resultados contra 6 sem filtro).
+
+**O que não deu para verificar automatizado:** a coluna "Cliente" desenhada na planilha e as colunas do agrupamento. As linhas usam `RenderIfVisible` (`core/components/core/render-if-visible-HOC.tsx`), que só troca o esqueleto pelo conteúdo quando o `IntersectionObserver` dispara — e o callback ainda passa por `window.requestIdleCallback`. No browser headless usado na automação **o `IntersectionObserver` nunca dispara** (verificado observando uma linha dentro do viewport, com dimensões reais, sem nenhum callback), então as linhas ficam em esqueleto permanente. Vale para qualquer listagem do Plane, com ou sem filtro; não é efeito desta mod. Essa parte precisa de olho humano num browser normal.
+
 ## Pitfalls
 
 - **Shadow allowlists de campos de issue.** Um campo novo na `Issue` precisa aparecer em _todos_ os lugares que listam campos explicitamente: serializers, as projeções `.values()` de `views/issue/base.py` e `sub_issue.py`, e o `addIssueToStore` de `issue.store.ts` no front. Faltando o último, o dropdown mostra "Nenhum" mesmo com o valor salvo no banco — mesmo sintoma do `recurrence_pattern` em [tarefas-recorrentes.md](tarefas-recorrentes.md#pitfalls--todos-os-lugares-onde-um-campo-novo-de-issue-precisa-aparecer).
