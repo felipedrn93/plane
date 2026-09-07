@@ -55,6 +55,7 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
   const activeLayout: EIssueLayoutTypes | undefined = workItemFilters?.displayFilters?.layout;
   // Filtros vindos da query string (ex.: /workspace-views/all-issues/?client_id=<uuid>)
   const routeConditions = useMemo(() => getRichFiltersFromSearchParams(searchParams), [searchParams]);
+  const routeConditionsKey = routeConditions ? JSON.stringify(routeConditions) : "";
   // Determine initial work item filters based on view type and availability
   const initialWorkItemFilters = useMemo(() => {
     if (!globalViewId) return undefined;
@@ -93,12 +94,23 @@ export const AllIssueLayoutRoot = observer(function AllIssueLayoutRoot(props: Pr
 
   // Fetch issues
   const { isLoading: issuesLoading } = useSWR(
-    workspaceSlug && globalViewId ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}` : null,
+    workspaceSlug && globalViewId
+      ? `WORKSPACE_GLOBAL_VIEW_ISSUES_${workspaceSlug}_${globalViewId}_${routeConditionsKey}`
+      : null,
     async () => {
       if (workspaceSlug && globalViewId) {
         clear();
         toggleLoading(true);
         await fetchFilters(workspaceSlug, globalViewId);
+        // fetchFilters sobrescreve richFilters com o que esta salvo na view, entao as condicoes
+        // da URL precisam ser reaplicadas depois dele e antes de buscar os work items
+        if (routeConditions) {
+          await updateFilterExpression(
+            workspaceSlug,
+            globalViewId,
+            mergeRouteFiltersIntoExpression(filters?.[globalViewId]?.richFilters ?? {}, routeConditions)
+          );
+        }
         await fetchIssues(workspaceSlug, globalViewId, groupedIssueIds ? "mutation" : "init-loader", {
           canGroup: false,
           perPageCount: 100,

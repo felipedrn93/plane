@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 import { usePopper } from "react-popper";
+import useSWR from "swr";
 import { Building2 } from "lucide-react";
 import { Combobox } from "@headlessui/react";
 // plane imports
@@ -44,10 +45,9 @@ type TClientOptionsProps = {
 const ClientOptions = observer(function ClientOptions(props: TClientOptionsProps) {
   const { isOpen, referenceElement, placement } = props;
   // router
-  const { workspaceSlug } = useParams();
   // hooks
   const { t } = useTranslation();
-  const { activeClients, fetchClients } = useClient();
+  const { activeClients } = useClient();
   const { isMobile } = usePlatformOS();
   // states
   const [query, setQuery] = useState("");
@@ -61,10 +61,8 @@ const ClientOptions = observer(function ClientOptions(props: TClientOptionsProps
 
   useEffect(() => {
     if (!isOpen) return;
-    // carrega a lista na primeira abertura; o store ignora refetch redundante
-    if (workspaceSlug) fetchClients(workspaceSlug.toString());
     if (!isMobile) inputRef.current?.focus();
-  }, [isOpen, isMobile, workspaceSlug, fetchClients]);
+  }, [isOpen, isMobile]);
 
   const searchInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (query !== "" && e.key === "Escape") {
@@ -150,14 +148,23 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
     value,
     renderByDefault = true,
   } = props;
+  // router
+  const { workspaceSlug } = useParams();
   // hooks
   const { t } = useTranslation();
-  const { getClientById } = useClient();
+  const { getClientById, fetchClients } = useClient();
   // states
   const [isOpen, setIsOpen] = useState(false);
   const [referenceElement, setReferenceElement] = useState<HTMLButtonElement | null>(null);
   // refs
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // sem isto o botao mostra o placeholder mesmo com um cliente vinculado: quem resolve o
+  // nome e o clientMap, e ele so era preenchido quando o painel abria. A chave e a mesma
+  // usada pelas telas de cliente, entao o SWR deduplica a busca entre todas as instancias.
+  useSWR(workspaceSlug ? `WORKSPACE_CLIENTS_${workspaceSlug}` : null, () =>
+    workspaceSlug ? fetchClients(workspaceSlug.toString()) : null
+  );
 
   // getClientById tambem resolve clientes inativos, que ficam fora das opcoes mas
   // precisam continuar aparecendo no botao quando ja estao vinculados a tarefa
