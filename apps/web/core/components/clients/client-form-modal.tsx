@@ -60,7 +60,8 @@ export const ClientFormModal = observer(function ClientFormModal(props: Props) {
   const { workspaceSlug } = useParams();
   // hooks
   const { t } = useTranslation();
-  const { getClientById, createClient, updateClient, createCompany, updateCompany, deleteCompany } = useClient();
+  const { getClientById, createClient, updateClient, deleteClient, createCompany, updateCompany, deleteCompany } =
+    useClient();
   // derived values
   const client = getClientById(clientId);
   const isEditing = Boolean(clientId);
@@ -125,9 +126,16 @@ export const ClientFormModal = observer(function ClientFormModal(props: Props) {
       } else {
         const payload: Partial<TClient> = { name: data.name };
         const created = await createClient(slug, payload);
-        await Promise.all(
-          rows.map((row) => createCompany(slug, created.id, { name: row.name, cnpj: normalizeCnpj(row.cnpj) }))
-        );
+        try {
+          await Promise.all(
+            rows.map((row) => createCompany(slug, created.id, { name: row.name, cnpj: normalizeCnpj(row.cnpj) }))
+          );
+        } catch (error) {
+          // o cliente ja foi persistido: sem esta compensacao, uma empresa recusada
+          // (CNPJ duplicado, por exemplo) deixaria um cliente orfao, sem empresa nenhuma
+          await deleteClient(slug, created.id).catch(() => undefined);
+          throw error;
+        }
       }
       handleClose();
     } catch (error) {
