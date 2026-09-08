@@ -98,7 +98,9 @@ Client (workspace)                ClientCompany (client)
 - `apps/web/core/store/issue/helpers/base-issues.store.ts` — `client` em `ISSUE_GROUP_BY_KEY` e `ISSUE_FILTER_DEFAULT_DATA`.
 - `apps/web/app/routes/core.ts` — rotas `/clients` e `/clients/:clientId`.
 - `apps/web/ce/components/workspace/sidebar/helper.tsx`, `apps/web/core/components/workspace/sidebar/sidebar-item.tsx` — ícone e liberação do item estático.
-- `apps/web/core/components/issues/issue-detail/sidebar.tsx` — linha "Cliente".
+- `apps/web/core/components/issues/issue-detail/sidebar.tsx` e `issues/peek-overview/properties.tsx` — linha "Cliente" no painel da página de detalhe e no peek.
+- `apps/web/core/components/issues/issue-layouts/properties/all-properties.tsx` — badge de cliente em Lista, Kanban, Calendário e Gantt.
+- `packages/utils/src/work-item/base.ts` — `client` em `getComputedDisplayProperties`, senão a chave é descartada antes de chegar aos layouts.
 - `apps/web/core/components/issues/issue-layouts/utils.tsx` — `getClientColumns` no `groupByColumnMap`.
 - `apps/web/ce/components/issues/issue-layouts/utils.tsx` — coluna e ícone da planilha.
 - `apps/web/ce/hooks/work-item-filters/use-work-item-filters-config.tsx` — `clientFilterConfig`.
@@ -154,6 +156,7 @@ Tudo que não depende de renderizar linhas de work item foi verificado com o app
 
 ## Pitfalls
 
+- **Registrar a display property não basta: são quatro lugares.** `ISSUE_DISPLAY_PROPERTIES` só coloca a opção no menu *Exibir*. Para a propriedade aparecer de fato é preciso (a) `getComputedDisplayProperties` em `packages/utils/src/work-item/base.ts` — ele monta um objeto **explícito**, e uma chave ausente dele é descartada em silêncio mesmo vindo `true` da API; (b) a coluna da planilha; (c) o badge em `issue-layouts/properties/all-properties.tsx`, que serve Lista, Kanban, Calendário e Gantt; e (d) o painel do **peek** (`issues/peek-overview/properties.tsx`), que é um arquivo separado do painel da página de detalhe (`issue-detail/sidebar.tsx`). Faltando (a), nada renderiza em lugar nenhum; faltando (c) ou (d), a propriedade some só naqueles layouts. Cobertura em `packages/utils/tests/computed-display-properties.test.ts`.
 - **Shadow allowlists de campos de issue.** Um campo novo na `Issue` precisa aparecer em _todos_ os lugares que listam campos explicitamente: serializers, as projeções `.values()` de `views/issue/base.py` e `sub_issue.py`, e o `addIssueToStore` de `issue.store.ts` no front. Faltando o último, o dropdown mostra "Nenhum" mesmo com o valor salvo no banco — mesmo sintoma do `recurrence_pattern` em [tarefas-recorrentes.md](tarefas-recorrentes.md#pitfalls--todos-os-lugares-onde-um-campo-novo-de-issue-precisa-aparecer).
 - **`client_id` é escalar e NÃO entra no `FIELD_MAPPER` do `plane/utils/grouper.py`.** Esse mapa existe só para campos de array (`label_ids`, `assignee_ids`, `module_ids`). Escalares como `state_id`, `cycle_id` e `client_id` só precisam entrar em `required_fields` e ganhar um branch em `issue_group_values`.
 - **O item de sidebar precisa estar em dois lugares.** Além de `WORKSPACE_SIDEBAR_STATIC_NAVIGATION_ITEMS(_LINKS)` nos constants, a chave tem que entrar no array `staticItems` de `core/components/workspace/sidebar/sidebar-item.tsx` — sem isso o item simplesmente não renderiza.

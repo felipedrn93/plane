@@ -6,6 +6,7 @@
 
 import type { FC } from "react";
 import { observer } from "mobx-react";
+import { Building2 } from "lucide-react";
 // i18n
 import { useTranslation } from "@plane/i18n";
 // ui icons
@@ -25,6 +26,7 @@ import {
 } from "@plane/propel/icons";
 import { cn, getDate, renderFormattedPayloadDate, shouldHighlightIssueDueDate } from "@plane/utils";
 // components
+import { ClientDropdown } from "@/components/dropdowns/client";
 import { DateDropdown } from "@/components/dropdowns/date";
 import { EstimateDropdown } from "@/components/dropdowns/estimate";
 import { RecurrenceDropdown } from "@/components/dropdowns/recurrence";
@@ -252,6 +254,22 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
             />
           </SidebarPropertyListItem>
         )}
+
+        <SidebarPropertyListItem icon={Building2} label={t("clients.client")}>
+          <ClientDropdown
+            value={issue?.client_id ?? null}
+            onChange={(clientId) => issueOperations.update(workspaceSlug, projectId, issueId, { client_id: clientId })}
+            disabled={disabled}
+            buttonVariant="transparent-with-text"
+            className="group h-7.5 w-full grow"
+            buttonContainerClassName="w-full text-left h-7.5 rounded-sm"
+            buttonClassName={`text-body-xs-medium justify-between ${issue?.client_id ? "" : "text-placeholder"}`}
+            placeholder={t("clients.none")}
+            hideIcon
+            dropdownArrow
+            dropdownArrowClassName="h-3.5 w-3.5 hidden group-hover:inline"
+          />
+        </SidebarPropertyListItem>
 
         <SidebarPropertyListItem icon={ParentPropertyIcon} label={t("common.parent")}>
           <IssueParentSelectRoot

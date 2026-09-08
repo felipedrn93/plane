@@ -26,6 +26,7 @@ import {
   shouldHighlightIssueDueDate,
 } from "@plane/utils";
 // components
+import { ClientDropdown } from "@/components/dropdowns/client";
 import { CycleDropdown } from "@/components/dropdowns/cycle";
 import { DateDropdown } from "@/components/dropdowns/date";
 import { DateRangeDropdown } from "@/components/dropdowns/date-range";
@@ -149,6 +150,10 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
     },
     [issue, issueOperations]
   );
+
+  const handleClient = async (clientId: string | null) => {
+    if (updateIssue) await updateIssue(issue.project_id, issue.id, { client_id: clientId });
+  };
 
   const handleStartDate = async (date: Date | null) => {
     if (updateIssue)
@@ -411,6 +416,22 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
           </>
         )}
       </>
+
+      {/* client */}
+      <WithDisplayPropertiesHOC displayProperties={displayProperties} displayPropertyKey="client">
+        <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
+          <ClientDropdown
+            value={issue?.client_id ?? null}
+            onChange={handleClient}
+            disabled={isReadOnly}
+            buttonContainerClassName="truncate max-w-40"
+            buttonVariant="border-with-text"
+            placeholder={t("clients.client")}
+            renderByDefault={isMobile}
+            showTooltip
+          />
+        </div>
+      </WithDisplayPropertiesHOC>
 
       {/* estimates */}
       {projectId && areEstimateEnabledByProjectId(projectId?.toString()) && (
