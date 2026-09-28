@@ -62,6 +62,7 @@ Roteiro manual:
 
 - **Deploy com migração.** `docker compose build api migrator web` e `docker compose up migrator` antes de `up -d api web`, senão o `api` fica esperando migração (502).
 - **Container `plane-test`:** o `--env-file` do Docker não remove aspas (`RABBITMQ_PORT="5672"` vira a string `"5672"`), e aí qualquer teste que dispara task Celery (ex.: `delete()` com soft-delete em cascata) quebra. Gerar um env sem aspas (`sed -E 's/^([A-Z_]+)="(.*)"$/\1=\2/'`) e passar `DATABASE_URL`/`REDIS_URL` já expandidos. Com isso a suíte fica só com as 5 falhas antigas documentadas em [clientes-cadastro.md](clientes-cadastro.md).
+- **Subtarefas de outros projetos ficam de fora.** O Plane permite filho em outro projeto do workspace; a foto só leva filhos do projeto da origem, senão nome/descrição de tarefas de um projeto que o usuário não vê vazariam para a cópia e para todos os membros via modelo (achado da revisão).
 - **Foto congelada:** mudar a tarefa de origem depois não altera o modelo; é preciso salvar de novo.
 
 ## Fora de escopo
