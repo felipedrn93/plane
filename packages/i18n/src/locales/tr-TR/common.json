@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Düzenleyici değişiklikleri atmaya hazır değil",
   "failed_to_move_issue_to_project": "İş öğesi projeye taşınamadı",
   "create_more": "Daha fazla oluştur",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Projeye ekle",
   "discard": "Vazgeç",
   "duplicate_issue_found": "Yinelenen iş öğesi bulundu",

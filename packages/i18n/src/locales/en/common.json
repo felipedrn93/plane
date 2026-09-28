@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Editor is not ready to discard changes",
   "failed_to_move_issue_to_project": "Failed to move work item to project",
   "create_more": "Create more",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Add to project",
   "discard": "Discard",
   "duplicate_issue_found": "Duplicate work item found",

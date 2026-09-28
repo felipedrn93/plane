@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Trình soạn thảo chưa sẵn sàng để hủy bỏ thay đổi",
   "failed_to_move_issue_to_project": "Không thể di chuyển mục công việc đến dự án",
   "create_more": "Tạo thêm",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Thêm vào dự án",
   "discard": "Hủy bỏ",
   "duplicate_issue_found": "Đã tìm thấy mục công việc trùng lặp",

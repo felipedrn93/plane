@@ -29,8 +29,8 @@ from django.utils import timezone
 
 # Module imports
 from plane.bgtasks.issue_activities_task import issue_activity
-from plane.db.models import Issue, IssueAssignee, IssueLabel, State
-from plane.db.models.state import StateGroup
+from plane.db.models import Issue
+from plane.utils.issue_structure import copy_assignees_and_labels, default_state_for_project
 from plane.utils.exception_logger import log_exception
 from plane.utils.recurrence_validator import validate_recurrence_pattern  # re-exported
 
@@ -152,51 +152,6 @@ def shift_dates(start_date, target_date, delta):
     )
 
 
-def _default_state_for_project(project):
-    """Pick the project's default (non-triage) state, falling back to first by sequence."""
-    return (
-        State.objects.filter(project=project, default=True).exclude(group=StateGroup.TRIAGE.value).first()
-        or State.objects.filter(project=project).exclude(group=StateGroup.TRIAGE.value).order_by("sequence").first()
-    )
-
-
-def _copy_issue_relations(source, new_issue):
-    """Clone assignees and labels from `source` issue onto `new_issue`."""
-    assignee_ids = list(IssueAssignee.objects.filter(issue=source).values_list("assignee_id", flat=True))
-    if assignee_ids:
-        IssueAssignee.objects.bulk_create(
-            [
-                IssueAssignee(
-                    issue=new_issue,
-                    assignee_id=assignee_id,
-                    project=new_issue.project,
-                    workspace=new_issue.workspace,
-                    created_by=source.created_by,
-                    updated_by=source.updated_by,
-                )
-                for assignee_id in assignee_ids
-            ],
-            ignore_conflicts=True,
-        )
-
-    label_ids = list(IssueLabel.objects.filter(issue=source).values_list("label_id", flat=True))
-    if label_ids:
-        IssueLabel.objects.bulk_create(
-            [
-                IssueLabel(
-                    issue=new_issue,
-                    label_id=label_id,
-                    project=new_issue.project,
-                    workspace=new_issue.workspace,
-                    created_by=source.created_by,
-                    updated_by=source.updated_by,
-                )
-                for label_id in label_ids
-            ],
-            ignore_conflicts=True,
-        )
-
-
 def _emit_created_activity(new_issue, source):
     """Emit an `issue.activity.created` event linking the clone to its source."""
     issue_activity.delay(
@@ -242,7 +197,7 @@ def create_next_recurring_issue(issue_id):
             if new_target is None:
                 return
 
-            default_state = _default_state_for_project(issue.project)
+            default_state = default_state_for_project(issue.project)
 
             new_issue = Issue.objects.create(
                 workspace=issue.workspace,
@@ -264,7 +219,7 @@ def create_next_recurring_issue(issue_id):
                 updated_by=issue.updated_by,
             )
 
-            _copy_issue_relations(issue, new_issue)
+            copy_assignees_and_labels(issue, new_issue)
             _emit_created_activity(new_issue, issue)
 
             # Cascade direct sub-issues under the new parent occurrence, shifting
@@ -276,7 +231,7 @@ def create_next_recurring_issue(issue_id):
             for child in children:
                 child_start, child_target = shift_dates(child.start_date, child.target_date, delta)
                 child_state = (
-                    default_state if child.project_id == issue.project_id else _default_state_for_project(child.project)
+                    default_state if child.project_id == issue.project_id else default_state_for_project(child.project)
                 )
                 new_child = Issue.objects.create(
                     workspace=child.workspace,
@@ -297,7 +252,7 @@ def create_next_recurring_issue(issue_id):
                     created_by=child.created_by,
                     updated_by=child.updated_by,
                 )
-                _copy_issue_relations(child, new_child)
+                copy_assignees_and_labels(child, new_child)
                 _emit_created_activity(new_child, child)
     except Issue.DoesNotExist:
         return

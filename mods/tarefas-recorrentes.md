@@ -42,7 +42,7 @@ JSONField nullable no model `Issue`:
 **Backend**
 
 - `apps/api/plane/db/migrations/0122_issue_recurrence_pattern.py` — adiciona a coluna JSONB em `issues`.
-- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`. Usa `dateutil.rrule`. Re-exporta `validate_recurrence_pattern` de `plane.utils.recurrence_validator` para manter compatibilidade com os testes. Desde 2026-06-11 inclui também os helpers da cascata de subtarefas (`shift_dates`, `_default_state_for_project`, `_copy_issue_relations`, `_emit_created_activity`).
+- `apps/api/plane/bgtasks/recurring_issue_task.py` — task Celery `create_next_recurring_issue` + utilitários `compute_next_date`, `compute_next_dates`. Usa `dateutil.rrule`. Re-exporta `validate_recurrence_pattern` de `plane.utils.recurrence_validator` para manter compatibilidade com os testes. Desde 2026-06-11 inclui também os helpers da cascata de subtarefas (`shift_dates`, `_emit_created_activity`); desde 2026-09-28 os helpers de estado padrão e cópia de responsáveis/labels vivem em `plane/utils/issue_structure.py` (ver [copiar-estrutura-tarefa.md](copiar-estrutura-tarefa.md)).
 - `apps/api/plane/utils/recurrence_validator.py` — função `validate_recurrence_pattern` (schema do JSONB) extraída do `recurring_issue_task.py` para um módulo dependency-free. Necessário porque os serializers de Issue precisam validar o campo, e importar direto do `recurring_issue_task.py` (que importa `issue_activities_task`, que importa `IssueActivitySerializer` do pacote serializers) fechava um ciclo durante o boot do Django.
 - `apps/api/plane/tests/unit/bg_tasks/test_recurring_issue_task.py` — 16 testes pytest cobrindo cálculo de próxima data (diário, semanal com/sem weekdays + wrap, mensal monthday, mensal Nª/última weekday, anual), `compute_next_dates` (preserva delta start↔target) e validação do schema. Atualizado em 2026-06-11 com `TestShiftDates` (4 testes puros) e `TestRecurringIssueCascade` (2 testes `django_db`: cascata pai→subtarefas e regressão da subtarefa recorrente sob o mesmo pai).
 
@@ -116,7 +116,7 @@ Estende a recorrência para **copiar as subtarefas junto com o pai**, cobrindo d
 
 ### Implementação (`recurring_issue_task.py`)
 - `shift_dates(start_date, target_date, delta)` — helper puro: desloca ambas as datas por um `timedelta`, preservando `None`.
-- `_default_state_for_project(project)` e `_copy_issue_relations(source, new_issue)` — extraídos da criação do pai para reuso nas subtarefas (state default não-triage + cópia de assignees/labels via `bulk_create`).
+- `default_state_for_project(project)` e `copy_assignees_and_labels(source, new_issue)` (hoje em `plane/utils/issue_structure.py`, antes `_default_state_for_project` / `_copy_issue_relations` neste arquivo) — extraídos da criação do pai para reuso nas subtarefas (state default não-triage + cópia de assignees/labels via `bulk_create`).
 - `_emit_created_activity(new_issue, source)` — emite `issue.activity.created` (com `recurring_source_id`) para cada clone.
 - Depois de criar o novo pai, a task itera os filhos diretos e cria um clone de cada (`parent` = novo pai, datas deslocadas pelo delta, state default, `recurrence_pattern` do próprio filho preservado, assignees/labels copiados). Tudo dentro do mesmo `transaction.atomic`.
 

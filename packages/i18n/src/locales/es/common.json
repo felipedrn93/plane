@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "El editor no está listo para descartar cambios",
   "failed_to_move_issue_to_project": "Error al mover elemento de trabajo al proyecto",
   "create_more": "Crear más",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Agregar al proyecto",
   "discard": "Descartar",
   "duplicate_issue_found": "Se encontró un elemento de trabajo duplicado",

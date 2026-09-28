@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "编辑器尚未准备好放弃更改",
   "failed_to_move_issue_to_project": "无法将工作项移动到项目",
   "create_more": "创建更多",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "添加到项目",
   "discard": "放弃",
   "duplicate_issue_found": "发现重复的工作项",

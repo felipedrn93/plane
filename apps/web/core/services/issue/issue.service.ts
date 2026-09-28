@@ -283,6 +283,21 @@ export class IssueService extends APIService {
       });
   }
 
+  async copyStructure(
+    workspaceSlug: string,
+    projectId: string,
+    issueId: string,
+    sourceIssueId: string
+  ): Promise<{ created: number }> {
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issues/${issueId}/copy-structure/`, {
+      source_issue_id: sourceIssueId,
+    })
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
   async fetchIssueLinks(workspaceSlug: string, projectId: string, issueId: string): Promise<TIssueLink[]> {
     return this.get(
       `/api/workspaces/${workspaceSlug}/projects/${projectId}/${this.serviceType}/${issueId}/${this.serviceType === EIssueServiceType.EPICS ? "links" : "issue-links"}/`

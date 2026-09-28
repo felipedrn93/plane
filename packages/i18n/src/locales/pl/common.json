@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Edytor nie jest gotowy do odrzucenia zmian",
   "failed_to_move_issue_to_project": "Nie udało się przenieść elementu pracy do projektu",
   "create_more": "Utwórz więcej",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Dodaj do projektu",
   "discard": "Odrzuć",
   "duplicate_issue_found": "Znaleziono zduplikowany element pracy",

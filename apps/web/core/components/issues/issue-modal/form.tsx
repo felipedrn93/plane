@@ -56,6 +56,8 @@ export interface IssueFormProps {
   isCreateMoreToggleEnabled: boolean;
   onAssetUpload: (assetId: string) => void;
   onCreateMoreToggleChange: (value: boolean) => void;
+  isCopyStructureEnabled?: boolean;
+  onCopyStructureChange?: (value: boolean) => void;
   onChange?: (formData: Partial<TIssue> | null) => void;
   onClose: () => void;
   onSubmit: (values: Partial<TIssue>, is_draft_issue?: boolean) => Promise<void>;
@@ -87,6 +89,8 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
     projectId: defaultProjectId,
     isCreateMoreToggleEnabled,
     onCreateMoreToggleChange,
+    isCopyStructureEnabled = false,
+    onCopyStructureChange,
     isDraft,
     moveToIssue = false,
     modalTitle = `${data?.id ? t("update") : isDraft ? t("create_a_draft") : t("create_new_issue")}`,
@@ -512,6 +516,19 @@ export const IssueFormRoot = observer(function IssueFormRoot(props: IssueFormPro
                   className="flex items-center justify-end gap-4 border-t-[0.5px] border-subtle pt-6 pb-3"
                   tabIndex={getIndex("create_more")}
                 >
+                  {!data?.id && data?.sourceIssueId && !!data?.sub_issues_count && onCopyStructureChange && (
+                    <div
+                      className="inline-flex cursor-pointer items-center gap-1.5"
+                      onClick={() => onCopyStructureChange(!isCopyStructureEnabled)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") onCopyStructureChange(!isCopyStructureEnabled);
+                      }}
+                      role="button"
+                    >
+                      <ToggleSwitch value={isCopyStructureEnabled} onChange={() => {}} size="sm" />
+                      <span className="text-caption-sm-regular">{t("copy_sub_issues_and_relations")}</span>
+                    </div>
+                  )}
                   {!data?.id && (
                     <div
                       className="inline-flex cursor-pointer items-center gap-1.5"

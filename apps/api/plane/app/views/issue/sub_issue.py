@@ -29,6 +29,7 @@ from collections import defaultdict
 from plane.utils.grouper import attach_parent_chain
 from plane.utils.host import base_host
 from plane.utils.order_queryset import order_issue_queryset
+from plane.utils.issue_structure import copy_issue_structure
 
 
 class SubIssuesEndpoint(BaseAPIView):
@@ -250,3 +251,30 @@ class SubIssuesEndpoint(BaseAPIView):
             {"sub_issues": serializer.data, "state_distribution": result},
             status=status.HTTP_200_OK,
         )
+
+
+class IssueCopyStructureEndpoint(BaseAPIView):
+    """Copy the sub-issue tree (and the relations inside it) of `source_issue_id` under `issue_id`."""
+
+    permission_classes = [ProjectEntityPermission]
+
+    def post(self, request, slug, project_id, issue_id):
+        target = Issue.issue_objects.filter(pk=issue_id, project_id=project_id, workspace__slug=slug).first()
+        source = Issue.issue_objects.filter(
+            pk=request.data.get("source_issue_id"), project_id=project_id, workspace__slug=slug
+        ).first()
+        if target is None or source is None:
+            return Response({"error": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Copying a tree into itself would clone the target under its own subtree.
+        node = target
+        while node is not None:
+            if node.id == source.id:
+                return Response(
+                    {"error": "Cannot copy an issue structure into itself"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            node = node.parent
+
+        created = copy_issue_structure(source, target, request.user)
+        return Response({"created": created}, status=status.HTTP_201_CREATED)

@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Editor není připraven zahodit změny",
   "failed_to_move_issue_to_project": "Přesunutí pracovní položky do projektu se nezdařilo",
   "create_more": "Vytvořit více",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Přidat do projektu",
   "discard": "Zahodit",
   "duplicate_issue_found": "Nalezena duplicitní pracovní položka",

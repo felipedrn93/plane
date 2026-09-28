@@ -25,7 +25,9 @@ import { useIssueStoreType } from "@/hooks/use-issue-layout-store";
 import { useIssuesActions } from "@/hooks/use-issues-actions";
 // services
 import { FileService } from "@/services/file.service";
+import { IssueService } from "@/services/issue";
 const fileService = new FileService();
+const issueService = new IssueService();
 // local imports
 import { CreateIssueToastActionItems } from "../create-issue-toast-action-items";
 import { DraftIssueLayout } from "./draft-issue-layout";
@@ -62,6 +64,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   // states
   const [changesMade, setChangesMade] = useState<Partial<TIssue> | null>(null);
   const [createMore, setCreateMore] = useState(false);
+  const [copyStructure, setCopyStructure] = useState(true);
   const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
   const [description, setDescription] = useState<string | undefined>(undefined);
   const [uploadedAssetIds, setUploadedAssetIds] = useState<string[]>([]);
@@ -159,7 +162,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
 
   const handleCreateIssue = async (
     payload: Partial<TIssue>,
-    is_draft_issue: boolean = false
+    is_draft_issue: boolean = false,
+    sourceIssueId?: string
   ): Promise<TIssue | undefined> => {
     if (!workspaceSlug || !payload.project_id) return;
 
@@ -231,6 +235,21 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
           projectId: response.project_id,
           parentId: response.id,
         });
+
+        // "make a copy": clone the source's sub-work items and the relations between them
+        if (sourceIssueId && !is_draft_issue) {
+          try {
+            await issueService.copyStructure(workspaceSlug.toString(), response.project_id, response.id, sourceIssueId);
+            await fetchIssue(workspaceSlug.toString(), response.project_id, response.id);
+            await projectIssues.fetchIssuesWithExistingPagination(
+              workspaceSlug.toString(),
+              response.project_id,
+              "mutation"
+            );
+          } catch {
+            setToast({ type: TOAST_TYPE.ERROR, title: t("error"), message: t("copy_sub_issues_failed") });
+          }
+        }
       }
 
       setToast({
@@ -367,13 +386,14 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const handleFormSubmit = async (payload: Partial<TIssue>, is_draft_issue: boolean = false) => {
     if (!workspaceSlug || !payload.project_id || !storeType) return;
     // remove sourceIssueId from payload since it is not needed
+    const sourceIssueId = copyStructure ? data?.sourceIssueId : undefined;
     if (data?.sourceIssueId) delete data.sourceIssueId;
 
     let response: TIssue | undefined = undefined;
 
     try {
       if (beforeFormSubmit) await beforeFormSubmit();
-      if (!data?.id) response = await handleCreateIssue(payload, is_draft_issue);
+      if (!data?.id) response = await handleCreateIssue(payload, is_draft_issue, sourceIssueId);
       else response = await handleUpdateIssue(payload);
     } finally {
       if (response != undefined && onSubmit) await onSubmit(response);
@@ -403,6 +423,8 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
     projectId: activeProjectId,
     isCreateMoreToggleEnabled: createMore,
     onCreateMoreToggleChange: handleCreateMoreToggleChange,
+    isCopyStructureEnabled: copyStructure,
+    onCopyStructureChange: setCopyStructure,
     isDraft: isDraft,
     moveToIssue: moveToIssue,
     modalTitle: modalTitle,

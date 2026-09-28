@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "편집기가 변경 사항을 폐기할 준비가 되지 않았습니다",
   "failed_to_move_issue_to_project": "작업 항목을 프로젝트로 이동하지 못했습니다",
   "create_more": "더 많이 생성",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "프로젝트에 추가",
   "discard": "폐기",
   "duplicate_issue_found": "중복된 작업 항목 발견",

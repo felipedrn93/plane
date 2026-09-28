@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "O editor não está pronto para descartar as alterações",
   "failed_to_move_issue_to_project": "Falha ao mover o item de trabalho para o projeto",
   "create_more": "Criar mais",
+  "copy_sub_issues_and_relations": "Copiar subtarefas e dependências",
+  "copy_sub_issues_failed": "Tarefa criada, mas as subtarefas não foram copiadas",
   "add_to_project": "Adicionar ao projeto",
   "discard": "Descartar",
   "duplicate_issue_found": "Item de trabalho duplicado encontrado",

@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "Editorul nu este pregătit să renunțe la modificări",
   "failed_to_move_issue_to_project": "Nu s-a putut muta activitatea în proiect",
   "create_more": "Creează mai multe",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Adaugă la proiect",
   "discard": "Renunță",
   "duplicate_issue_found": "Activitate duplicată găsită",

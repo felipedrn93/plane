@@ -278,6 +278,8 @@
   "editor_is_not_ready_to_discard_changes": "L’éditeur n’est pas prêt à annuler les modifications",
   "failed_to_move_issue_to_project": "Échec du déplacement de l’élément de travail vers le projet",
   "create_more": "Créer plus",
+  "copy_sub_issues_and_relations": "Copy sub-work items and relations",
+  "copy_sub_issues_failed": "Work item created, but its sub-work items could not be copied",
   "add_to_project": "Ajouter au projet",
   "discard": "Annuler",
   "duplicate_issue_found": "Élément de travail en double trouvé",
