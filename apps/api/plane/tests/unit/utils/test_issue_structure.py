@@ -4,19 +4,22 @@
 
 from datetime import date
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from rest_framework import status
 
 from plane.db.models import Issue, IssueAssignee, IssueRelation, Project, ProjectMember, State
-from plane.utils.issue_structure import copy_issue_structure
+from plane.utils.issue_structure import copy_issue_structure, instantiate_issue_structure, snapshot_issue_structure
 
 
 @pytest.mark.unit
 class TestCopyIssueStructure:
     @pytest.fixture
     def project(self, create_user, workspace):
-        return Project.objects.create(name="BI", identifier="BI", workspace=workspace, created_by=create_user)
+        project = Project.objects.create(name="BI", identifier="BI", workspace=workspace, created_by=create_user)
+        ProjectMember.objects.create(project=project, member=create_user, workspace=workspace, role=20)
+        return project
 
     @pytest.fixture
     def todo(self, project):
@@ -98,6 +101,51 @@ class TestCopyIssueStructure:
         }
         # the source tree is untouched
         assert Issue.issue_objects.filter(parent=source).count() == 3
+
+    @pytest.mark.django_db
+    @patch("plane.utils.issue_structure.issue_activity")
+    def test_snapshot_then_instantiate(self, _mock_activity, create_user, make):
+        source = make("Modelo", priority="high")
+        a = make("A", parent=source)
+        b = make("B", parent=a)
+        self._relate(b, a)
+        self._relate(a, source, "relates_to")
+
+        structure = snapshot_issue_structure(source)
+        assert structure["root"]["name"] == "Modelo"
+        assert structure["root"]["priority"] == "high"
+        assert [(n["name"], n["parent"]) for n in structure["nodes"]] == [("A", "root"), ("B", str(a.id))]
+        assert sorted(structure["relations"], key=lambda r: r["relation_type"]) == [
+            {"issue": str(b.id), "related_issue": str(a.id), "relation_type": "blocked_by"},
+            {"issue": str(a.id), "related_issue": "root", "relation_type": "relates_to"},
+        ]
+
+        target = make("Nova")
+        assert instantiate_issue_structure(structure, target, create_user) == 2
+        new_a = Issue.issue_objects.get(parent=target)
+        new_b = Issue.issue_objects.get(parent=new_a)
+        assert IssueRelation.objects.filter(issue=new_b, related_issue=new_a, relation_type="blocked_by").exists()
+        assert IssueRelation.objects.filter(issue=new_a, related_issue=target, relation_type="relates_to").exists()
+
+    @pytest.mark.django_db
+    @patch("plane.utils.issue_structure.issue_activity")
+    def test_instantiate_skips_stale_assignees_and_labels(self, _mock_activity, create_user, make):
+        source = make("Modelo")
+        make("A", parent=source)
+        structure = snapshot_issue_structure(source)
+        structure["nodes"][0]["assignee_ids"] = [str(create_user.id), str(uuid4())]
+        structure["nodes"][0]["label_ids"] = [str(uuid4())]
+
+        target = make("Nova")
+        instantiate_issue_structure(structure, target, create_user)
+        child = Issue.issue_objects.get(parent=target)
+        assert list(child.assignees.all()) == [create_user]
+        assert child.labels.count() == 0
+
+    @pytest.mark.django_db
+    def test_instantiate_structure_without_sub_issues(self, create_user, make):
+        source = make("Sem filhos")
+        assert instantiate_issue_structure(snapshot_issue_structure(source), make("Nova"), create_user) == 0
 
 
 @pytest.mark.unit

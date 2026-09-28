@@ -11,7 +11,7 @@ from django.utils import timezone
 
 # Module imports
 from plane.bgtasks.issue_activities_task import issue_activity
-from plane.db.models import Issue, IssueAssignee, IssueLabel, IssueRelation, State
+from plane.db.models import Issue, IssueAssignee, IssueLabel, IssueRelation, Label, ProjectMember, State
 from plane.db.models.state import StateGroup
 
 
@@ -60,60 +60,122 @@ def copy_assignees_and_labels(source, new_issue):
         )
 
 
-def copy_issue_structure(source, target, actor):
-    """Clone every descendant of `source` under `target`, plus the relations between them.
+def _node_fields(issue):
+    return {
+        "name": issue.name,
+        "description_html": issue.description_html,
+        "priority": issue.priority,
+        "assignee_ids": [
+            str(i) for i in IssueAssignee.objects.filter(issue=issue).values_list("assignee_id", flat=True)
+        ],
+        "label_ids": [str(i) for i in IssueLabel.objects.filter(issue=issue).values_list("label_id", flat=True)],
+    }
 
-    The clones start in the project's default state with no dates; assignees and labels
-    are kept. Relations are copied only when both ends are inside the copied tree
-    (`source` itself maps to `target`). Returns the number of sub-issues created.
+
+def snapshot_issue_structure(source):
+    """Photograph `source` and all its descendants (plus the relations between them) as plain JSON.
+
+    Nodes are listed breadth-first, so a node's parent always comes before it. `source` itself is
+    the "root" key; relations with an end outside the tree are left out. Dates and state are not kept.
     """
-    with transaction.atomic():
-        # Walk the tree level by level: parents are always created before their children.
-        id_map = {source.id: target.id}
-        created = []
-        level = [source.id]
-        while level:
-            children = list(
-                Issue.issue_objects.filter(parent_id__in=level)
-                .exclude(id__in=id_map.keys())
-                .select_related("project")
-                .order_by("sequence_id")
-            )
-            for child in children:
-                new_child = Issue.objects.create(
-                    workspace=child.workspace,
-                    project=child.project,
-                    name=child.name,
-                    description_json=child.description_json,
-                    description_html=child.description_html,
-                    description_binary=child.description_binary,
-                    priority=child.priority,
-                    point=child.point,
-                    estimate_point=child.estimate_point,
-                    parent_id=id_map[child.parent_id],
-                    type=child.type,
-                    state=default_state_for_project(child.project),
-                    created_by=actor,
-                    updated_by=actor,
-                )
-                copy_assignees_and_labels(child, new_child)
-                id_map[child.id] = new_child.id
-                created.append(new_child)
-            level = [child.id for child in children]
+    keys = {source.id: "root"}
+    nodes = []
+    level = [source.id]
+    while level:
+        children = list(
+            Issue.issue_objects.filter(parent_id__in=level).exclude(id__in=keys.keys()).order_by("sequence_id")
+        )
+        for child in children:
+            keys[child.id] = str(child.id)
+            nodes.append({"key": str(child.id), "parent": keys[child.parent_id], **_node_fields(child)})
+        level = [child.id for child in children]
 
-        relations = IssueRelation.objects.filter(issue_id__in=id_map.keys(), related_issue_id__in=id_map.keys())
+    relations = [
+        {"issue": keys[r.issue_id], "related_issue": keys[r.related_issue_id], "relation_type": r.relation_type}
+        for r in IssueRelation.objects.filter(issue_id__in=keys.keys(), related_issue_id__in=keys.keys())
+    ]
+    return {"root": _node_fields(source), "nodes": nodes, "relations": relations}
+
+
+def valid_member_ids(project, ids):
+    """Keep only the ids of active members of `project`."""
+    return {
+        str(i)
+        for i in ProjectMember.objects.filter(project=project, member_id__in=ids, is_active=True).values_list(
+            "member_id", flat=True
+        )
+    }
+
+
+def valid_label_ids(project, ids):
+    """Keep only the ids of labels that still exist in `project`."""
+    return {str(i) for i in Label.objects.filter(project=project, id__in=ids).values_list("id", flat=True)}
+
+
+def instantiate_issue_structure(structure, target, actor):
+    """Create the snapshot's nodes under `target` (which plays the "root"). Returns how many were created.
+
+    New sub-issues start in the project's default state with no dates. Assignees who left the project
+    and labels that were deleted since the snapshot are skipped.
+    """
+    project = target.project
+    nodes = structure.get("nodes", [])
+    member_ids = valid_member_ids(project, {i for n in nodes for i in n.get("assignee_ids", [])})
+    label_ids = valid_label_ids(project, {i for n in nodes for i in n.get("label_ids", [])})
+    state = default_state_for_project(project)
+
+    with transaction.atomic():
+        id_map = {"root": target.id}
+        created = []
+        for node in nodes:
+            new_issue = Issue.objects.create(
+                workspace=target.workspace,
+                project=project,
+                name=node["name"],
+                description_html=node.get("description_html") or "<p></p>",
+                priority=node.get("priority") or "none",
+                parent_id=id_map[node["parent"]],
+                state=state,
+                created_by=actor,
+                updated_by=actor,
+            )
+            id_map[node["key"]] = new_issue.id
+            created.append(new_issue)
+
+            IssueAssignee.objects.bulk_create(
+                [
+                    IssueAssignee(
+                        issue=new_issue, assignee_id=i, project=project, workspace=target.workspace, created_by=actor
+                    )
+                    for i in node.get("assignee_ids", [])
+                    if i in member_ids
+                ],
+                ignore_conflicts=True,
+            )
+            IssueLabel.objects.bulk_create(
+                [
+                    IssueLabel(
+                        issue=new_issue, label_id=i, project=project, workspace=target.workspace, created_by=actor
+                    )
+                    for i in node.get("label_ids", [])
+                    if i in label_ids
+                ],
+                ignore_conflicts=True,
+            )
+
         IssueRelation.objects.bulk_create(
             [
                 IssueRelation(
-                    issue_id=id_map[relation.issue_id],
-                    related_issue_id=id_map[relation.related_issue_id],
-                    relation_type=relation.relation_type,
-                    project_id=target.project_id,
-                    workspace_id=target.workspace_id,
+                    issue_id=id_map[r["issue"]],
+                    related_issue_id=id_map[r["related_issue"]],
+                    relation_type=r["relation_type"],
+                    project=project,
+                    workspace=target.workspace,
                     created_by=actor,
                     updated_by=actor,
                 )
-                for relation in relations
+                for r in structure.get("relations", [])
+                if r["issue"] in id_map and r["related_issue"] in id_map
             ],
             ignore_conflicts=True,
         )
@@ -131,3 +193,8 @@ def copy_issue_structure(source, target, actor):
             notification=False,
         )
     return len(created)
+
+
+def copy_issue_structure(source, target, actor):
+    """Clone every descendant of `source` under `target`, plus the relations between them."""
+    return instantiate_issue_structure(snapshot_issue_structure(source), target, actor)
