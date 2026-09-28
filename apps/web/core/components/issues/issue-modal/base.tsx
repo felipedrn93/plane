@@ -396,8 +396,9 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
       : copyStructure && data?.sourceIssueId
         ? { source_issue_id: data.sourceIssueId }
         : undefined;
-    if (data?.sourceIssueId) delete data.sourceIssueId;
-    if (data?.issueTemplateId) delete data.issueTemplateId;
+    // strip them from the payload only: mutating `data` would lose them if this submit fails
+    delete payload.sourceIssueId;
+    delete payload.issueTemplateId;
 
     let response: TIssue | undefined = undefined;
 

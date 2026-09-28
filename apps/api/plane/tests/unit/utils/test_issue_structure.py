@@ -147,6 +147,14 @@ class TestCopyIssueStructure:
         source = make("Sem filhos")
         assert instantiate_issue_structure(snapshot_issue_structure(source), make("Nova"), create_user) == 0
 
+    @pytest.mark.django_db
+    def test_snapshot_skips_sub_issues_from_other_projects(self, create_user, workspace, make):
+        other = Project.objects.create(name="Outro", identifier="OUT", workspace=workspace, created_by=create_user)
+        source = make("Modelo")
+        make("Daqui", parent=source)
+        Issue.objects.create(name="Secreta", project=other, workspace=workspace, parent=source)
+        assert [n["name"] for n in snapshot_issue_structure(source)["nodes"]] == ["Daqui"]
+
 
 @pytest.mark.unit
 @pytest.mark.django_db

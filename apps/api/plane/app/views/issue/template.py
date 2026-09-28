@@ -41,8 +41,8 @@ class IssueTemplateEndpoint(BaseAPIView):
 
     def post(self, request, slug, project_id):
         name = (request.data.get("name") or "").strip()
-        if not name:
-            return Response({"error": "Name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        if not name or len(name) > 255:
+            return Response({"error": "Name is required (max 255 characters)"}, status=status.HTTP_400_BAD_REQUEST)
         source = Issue.issue_objects.filter(
             pk=request.data.get("issue_id"), project_id=project_id, workspace__slug=slug
         ).first()

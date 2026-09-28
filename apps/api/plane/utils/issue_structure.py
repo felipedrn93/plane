@@ -84,7 +84,9 @@ def snapshot_issue_structure(source):
     level = [source.id]
     while level:
         children = list(
-            Issue.issue_objects.filter(parent_id__in=level).exclude(id__in=keys.keys()).order_by("sequence_id")
+            Issue.issue_objects.filter(parent_id__in=level, project_id=source.project_id)
+            .exclude(id__in=keys.keys())
+            .order_by("sequence_id")
         )
         for child in children:
             keys[child.id] = str(child.id)
