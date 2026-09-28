@@ -27,6 +27,7 @@ import { BreadcrumbLink } from "@/components/common/breadcrumb-link";
 import { CountChip } from "@/components/common/count-chip";
 // constants
 import { HeaderFilters } from "@/components/issues/filters";
+import { IssueTemplatesDropdown } from "@/components/issues/issue-templates-dropdown";
 // helpers
 // hooks
 import { useCommandPalette } from "@/hooks/store/use-command-palette";
@@ -116,6 +117,9 @@ export const IssuesHeader = observer(function IssuesHeader() {
             canUserCreateIssue={canUserCreateIssue}
           />
         </div>
+        {canUserCreateIssue && workspaceSlug && projectId && (
+          <IssueTemplatesDropdown workspaceSlug={workspaceSlug.toString()} projectId={projectId.toString()} />
+        )}
         {canUserCreateIssue && (
           <Button
             variant="primary"

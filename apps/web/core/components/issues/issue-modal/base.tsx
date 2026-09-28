@@ -163,7 +163,7 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const handleCreateIssue = async (
     payload: Partial<TIssue>,
     is_draft_issue: boolean = false,
-    sourceIssueId?: string
+    structureSource?: { source_issue_id: string } | { template_id: string }
   ): Promise<TIssue | undefined> => {
     if (!workspaceSlug || !payload.project_id) return;
 
@@ -237,9 +237,14 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
         });
 
         // "make a copy": clone the source's sub-work items and the relations between them
-        if (sourceIssueId && !is_draft_issue) {
+        if (structureSource && !is_draft_issue) {
           try {
-            await issueService.copyStructure(workspaceSlug.toString(), response.project_id, response.id, sourceIssueId);
+            await issueService.copyStructure(
+              workspaceSlug.toString(),
+              response.project_id,
+              response.id,
+              structureSource
+            );
             await fetchIssue(workspaceSlug.toString(), response.project_id, response.id);
             await projectIssues.fetchIssuesWithExistingPagination(
               workspaceSlug.toString(),
@@ -386,14 +391,19 @@ export const CreateUpdateIssueModalBase = observer(function CreateUpdateIssueMod
   const handleFormSubmit = async (payload: Partial<TIssue>, is_draft_issue: boolean = false) => {
     if (!workspaceSlug || !payload.project_id || !storeType) return;
     // remove sourceIssueId from payload since it is not needed
-    const sourceIssueId = copyStructure ? data?.sourceIssueId : undefined;
+    const structureSource = data?.issueTemplateId
+      ? { template_id: data.issueTemplateId }
+      : copyStructure && data?.sourceIssueId
+        ? { source_issue_id: data.sourceIssueId }
+        : undefined;
     if (data?.sourceIssueId) delete data.sourceIssueId;
+    if (data?.issueTemplateId) delete data.issueTemplateId;
 
     let response: TIssue | undefined = undefined;
 
     try {
       if (beforeFormSubmit) await beforeFormSubmit();
-      if (!data?.id) response = await handleCreateIssue(payload, is_draft_issue, sourceIssueId);
+      if (!data?.id) response = await handleCreateIssue(payload, is_draft_issue, structureSource);
       else response = await handleUpdateIssue(payload);
     } finally {
       if (response != undefined && onSubmit) await onSubmit(response);

@@ -5,7 +5,8 @@
  */
 
 import { useMemo } from "react";
-import { XCircle, ArchiveRestoreIcon } from "lucide-react";
+import { XCircle, ArchiveRestoreIcon, LayoutTemplate } from "lucide-react";
+import { mutate } from "swr";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon, CopyIcon, NewTabIcon, EditIcon, ArchiveIcon, TrashIcon } from "@plane/propel/icons";
@@ -14,7 +15,11 @@ import type { EIssuesStoreType, TIssue } from "@plane/types";
 import type { TContextMenuItem } from "@plane/ui";
 import { copyUrlToClipboard, generateWorkItemLink } from "@plane/utils";
 // types
+import { getIssueTemplatesKey } from "@/components/issues/issue-templates-dropdown";
 import { createCopyMenuWithDuplication } from "@/plane-web/components/issues/issue-layouts/quick-action-dropdowns";
+import { IssueService } from "@/services/issue";
+
+const issueService = new IssueService();
 
 // Generic helper function to handle optional function calls gracefully
 // Overload for functions without parameters
@@ -191,6 +196,28 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     });
   };
 
+  const handleSaveAsTemplate = async () => {
+    const { workspaceSlug } = props;
+    if (!workspaceSlug || !issue.project_id) return;
+    const name = window.prompt(t("issue_templates.name_prompt"), issue.name)?.trim();
+    if (!name) return;
+    try {
+      await issueService.saveTemplate(workspaceSlug, issue.project_id, { issue_id: issue.id, name });
+      void mutate(getIssueTemplatesKey(issue.project_id));
+      setToast({ type: TOAST_TYPE.SUCCESS, title: t("success"), message: t("issue_templates.saved", { name }) });
+    } catch {
+      setToast({ type: TOAST_TYPE.ERROR, title: t("error"), message: t("issue_templates.save_failed") });
+    }
+  };
+
+  const createSaveAsTemplateMenuItem = (): TContextMenuItem => ({
+    key: "save-as-template",
+    title: t("issue_templates.save_as"),
+    icon: LayoutTemplate,
+    action: () => void handleSaveAsTemplate(),
+    shouldRender: isEditingAllowed,
+  });
+
   const createOpenInNewTabMenuItem = (): TContextMenuItem => ({
     key: "open-in-new-tab",
     title: t("common.actions.open_in_new_tab"),
@@ -255,6 +282,7 @@ export const useMenuItemFactory = (props: MenuItemFactoryProps) => {
     ...actionHandlers,
     createEditMenuItem,
     createCopyMenuItem,
+    createSaveAsTemplateMenuItem,
     createOpenInNewTabMenuItem,
     createCopyLinkMenuItem,
     createRemoveFromCycleMenuItem,
@@ -273,6 +301,7 @@ export const useProjectIssueMenuItems = (props: MenuItemFactoryProps): TContextM
     () => [
       factory.createEditMenuItem(),
       factory.createCopyMenuItem(),
+      factory.createSaveAsTemplateMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
       factory.createArchiveMenuItem(),
@@ -288,6 +317,7 @@ export const useWorkItemDetailMenuItems = (props: MenuItemFactoryProps): TContex
   return useMemo(
     () => [
       factory.createCopyMenuItem(props.workspaceSlug),
+      factory.createSaveAsTemplateMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createArchiveMenuItem(),
       factory.createRestoreMenuItem(),
@@ -304,6 +334,7 @@ export const useAllIssueMenuItems = (props: MenuItemFactoryProps): TContextMenuI
     () => [
       factory.createEditMenuItem(),
       factory.createCopyMenuItem(),
+      factory.createSaveAsTemplateMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
       factory.createArchiveMenuItem(),
@@ -328,6 +359,7 @@ export const useCycleIssueMenuItems = (props: MenuItemFactoryProps): TContextMen
     () => [
       factory.createEditMenuItem(customEditAction),
       factory.createCopyMenuItem(),
+      factory.createSaveAsTemplateMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
       factory.createRemoveFromCycleMenuItem(),
@@ -353,6 +385,7 @@ export const useModuleIssueMenuItems = (props: MenuItemFactoryProps): TContextMe
     () => [
       factory.createEditMenuItem(customEditAction),
       factory.createCopyMenuItem(),
+      factory.createSaveAsTemplateMenuItem(),
       factory.createOpenInNewTabMenuItem(),
       factory.createCopyLinkMenuItem(),
       factory.createRemoveFromModuleMenuItem(),

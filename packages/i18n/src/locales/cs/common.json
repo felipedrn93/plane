@@ -871,5 +871,16 @@
       "description": "Exportujte položky do JSON.",
       "short_description": "Exportovat jako JSON"
     }
+  },
+  "issue_templates": {
+    "label": "Templates",
+    "save_as": "Save as template",
+    "name_prompt": "Template name (an existing name replaces that template):",
+    "saved": "Template \"{name}\" saved",
+    "save_failed": "Could not save the template",
+    "delete_confirm": "Delete the template \"{name}\"?",
+    "delete_failed": "Could not delete the template",
+    "empty": "No templates in this project. Use \"Save as template\" in a work item menu.",
+    "sub_issues_count": "{count, plural, =0 {no sub-work items} one {# sub-work item} other {# sub-work items}}"
   }
 }

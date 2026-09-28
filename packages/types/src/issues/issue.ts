@@ -127,6 +127,8 @@ export type TIssue = TBaseIssue & {
   tempId?: string;
   // sourceIssueId is used to store the original issue id when creating a copy of an issue. Used in cloning property values. It is not a part of the API response.
   sourceIssueId?: string;
+  // issueTemplateId: project template (fork feature) whose sub-work items are created after this issue. Not part of the API response.
+  issueTemplateId?: string;
   state__group?: TStateGroups | null;
 };
 
@@ -250,3 +252,17 @@ export interface IWorkItemPeekOverview {
   is_draft?: boolean;
   storeType?: EIssuesStoreType;
 }
+
+// Project work item template (fork feature): a saved work item tree, see apps/api plane/utils/issue_structure.py
+export type TIssueTemplate = {
+  id: string;
+  name: string;
+  sub_issues_count: number;
+  root: {
+    name: string;
+    description_html?: string;
+    priority?: TIssuePriorities;
+    assignee_ids: string[];
+    label_ids: string[];
+  };
+};

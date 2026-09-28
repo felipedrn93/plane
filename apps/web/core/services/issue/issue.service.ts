@@ -17,6 +17,7 @@ import type {
   TIssueServiceType,
   TIssuesResponse,
   TIssueSubIssues,
+  TIssueTemplate,
 } from "@plane/types";
 // services
 import { APIService } from "@/services/api.service";
@@ -287,11 +288,33 @@ export class IssueService extends APIService {
     workspaceSlug: string,
     projectId: string,
     issueId: string,
-    sourceIssueId: string
+    source: { source_issue_id: string } | { template_id: string }
   ): Promise<{ created: number }> {
-    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issues/${issueId}/copy-structure/`, {
-      source_issue_id: sourceIssueId,
-    })
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issues/${issueId}/copy-structure/`, source)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async listTemplates(workspaceSlug: string, projectId: string): Promise<TIssueTemplate[]> {
+    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issue-templates/`)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async saveTemplate(workspaceSlug: string, projectId: string, data: { issue_id: string; name: string }) {
+    return this.post(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issue-templates/`, data)
+      .then((response) => response?.data)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
+  async deleteTemplate(workspaceSlug: string, projectId: string, templateId: string) {
+    return this.delete(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issue-templates/${templateId}/`)
       .then((response) => response?.data)
       .catch((error) => {
         throw error?.response?.data;

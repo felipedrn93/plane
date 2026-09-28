@@ -873,5 +873,16 @@
       "description": "Exporte itens de trabalho para um arquivo JSON.",
       "short_description": "Exportar como JSON"
     }
+  },
+  "issue_templates": {
+    "label": "Modelos",
+    "save_as": "Salvar como modelo",
+    "name_prompt": "Nome do modelo (um nome já existente substitui o modelo):",
+    "saved": "Modelo \"{name}\" salvo",
+    "save_failed": "Não foi possível salvar o modelo",
+    "delete_confirm": "Excluir o modelo \"{name}\"?",
+    "delete_failed": "Não foi possível excluir o modelo",
+    "empty": "Nenhum modelo neste projeto. Use \"Salvar como modelo\" no menu de uma tarefa.",
+    "sub_issues_count": "{count, plural, =0 {sem subtarefas} one {# subtarefa} other {# subtarefas}}"
   }
 }
