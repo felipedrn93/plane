@@ -4,6 +4,7 @@
 **Autor:** felipedrn93
 **Branch:** main
 **Plano:** nenhum (mudança delimitada, design aprovado no chat)
+**Atualizado:** 2026-09-28 — a cópia virou `instantiate(snapshot(...))`, compartilhada com [modelos-de-tarefa.md](modelos-de-tarefa.md); descrição copiada só em HTML e estimativa/tipo não são mais copiados.
 
 ## Contexto
 
@@ -57,7 +58,7 @@ Roteiro manual:
 
 - **O `delete data.sourceIssueId` do `handleFormSubmit` muta a prop.** Por isso o id da origem é lido antes. Com "Criar mais" ligado, só a primeira criação copia a estrutura.
 - **O pre-commit bloqueia os arquivos do modal.** `base.tsx`/`form.tsx` já têm 10 avisos de oxlint do upstream (`no-shadow`, `exhaustive-deps`, `prefer-tag-over-role`); o toggle novo segue o mesmo padrão `div role="button"` do "Criar mais" (trocar por `<button>` aninharia botões, pois o `ToggleSwitch` do Headless UI já é um `<button>`). Mesmo caso de [divida-ci-web.md](divida-ci-web.md).
-- **Suíte unitária no `plane-test` recriado:** 8 falhas pré-existentes (as 5 documentadas em [clientes-cadastro.md](clientes-cadastro.md) menos `copy_s3_objects`, mais 3 de `client` causadas pelo `--env-file` do Docker não remover aspas de `RABBITMQ_PORT`). Idênticas com e sem esta mod.
+- **Suíte unitária no `plane-test` recriado:** as 3 falhas extras de `client` vinham das aspas no `--env-file`; ver o pitfall em [modelos-de-tarefa.md](modelos-de-tarefa.md).
 
 ## Fora de escopo
 
