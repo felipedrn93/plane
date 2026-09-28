@@ -9,6 +9,7 @@ from plane.app.views import (
     BulkDeleteIssuesEndpoint,
     SubIssuesEndpoint,
     IssueCopyStructureEndpoint,
+    IssueTemplateEndpoint,
     IssueLinkViewSet,
     IssueAttachmentEndpoint,
     CommentReactionViewSet,
@@ -111,6 +112,16 @@ urlpatterns = [
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/copy-structure/",
         IssueCopyStructureEndpoint.as_view(),
         name="issue-copy-structure",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issue-templates/",
+        IssueTemplateEndpoint.as_view(),
+        name="issue-templates",
+    ),
+    path(
+        "workspaces/<str:slug>/projects/<uuid:project_id>/issue-templates/<uuid:pk>/",
+        IssueTemplateEndpoint.as_view(),
+        name="issue-templates",
     ),
     path(
         "workspaces/<str:slug>/projects/<uuid:project_id>/issues/<uuid:issue_id>/issue-links/",

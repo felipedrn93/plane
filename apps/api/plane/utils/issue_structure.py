@@ -7,6 +7,7 @@ import json
 
 # Django imports
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 
 # Module imports
@@ -108,8 +109,9 @@ def valid_member_ids(project, ids):
 
 
 def valid_label_ids(project, ids):
-    """Keep only the ids of labels that still exist in `project`."""
-    return {str(i) for i in Label.objects.filter(project=project, id__in=ids).values_list("id", flat=True)}
+    """Keep only the ids of labels that still exist in `project` (or workspace-wide labels)."""
+    labels = Label.objects.filter(Q(project=project) | Q(project__isnull=True, workspace_id=project.workspace_id))
+    return {str(i) for i in labels.filter(id__in=ids).values_list("id", flat=True)}
 
 
 def instantiate_issue_structure(structure, target, actor):

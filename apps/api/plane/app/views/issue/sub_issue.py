@@ -22,14 +22,23 @@ from rest_framework import status
 from .. import BaseAPIView
 from plane.app.serializers import IssueSerializer
 from plane.app.permissions import ProjectEntityPermission
-from plane.db.models import Issue, IssueLink, FileAsset, CycleIssue, IssueLabel, IssueAssignee, ModuleIssue
+from plane.db.models import (
+    Issue,
+    IssueLink,
+    FileAsset,
+    CycleIssue,
+    IssueLabel,
+    IssueAssignee,
+    IssueTemplate,
+    ModuleIssue,
+)
 from plane.bgtasks.issue_activities_task import issue_activity
 from plane.utils.timezone_converter import user_timezone_converter
 from collections import defaultdict
 from plane.utils.grouper import attach_parent_chain
 from plane.utils.host import base_host
 from plane.utils.order_queryset import order_issue_queryset
-from plane.utils.issue_structure import copy_issue_structure
+from plane.utils.issue_structure import copy_issue_structure, instantiate_issue_structure
 
 
 class SubIssuesEndpoint(BaseAPIView):
@@ -254,16 +263,27 @@ class SubIssuesEndpoint(BaseAPIView):
 
 
 class IssueCopyStructureEndpoint(BaseAPIView):
-    """Copy the sub-issue tree (and the relations inside it) of `source_issue_id` under `issue_id`."""
+    """Create under `issue_id` the sub-issue tree of `source_issue_id` or of the project template `template_id`."""
 
     permission_classes = [ProjectEntityPermission]
 
     def post(self, request, slug, project_id, issue_id):
         target = Issue.issue_objects.filter(pk=issue_id, project_id=project_id, workspace__slug=slug).first()
+        if target is None:
+            return Response({"error": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        template_id = request.data.get("template_id")
+        if template_id:
+            template = IssueTemplate.objects.filter(pk=template_id, project_id=project_id).first()
+            if template is None:
+                return Response({"error": "Template not found"}, status=status.HTTP_404_NOT_FOUND)
+            created = instantiate_issue_structure(template.structure, target, request.user)
+            return Response({"created": created}, status=status.HTTP_201_CREATED)
+
         source = Issue.issue_objects.filter(
             pk=request.data.get("source_issue_id"), project_id=project_id, workspace__slug=slug
         ).first()
-        if target is None or source is None:
+        if source is None:
             return Response({"error": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # Copying a tree into itself would clone the target under its own subtree.

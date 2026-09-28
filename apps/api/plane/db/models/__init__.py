@@ -7,6 +7,7 @@ from .api import APIActivityLog, APIToken
 from .asset import FileAsset
 from .base import BaseModel
 from .client import Client, ClientCompany
+from .issue_template import IssueTemplate
 from .cycle import Cycle, CycleIssue, CycleUserProperties
 from .deploy_board import DeployBoard
 from .draft import (
