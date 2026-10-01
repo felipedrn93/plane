@@ -2,13 +2,16 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # See the LICENSE file for details.
 
+import calendar
 import copy
+from datetime import datetime, time, timedelta
+from zoneinfo import ZoneInfo
 
 from django.db import models
 from django.db.models import Q
 from django_filters import FilterSet, filters
 
-from plane.db.models import Issue
+from plane.db.models import Issue, Profile
 from plane.utils.blocked import active_blocked_exists
 
 
@@ -122,6 +125,19 @@ class BaseFilterSet(FilterSet):
         return qs
 
 
+RELATIVE_DATE_CHOICES = (("today", "today"), ("end_of_week", "end_of_week"), ("end_of_month", "end_of_month"))
+
+
+def resolve_relative_date(value, today, week_start=0):
+    """Last day covered by a relative bound. `week_start` follows Profile.start_of_the_week (0 = Sunday)."""
+    if value == "end_of_week":
+        last_weekday = (week_start - 2) % 7  # day before the week start, in Python's weekday() (0 = Monday)
+        return today + timedelta(days=(last_weekday - today.weekday()) % 7)
+    if value == "end_of_month":
+        return today.replace(day=calendar.monthrange(today.year, today.month)[1])
+    return today
+
+
 class IssueFilterSet(BaseFilterSet):
     # Custom filter methods to handle soft delete exclusion for relations
 
@@ -164,6 +180,25 @@ class IssueFilterSet(BaseFilterSet):
     # Blocked filter: true -> only work items actively blocked, false -> only those not blocked
     is_blocked = filters.BooleanFilter(method="filter_is_blocked", distinct=True)
 
+    # Date "on or after" / "on or before" (inclusive); datetime fields compare by day
+    start_date__gte = filters.DateFilter(field_name="start_date", lookup_expr="gte")
+    start_date__lte = filters.DateFilter(field_name="start_date", lookup_expr="lte")
+    target_date__gte = filters.DateFilter(field_name="target_date", lookup_expr="gte")
+    target_date__lte = filters.DateFilter(field_name="target_date", lookup_expr="lte")
+    created_at__gte = filters.DateFilter(field_name="created_at", lookup_expr="date__gte")
+    created_at__lte = filters.DateFilter(field_name="created_at", lookup_expr="date__lte")
+    updated_at__gte = filters.DateFilter(field_name="updated_at", lookup_expr="date__gte")
+    updated_at__lte = filters.DateFilter(field_name="updated_at", lookup_expr="date__lte")
+    completed_at__gte = filters.DateFilter(field_name="completed_at", lookup_expr="date__gte")
+    completed_at__lte = filters.DateFilter(field_name="completed_at", lookup_expr="date__lte")
+
+    # "Until end of today / this week / this month", resolved at query time in the user's timezone
+    start_date__lte_relative = filters.ChoiceFilter(choices=RELATIVE_DATE_CHOICES, method="filter_lte_relative")
+    target_date__lte_relative = filters.ChoiceFilter(choices=RELATIVE_DATE_CHOICES, method="filter_lte_relative")
+    created_at__lte_relative = filters.ChoiceFilter(choices=RELATIVE_DATE_CHOICES, method="filter_lte_relative")
+    updated_at__lte_relative = filters.ChoiceFilter(choices=RELATIVE_DATE_CHOICES, method="filter_lte_relative")
+    completed_at__lte_relative = filters.ChoiceFilter(choices=RELATIVE_DATE_CHOICES, method="filter_lte_relative")
+
     class Meta:
         model = Issue
         fields = {
@@ -175,6 +210,21 @@ class IssueFilterSet(BaseFilterSet):
             "is_draft": ["exact"],
             "priority": ["exact", "in"],
         }
+
+    def filter_lte_relative(self, queryset, name, value):
+        field = name.removesuffix("__lte_relative")
+        user = getattr(self.request, "user", None)
+        tz = ZoneInfo(getattr(user, "user_timezone", None) or "UTC")
+        week_start = (
+            Profile.objects.filter(user_id=user.id).values_list("start_of_the_week", flat=True).first()
+            if getattr(user, "is_authenticated", False)
+            else None
+        ) or 0
+        last_day = resolve_relative_date(value, datetime.now(tz).date(), week_start)
+        if isinstance(Issue._meta.get_field(field), models.DateTimeField):
+            # Everything before the next day starts, in the user's timezone
+            return Q(**{f"{field}__lt": datetime.combine(last_day + timedelta(days=1), time.min, tzinfo=tz)})
+        return Q(**{f"{field}__lte": last_day})
 
     def filter_is_archived(self, queryset, name, value):
         """

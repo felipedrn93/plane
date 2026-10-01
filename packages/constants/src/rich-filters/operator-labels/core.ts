@@ -14,6 +14,9 @@ export const CORE_OPERATOR_LABELS_MAP: Record<TCoreSupportedOperators, string> =
   [CORE_EQUALITY_OPERATOR.EXACT]: "is",
   [CORE_COLLECTION_OPERATOR.IN]: "is any of",
   [CORE_COMPARISON_OPERATOR.RANGE]: "between",
+  [CORE_COMPARISON_OPERATOR.GTE]: "on or after",
+  [CORE_COMPARISON_OPERATOR.LTE]: "on or before",
+  [CORE_COMPARISON_OPERATOR.LTE_RELATIVE]: "until end of",
 } as const;
 
 /**
@@ -22,4 +25,6 @@ export const CORE_OPERATOR_LABELS_MAP: Record<TCoreSupportedOperators, string> =
 export const CORE_DATE_OPERATOR_LABELS_MAP: Record<TCoreSupportedDateFilterOperators, string> = {
   [CORE_EQUALITY_OPERATOR.EXACT]: "is",
   [CORE_COMPARISON_OPERATOR.RANGE]: "between",
+  [CORE_COMPARISON_OPERATOR.GTE]: "on or after",
+  [CORE_COMPARISON_OPERATOR.LTE]: "on or before",
 } as const;

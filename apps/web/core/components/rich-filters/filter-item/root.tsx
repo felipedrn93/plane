@@ -7,6 +7,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import type { IFilterInstance } from "@plane/shared-state";
 import type {
   SingleOrArray,
@@ -20,7 +21,7 @@ import { CustomSearchSelect } from "@plane/ui";
 import { cn, getOperatorForPayload } from "@plane/utils";
 // local imports
 import { FilterValueInput } from "../filter-value-input/root";
-import { COMMON_FILTER_ITEM_BORDER_CLASSNAME } from "../shared";
+import { COMMON_FILTER_ITEM_BORDER_CLASSNAME, translateFilterLabel } from "../shared";
 import { FilterItemCloseButton } from "./close-button";
 import { FilterItemContainer } from "./container";
 import { InvalidFilterItem } from "./invalid";
@@ -38,15 +39,15 @@ export const FilterItem = observer(function FilterItem<P extends TFilterProperty
   props: IFilterItemProps<P, E>
 ) {
   const { condition, filter, isDisabled = false, showTransition = true } = props;
+  const { t } = useTranslation();
   // derived values
   const filterConfig = condition?.property ? filter.configManager.getConfigByProperty(condition.property) : undefined;
   const operatorOptions = filterConfig
     ?.getAllDisplayOperatorOptionsByValue(condition.value as TFilterValue)
-    .map((option) => ({
-      value: option.value,
-      content: option.label,
-      query: option.label.toLowerCase(),
-    }));
+    .map((option) => {
+      const label = translateFilterLabel(t, `operator.${option.value}`, option.label);
+      return { value: option.value, content: label, query: label.toLowerCase() };
+    });
   const selectedOperatorFieldConfig = filterConfig?.getOperatorConfig(condition.operator);
   const selectedOperatorOption = filterConfig?.getDisplayOperatorByValue(
     condition.operator,
@@ -91,7 +92,7 @@ export const FilterItem = observer(function FilterItem<P extends TFilterProperty
         filter={filter}
         icon={filterConfig.icon}
         isDisabled={isDisabled}
-        label={filterConfig.label}
+        label={translateFilterLabel(t, `property.${filterConfig.id}`, filterConfig.label)}
         tooltipContent={filterConfig.tooltipContent}
       />
 
@@ -110,7 +111,11 @@ export const FilterItem = observer(function FilterItem<P extends TFilterProperty
         disabled={isOperatorSelectionDisabled}
         customButton={
           <div className="flex h-full items-center" aria-disabled={isOperatorSelectionDisabled}>
-            {filterConfig.getLabelForOperator(selectedOperatorOption)}
+            {translateFilterLabel(
+              t,
+              `operator.${selectedOperatorOption}`,
+              filterConfig.getLabelForOperator(selectedOperatorOption)
+            )}
           </div>
         }
       />

@@ -8,22 +8,25 @@
 import type { TSupportedFilterFieldConfigs, IFilterOption, TFilterValue } from "@plane/types";
 import { cn } from "@plane/utils";
 // local imports
-import { COMMON_FILTER_ITEM_BORDER_CLASSNAME } from "../../shared";
+import { COMMON_FILTER_ITEM_BORDER_CLASSNAME, translateFilterLabel } from "../../shared";
 
 type TLoadOptionsProps<V extends TFilterValue> = {
   config: TSupportedFilterFieldConfigs<V>;
   setOptions: (options: IFilterOption<V>[]) => void;
   setLoading?: (loading: boolean) => void;
+  t: (key: string) => string;
 };
 
 export const loadOptions = async <V extends TFilterValue>(props: TLoadOptionsProps<V>) => {
-  const { config, setOptions, setLoading } = props;
+  const { config, setOptions, setLoading, t } = props;
 
   // if the config has a getOptions function, load the options
   if ("getOptions" in config && typeof config.getOptions === "function") {
     setLoading?.(true);
     try {
       const result = await config.getOptions();
+      // options are built fresh on every getOptions() call, so relabeling in place is safe
+      for (const option of result) option.label = translateFilterLabel(t, `value.${option.value}`, option.label);
       setOptions(result);
     } catch (error) {
       console.error("Failed to load options:", error);

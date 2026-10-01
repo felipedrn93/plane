@@ -7,11 +7,14 @@
 import React from "react";
 import { observer } from "mobx-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import { setToast, TOAST_TYPE } from "@plane/propel/toast";
 import type { IFilterInstance } from "@plane/shared-state";
 import type { TExternalFilter, TFilterProperty, TSupportedOperators } from "@plane/types";
 import { CustomSearchSelect } from "@plane/ui";
 import { getOperatorForPayload } from "@plane/utils";
+// local imports
+import { translateFilterLabel } from "../shared";
 
 export type TAddFilterDropdownProps<P extends TFilterProperty, E extends TExternalFilter> = {
   customButton: React.ReactNode;
@@ -30,23 +33,27 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
 >(props: TAddFilterDropdownProps<P, E>) {
   const { filter, customButton, buttonConfig } = props;
   const { className, defaultOpen = false, isDisabled = false } = buttonConfig || {};
+  const { t } = useTranslation();
 
   // Transform available filter configs to CustomSearchSelect options format
-  const filterOptions = filter.configManager.allAvailableConfigs.map((config) => ({
-    value: config.id,
-    content: (
-      <div className="flex items-center justify-between gap-2 text-secondary transition-all duration-200 ease-in-out">
-        <div className="flex items-center gap-2">
-          {config.icon && (
-            <config.icon className="size-4 text-tertiary transition-transform duration-200 ease-in-out" />
-          )}
-          <span>{config.label}</span>
+  const filterOptions = filter.configManager.allAvailableConfigs.map((config) => {
+    const label = translateFilterLabel(t, `property.${config.id}`, config.label);
+    return {
+      value: config.id,
+      content: (
+        <div className="flex items-center justify-between gap-2 text-secondary transition-all duration-200 ease-in-out">
+          <div className="flex items-center gap-2">
+            {config.icon && (
+              <config.icon className="size-4 text-tertiary transition-transform duration-200 ease-in-out" />
+            )}
+            <span>{label}</span>
+          </div>
+          {config.rightContent}
         </div>
-        {config.rightContent}
-      </div>
-    ),
-    query: config.label.toLowerCase(),
-  }));
+      ),
+      query: label.toLowerCase(),
+    };
+  });
 
   // If all filters are applied, show disabled options
   const allFiltersApplied = filterOptions.length === 0;
@@ -54,7 +61,11 @@ export const AddFilterDropdown = observer(function AddFilterDropdown<
     ? [
         {
           value: "all_filters_applied",
-          content: <div className="text-placeholder italic">All filters applied</div>,
+          content: (
+            <div className="text-placeholder italic">
+              {translateFilterLabel(t, "all_filters_applied", "All filters applied")}
+            </div>
+          ),
           query: "all filters applied",
           disabled: true,
         },

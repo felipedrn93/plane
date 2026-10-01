@@ -30,6 +30,9 @@ export const CORE_COLLECTION_OPERATOR = {
  */
 export const CORE_COMPARISON_OPERATOR = {
   RANGE: "range",
+  GTE: "gte",
+  LTE: "lte",
+  LTE_RELATIVE: "lte_relative",
 } as const;
 
 /**

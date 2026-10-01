@@ -16,6 +16,12 @@ export const COMMON_FILTER_ITEM_BORDER_CLASSNAME = "border-r border-subtle-1";
 
 export const EMPTY_FILTER_PLACEHOLDER_TEXT = "--";
 
+/** Translate a rich-filter label by key, falling back to the config's English label when there's no translation */
+export const translateFilterLabel = (t: (key: string) => string, key: string, fallback: string) => {
+  const translated = t(`rich_filters.${key}`);
+  return translated === `rich_filters.${key}` ? fallback : translated;
+};
+
 export type TFilterValueInputProps<P extends TFilterProperty, V extends TFilterValue> = {
   condition: TFilterConditionNodeForDisplay<P, V>;
   filterFieldConfig: TSupportedFilterFieldConfigs<V>;

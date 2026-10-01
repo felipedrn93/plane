@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
 // plane imports
+import { useTranslation } from "@plane/i18n";
 import type {
   IFilterOption,
   TFilterProperty,
@@ -29,6 +30,7 @@ export const SingleSelectFilterValueInput = observer(function SingleSelectFilter
   props: TSingleSelectFilterValueInputProps<P>
 ) {
   const { config, condition, onChange, isDisabled } = props;
+  const { t } = useTranslation();
   // states
   const [options, setOptions] = useState<IFilterOption<string>[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -36,7 +38,8 @@ export const SingleSelectFilterValueInput = observer(function SingleSelectFilter
   const formattedOptions = useMemo(() => getFormattedOptions<string>(options), [options]);
 
   useEffect(() => {
-    loadOptions({ config, setOptions, setLoading });
+    loadOptions({ config, setOptions, setLoading, t });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- `t` is recreated every render
   }, [config]);
 
   const handleSelectChange = (value: string) => {

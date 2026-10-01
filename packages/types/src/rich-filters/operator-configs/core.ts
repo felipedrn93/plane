@@ -29,4 +29,7 @@ export type TCoreOperatorSpecificConfigs = {
   [CORE_EQUALITY_OPERATOR.EXACT]: TCoreExactOperatorConfigs;
   [CORE_COLLECTION_OPERATOR.IN]: TCoreInOperatorConfigs;
   [CORE_COMPARISON_OPERATOR.RANGE]: TCoreRangeOperatorConfigs;
+  [CORE_COMPARISON_OPERATOR.GTE]: TDateFilterFieldConfig<TFilterValue>;
+  [CORE_COMPARISON_OPERATOR.LTE]: TDateFilterFieldConfig<TFilterValue>;
+  [CORE_COMPARISON_OPERATOR.LTE_RELATIVE]: TSingleSelectFilterFieldConfig<TFilterValue>;
 };

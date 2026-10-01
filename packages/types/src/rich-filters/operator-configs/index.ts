@@ -5,7 +5,12 @@
  */
 
 import type { EQUALITY_OPERATOR, COLLECTION_OPERATOR, COMPARISON_OPERATOR } from "../operators";
-import type { TCoreExactOperatorConfigs, TCoreInOperatorConfigs, TCoreRangeOperatorConfigs } from "./core";
+import type {
+  TCoreExactOperatorConfigs,
+  TCoreInOperatorConfigs,
+  TCoreOperatorSpecificConfigs,
+  TCoreRangeOperatorConfigs,
+} from "./core";
 import type {
   TExtendedExactOperatorConfigs,
   TExtendedInOperatorConfigs,
@@ -40,6 +45,9 @@ export type TOperatorSpecificConfigs = {
   [EQUALITY_OPERATOR.EXACT]: TExactOperatorConfigs;
   [COLLECTION_OPERATOR.IN]: TInOperatorConfigs;
   [COMPARISON_OPERATOR.RANGE]: TRangeOperatorConfigs;
+  [COMPARISON_OPERATOR.GTE]: TCoreOperatorSpecificConfigs[typeof COMPARISON_OPERATOR.GTE];
+  [COMPARISON_OPERATOR.LTE]: TCoreOperatorSpecificConfigs[typeof COMPARISON_OPERATOR.LTE];
+  [COMPARISON_OPERATOR.LTE_RELATIVE]: TCoreOperatorSpecificConfigs[typeof COMPARISON_OPERATOR.LTE_RELATIVE];
 } & TExtendedOperatorSpecificConfigs;
 
 /**

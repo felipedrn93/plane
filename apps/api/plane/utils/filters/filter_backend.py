@@ -272,7 +272,7 @@ class ComplexFilterBackend(filters.BaseFilterBackend):
 
         # Instantiate the filterset with the actual queryset
         # Custom filter methods may need access to the queryset for filtering
-        fs = filterset_class(data=qd, queryset=queryset)
+        fs = filterset_class(data=qd, queryset=queryset, request=getattr(view, "request", None))
 
         if not fs.is_valid():
             ve = translate_validation(fs.errors)

@@ -8,7 +8,7 @@
 import type { IProject, IUserLite, TOperatorConfigMap, TSupportedOperators } from "@plane/types";
 import { COMPARISON_OPERATOR, EQUALITY_OPERATOR } from "@plane/types";
 // local imports
-import { getDatePickerConfig, getDateRangePickerConfig, getMultiSelectConfig } from "../core";
+import { getDatePickerConfig, getDateRangePickerConfig, getMultiSelectConfig, getSingleSelectConfig } from "../core";
 import type { IFilterIconConfig, TCreateDateFilterParams, TCreateFilterConfigParams, TFilterIconType } from "../shared";
 import { createOperatorConfigEntry } from "../shared";
 
@@ -47,11 +47,33 @@ export const getMemberMultiSelectConfig = (params: TCreateUserFilterParams, sing
 
 // ------------ Date Operators ------------
 
+/**
+ * Relative date bounds, resolved by the backend at query time (so saved views keep moving with the calendar)
+ */
+const RELATIVE_DATE_OPTIONS: { id: string; label: string }[] = [
+  { id: "today", label: "today" },
+  { id: "end_of_week", label: "this week" },
+  { id: "end_of_month", label: "this month" },
+];
+
 export const getSupportedDateOperators = (params: TCreateDateFilterParams): TOperatorConfigMap =>
   new Map([
     createOperatorConfigEntry(EQUALITY_OPERATOR.EXACT, params, (updatedParams) => getDatePickerConfig(updatedParams)),
     createOperatorConfigEntry(COMPARISON_OPERATOR.RANGE, params, (updatedParams) =>
       getDateRangePickerConfig(updatedParams)
+    ),
+    createOperatorConfigEntry(COMPARISON_OPERATOR.GTE, params, (updatedParams) => getDatePickerConfig(updatedParams)),
+    createOperatorConfigEntry(COMPARISON_OPERATOR.LTE, params, (updatedParams) => getDatePickerConfig(updatedParams)),
+    createOperatorConfigEntry(COMPARISON_OPERATOR.LTE_RELATIVE, params, (updatedParams) =>
+      getSingleSelectConfig<{ id: string; label: string }, string>(
+        {
+          items: RELATIVE_DATE_OPTIONS,
+          getId: (option) => option.id,
+          getLabel: (option) => option.label,
+          getValue: (option) => option.id,
+        },
+        { ...updatedParams }
+      )
     ),
   ]);
 

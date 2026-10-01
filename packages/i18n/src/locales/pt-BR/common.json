@@ -884,5 +884,53 @@
     "delete_failed": "Não foi possível excluir o modelo",
     "empty": "Nenhum modelo neste projeto. Use \"Salvar como modelo\" no menu de uma tarefa.",
     "sub_issues_count": "{count, plural, =0 {sem subtarefas} one {# subtarefa} other {# subtarefas}}"
+  },
+  "rich_filters": {
+    "property": {
+      "state_group": "Grupo de estado",
+      "state_id": "Estado",
+      "label_id": "Etiqueta",
+      "cycle_id": "Ciclo",
+      "client_id": "Cliente",
+      "module_id": "Módulo",
+      "assignee_id": "Responsáveis",
+      "mention_id": "Menções",
+      "created_by_id": "Criado por",
+      "subscriber_id": "Inscrito",
+      "priority": "Prioridade",
+      "start_date": "Data de início",
+      "target_date": "Data de vencimento",
+      "created_at": "Criado em",
+      "updated_at": "Atualizado em",
+      "completed_at": "Concluído em",
+      "is_blocked": "Bloqueado",
+      "project_id": "Projetos"
+    },
+    "operator": {
+      "exact": "é",
+      "in": "é um de",
+      "range": "entre",
+      "gte": "a partir de",
+      "lte": "até",
+      "lte_relative": "até o fim de"
+    },
+    "all_filters_applied": "Todos os filtros aplicados",
+    "value": {
+      "today": "hoje",
+      "end_of_week": "esta semana",
+      "end_of_month": "este mês",
+      "urgent": "Urgente",
+      "high": "Alta",
+      "medium": "Média",
+      "low": "Baixa",
+      "none": "Nenhuma",
+      "backlog": "Backlog",
+      "unstarted": "Não iniciado",
+      "started": "Iniciado",
+      "completed": "Concluído",
+      "cancelled": "Cancelado",
+      "true": "Bloqueado",
+      "false": "Não bloqueado"
+    }
   }
 }
