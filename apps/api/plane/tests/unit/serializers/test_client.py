@@ -21,6 +21,11 @@ class TestClientCompanySerializer:
         assert serializer.is_valid() is True
         assert serializer.validated_data["cnpj"] == "11222333000181"
 
+    def test_cnpj_is_optional(self):
+        serializer = ClientCompanySerializer(data={"name": "Acme SP", "cnpj": ""})
+        assert serializer.is_valid() is True
+        assert serializer.validated_data["cnpj"] == ""
+
 
 @pytest.mark.unit
 @pytest.mark.django_db

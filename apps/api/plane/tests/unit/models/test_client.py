@@ -44,6 +44,12 @@ class TestClientCompanyModel:
         with pytest.raises(IntegrityError):
             ClientCompany.objects.create(workspace=workspace, client=client_b, name="Globex SP", cnpj="11222333000181")
 
+    def test_blank_cnpj_is_not_unique(self, workspace):
+        client = Client.objects.create(workspace=workspace, name="Acme")
+        ClientCompany.objects.create(workspace=workspace, client=client, name="Acme SP", cnpj="")
+        ClientCompany.objects.create(workspace=workspace, client=client, name="Acme RJ", cnpj="")
+        assert client.companies.count() == 2
+
 
 @pytest.mark.unit
 @pytest.mark.django_db

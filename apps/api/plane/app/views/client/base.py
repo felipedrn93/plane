@@ -113,7 +113,8 @@ class ClientCompanyViewSet(BaseViewSet):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        if self._cnpj_taken(client.workspace_id, serializer.validated_data["cnpj"]):
+        cnpj = serializer.validated_data.get("cnpj")
+        if cnpj and self._cnpj_taken(client.workspace_id, cnpj):
             return Response(
                 {"cnpj": ["Este CNPJ já está cadastrado neste workspace."]},
                 status=status.HTTP_400_BAD_REQUEST,

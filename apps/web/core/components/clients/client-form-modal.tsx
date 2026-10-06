@@ -185,7 +185,13 @@ export const ClientFormModal = observer(function ClientFormModal(props: Props) {
                   <Controller
                     control={control}
                     name={`companies.${index}.name`}
-                    rules={{ validate: (value) => value.trim() !== "" || t("clients.company_name_is_required") }}
+                    rules={{
+                      // linha toda vazia e ignorada no submit; nome so e exigido se houver CNPJ
+                      validate: (value, values) =>
+                        value.trim() !== "" ||
+                        normalizeCnpj(values.companies[index]?.cnpj) === "" ||
+                        t("clients.company_name_is_required"),
+                    }}
                     render={({ field: { value, onChange } }) => (
                       <Input
                         type="text"
@@ -205,7 +211,11 @@ export const ClientFormModal = observer(function ClientFormModal(props: Props) {
                   <Controller
                     control={control}
                     name={`companies.${index}.cnpj`}
-                    rules={{ validate: (value) => isValidCnpj(value) || t("clients.invalid_cnpj") }}
+                    rules={{
+                      // CNPJ e opcional; so valida quando informado
+                      validate: (value) =>
+                        normalizeCnpj(value) === "" || isValidCnpj(value) || t("clients.invalid_cnpj"),
+                    }}
                     render={({ field: { value, onChange } }) => (
                       <Input
                         type="text"

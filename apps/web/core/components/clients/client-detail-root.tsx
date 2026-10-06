@@ -124,7 +124,7 @@ export const ClientDetailRoot = observer(function ClientDetailRoot(props: Props)
                 {client.companies.map((company) => (
                   <tr key={company.id} className="border-b border-subtle">
                     <td className="py-2.5 text-secondary">{company.name}</td>
-                    <td className="py-2.5 text-tertiary">{formatCnpj(company.cnpj)}</td>
+                    <td className="py-2.5 text-tertiary">{formatCnpj(company.cnpj) || "—"}</td>
                   </tr>
                 ))}
               </tbody>

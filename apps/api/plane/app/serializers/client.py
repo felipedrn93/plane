@@ -17,7 +17,7 @@ class ClientCompanySerializer(BaseSerializer):
     # ("11.222.333/0001-81" = 18 caracteres). Sem declarar o campo aqui, o
     # `max_length=14` herdado do model rejeitaria a máscara antes de
     # `validate_cnpj` ter a chance de normalizá-la.
-    cnpj = serializers.CharField(max_length=18)
+    cnpj = serializers.CharField(max_length=18, required=False, allow_blank=True)
 
     class Meta:
         model = ClientCompany
@@ -32,7 +32,8 @@ class ClientCompanySerializer(BaseSerializer):
 
     def validate_cnpj(self, value):
         cnpj = normalize_cnpj(value)
-        if not is_valid_cnpj(cnpj):
+        # CNPJ é opcional; só valida quando informado
+        if cnpj and not is_valid_cnpj(cnpj):
             raise serializers.ValidationError("CNPJ inválido.")
         return cnpj
 

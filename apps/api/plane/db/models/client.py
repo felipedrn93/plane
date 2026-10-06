@@ -42,7 +42,8 @@ class ClientCompany(BaseModel):
     workspace = models.ForeignKey("db.Workspace", on_delete=models.CASCADE, related_name="client_companies")
     client = models.ForeignKey("db.Client", on_delete=models.CASCADE, related_name="companies")
     name = models.CharField(max_length=255)
-    cnpj = models.CharField(max_length=14)
+    # Opcional: nem sempre se sabe o CNPJ ao cadastrar. Vazio fica fora da unicidade.
+    cnpj = models.CharField(max_length=14, blank=True, default="")
 
     class Meta:
         verbose_name = "Client Company"
@@ -52,10 +53,10 @@ class ClientCompany(BaseModel):
         constraints = [
             models.UniqueConstraint(
                 fields=["workspace", "cnpj"],
-                condition=Q(deleted_at__isnull=True),
+                condition=Q(deleted_at__isnull=True) & ~Q(cnpj=""),
                 name="unique_client_company_cnpj_per_workspace_when_not_deleted",
             )
         ]
 
     def __str__(self):
-        return f"{self.name} <{self.cnpj}>"
+        return f"{self.name} <{self.cnpj}>" if self.cnpj else self.name
