@@ -38,8 +38,10 @@ from plane.db.models import (
     IssueVote,
     IssueRelation,
     State,
+    Client,
     IssueVersion,
     IssueDescriptionVersion,
+    Project,
     ProjectMember,
     EstimatePoint,
 )
@@ -87,6 +89,10 @@ class IssueCreateSerializer(BaseSerializer):
     )
     parent_id = serializers.PrimaryKeyRelatedField(
         source="parent", queryset=Issue.objects.all(), required=False, allow_null=True
+    )
+    # o front envia `client_id`; com `fields = "__all__"` só existiria `client`
+    client_id = serializers.PrimaryKeyRelatedField(
+        source="client", queryset=Client.objects.all(), required=False, allow_null=True
     )
     label_ids = serializers.ListField(
         child=serializers.PrimaryKeyRelatedField(queryset=Label.objects.all()),
@@ -150,6 +156,12 @@ class IssueCreateSerializer(BaseSerializer):
             is_valid, error_msg = validate_binary_data(attrs["description_binary"])
             if not is_valid:
                 raise serializers.ValidationError({"description_binary": "Invalid binary data"})
+
+        # Cliente precisa ser do workspace do projeto
+        if attrs.get("client") and not Project.objects.filter(
+            pk=self.context.get("project_id"), workspace_id=attrs["client"].workspace_id
+        ).exists():
+            raise serializers.ValidationError({"client_id": "Cliente não pertence a este workspace."})
 
         # Validate assignees are from project
         if attrs.get("assignee_ids", []):

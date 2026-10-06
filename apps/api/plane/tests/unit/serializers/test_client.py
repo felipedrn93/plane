@@ -42,3 +42,24 @@ class TestClientSerializer:
         serializer = ClientSerializer(data={"name": "   "})
         assert serializer.is_valid() is False
         assert "name" in serializer.errors
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestIssueClientId:
+    def test_issue_create_serializer_saves_client_id(self, workspace, create_user):
+        from plane.app.serializers import IssueCreateSerializer
+        from plane.db.models import Issue, Project, State
+
+        client = Client.objects.create(workspace=workspace, name="Acme")
+        project = Project.objects.create(name="Proj", identifier="PROJ", workspace=workspace, created_by=create_user)
+        state = State.objects.create(name="Backlog", group="backlog", project=project, workspace=workspace)
+        issue = Issue.objects.create(name="Tarefa", project=project, workspace=workspace, state=state)
+
+        serializer = IssueCreateSerializer(
+            issue, data={"client_id": str(client.id)}, partial=True, context={"project_id": project.id}
+        )
+        assert serializer.is_valid(), serializer.errors
+        serializer.save()
+        issue.refresh_from_db()
+        assert issue.client_id == client.id

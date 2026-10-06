@@ -176,3 +176,9 @@ Tudo que não depende de renderizar linhas de work item foi verificado com o app
 - Ordenação da planilha por nome de cliente (precisa de suporte server-side).
 - Aba de tarefas embutida no detalhe do cliente (ver decisão 10).
 - Múltiplos clientes por tarefa e vínculo direto com a empresa.
+
+## Correção 2026-10-06 — cliente não era salvo na tarefa
+
+O `IssueCreateSerializer` (`plane/app/serializers/issue.py`) usa `fields = "__all__"`, que expõe a FK como `client` — mas o front envia `client_id`. O DRF descartava o campo em silêncio: o PATCH respondia 204 e o `client_id` continuava `NULL` (nenhuma tarefa em produção tinha cliente gravado). Corrigido com um `client_id = PrimaryKeyRelatedField(source="client")`, como já é feito com `state_id`/`parent_id`, e validação de que o cliente é do workspace do projeto. Teste: `tests/unit/serializers/test_client.py::TestIssueClientId`.
+
+Mais um item para a lista de _shadow allowlists_ acima: campo FK novo na `Issue` precisa de um `<campo>_id` explícito no `IssueCreateSerializer`.
