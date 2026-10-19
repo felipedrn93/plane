@@ -30,6 +30,9 @@
       "active": "Ativo",
       "inactive": "Inativo"
     },
-    "inherited_from_parent": "Herdado da tarefa pai"
+    "inherited_from_parent": "Herdado da tarefa pai",
+    "change_subissues_title": "Trocar o cliente das subtarefas?",
+    "change_subissues_content": "{count, plural, one {# subtarefa tem outro cliente e vai passar para o cliente escolhido} other {# subtarefas têm outro cliente e vão passar para o cliente escolhido}}. O cliente anterior delas não fica no histórico.",
+    "change_subissues_confirm": "Trocar"
   }
 }

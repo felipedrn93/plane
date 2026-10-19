@@ -86,3 +86,30 @@ class TestClientCompanyEndpoints:
         url = f"/api/workspaces/{workspace.slug}/clients/{client_b.id}/companies/"
         response = session_client.post(url, {"name": "Globex SP", "cnpj": "11222333000181"}, format="json")
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestIssueClientConflictsEndpoint:
+    def test_counts_descendants_with_another_client(self, session_client, workspace, create_user):
+        from plane.db.models import Issue, Project, ProjectMember, State
+
+        project = Project.objects.create(name="Proj", identifier="PROJ", workspace=workspace, created_by=create_user)
+        ProjectMember.objects.create(project=project, member=create_user, workspace=workspace, role=20)
+        state = State.objects.create(name="Backlog", group="backlog", project=project, workspace=workspace)
+        acme = Client.objects.create(workspace=workspace, name="Acme")
+        globex = Client.objects.create(workspace=workspace, name="Globex")
+
+        def make(**kw):
+            return Issue.objects.create(name="T", project=project, workspace=workspace, state=state, **kw)
+
+        parent = make()
+        child = make(parent=parent, client=globex)  # conta: outro cliente
+        make(parent=child)  # neto herdou Globex: conta
+        make(parent=parent)  # sem cliente: não conta
+        make(parent=parent, client=acme)  # já é Acme: não conta
+
+        url = f"/api/workspaces/{workspace.slug}/projects/{project.id}/issues/{parent.id}/client-conflicts/"
+        response = session_client.get(url, {"client_id": str(acme.id)})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 2

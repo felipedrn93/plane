@@ -258,7 +258,7 @@ export const PeekOverviewProperties = observer(function PeekOverviewProperties(p
         <SidebarPropertyListItem icon={Building2} label={t("clients.client")}>
           <ClientDropdown
             value={issue?.client_id ?? null}
-            parentId={issue?.parent_id}
+            issue={issue}
             onChange={(clientId) => issueOperations.update(workspaceSlug, projectId, issueId, { client_id: clientId })}
             disabled={disabled}
             buttonVariant="transparent-with-text"

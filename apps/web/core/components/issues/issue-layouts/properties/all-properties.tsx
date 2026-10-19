@@ -422,7 +422,7 @@ export const IssueProperties = observer(function IssueProperties(props: IIssuePr
         <div className="h-5" onFocus={handleEventPropagation} onClick={handleEventPropagation}>
           <ClientDropdown
             value={issue?.client_id ?? null}
-            parentId={issue?.parent_id}
+            issue={issue}
             onChange={handleClient}
             disabled={isReadOnly}
             buttonContainerClassName="truncate max-w-40"

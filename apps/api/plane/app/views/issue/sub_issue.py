@@ -265,6 +265,25 @@ class SubIssuesEndpoint(BaseAPIView):
         )
 
 
+class IssueClientConflictsEndpoint(BaseAPIView):
+    """Quantas subtarefas (todos os níveis) têm outro cliente e seriam trocadas ao definir `client_id` aqui."""
+
+    permission_classes = [ProjectEntityPermission]
+
+    def get(self, request, slug, project_id, issue_id):
+        if not Issue.objects.filter(pk=issue_id, project_id=project_id, workspace__slug=slug).exists():
+            return Response({"error": "Issue not found"}, status=status.HTTP_404_NOT_FOUND)
+        client_id = request.query_params.get("client_id")
+        if not client_id:
+            return Response({"count": 0}, status=status.HTTP_200_OK)
+        count = (
+            Issue.objects.filter(id__in=Issue.descendant_ids([issue_id]), client_id__isnull=False)
+            .exclude(client_id=client_id)
+            .count()
+        )
+        return Response({"count": count}, status=status.HTTP_200_OK)
+
+
 class IssueCopyStructureEndpoint(BaseAPIView):
     """Create under `issue_id` the sub-issue tree of `source_issue_id` or of the project template `template_id`."""
 

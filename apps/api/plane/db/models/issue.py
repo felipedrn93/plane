@@ -262,15 +262,23 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
         return kwargs
 
     @staticmethod
-    def propagate_client(issue_ids, client_id):
-        """Push client_id down to every descendant of issue_ids (bulk update, bypasses save)."""
+    def descendant_ids(issue_ids):
+        """Ids of every descendant of issue_ids, all levels (guards against parent cycles)."""
         seen = set(issue_ids)
         level = list(issue_ids)
+        found = []
         while level:
-            children = Issue.objects.filter(parent_id__in=level).exclude(id__in=seen)
-            children.exclude(client_id=client_id).update(client_id=client_id)
-            level = list(children.values_list("id", flat=True))
+            level = list(Issue.objects.filter(parent_id__in=level).exclude(id__in=seen).values_list("id", flat=True))
             seen.update(level)
+            found.extend(level)
+        return found
+
+    @staticmethod
+    def propagate_client(issue_ids, client_id):
+        """Push client_id down to every descendant of issue_ids (bulk update, bypasses save)."""
+        Issue.objects.filter(id__in=Issue.descendant_ids(issue_ids)).exclude(client_id=client_id).update(
+            client_id=client_id
+        )
 
     def _ensure_default_state(self):
         """Assign a default state when none is set."""

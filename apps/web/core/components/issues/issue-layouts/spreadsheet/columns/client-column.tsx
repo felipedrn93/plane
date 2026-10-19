@@ -27,7 +27,7 @@ export const SpreadsheetClientColumn = observer(function SpreadsheetClientColumn
     <div className="h-11 border-b-[0.5px] border-subtle">
       <ClientDropdown
         value={issue.client_id ?? null}
-        parentId={issue.parent_id}
+        issue={issue}
         onChange={(clientId) =>
           onChange(issue, { client_id: clientId }, { changed_property: "client", change_details: clientId })
         }

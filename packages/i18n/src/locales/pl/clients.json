@@ -30,6 +30,9 @@
       "active": "Active",
       "inactive": "Inactive"
     },
-    "inherited_from_parent": "Inherited from parent work item"
+    "inherited_from_parent": "Inherited from parent work item",
+    "change_subissues_title": "Change the client of sub-work items?",
+    "change_subissues_content": "{count, plural, one {# sub-work item has another client and will switch to the selected one} other {# sub-work items have another client and will switch to the selected one}}. Their previous client is not kept in the history.",
+    "change_subissues_confirm": "Change"
   }
 }

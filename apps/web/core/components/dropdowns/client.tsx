@@ -15,7 +15,9 @@ import { Combobox } from "@headlessui/react";
 // plane imports
 import { useTranslation } from "@plane/i18n";
 import { CheckIcon, ChevronDownIcon, SearchIcon } from "@plane/propel/icons";
-import { ComboDropDown } from "@plane/ui";
+import { ClientService } from "@plane/services";
+import type { TIssue } from "@plane/types";
+import { AlertModalCore, ComboDropDown } from "@plane/ui";
 import { cn } from "@plane/utils";
 // hooks
 import { useClient } from "@/hooks/store/use-client";
@@ -35,9 +37,14 @@ type Props = TDropdownProps & {
   onClose?: () => void;
   value: string | null;
   renderByDefault?: boolean;
-  /** pai da tarefa: se algum ancestral tem cliente, o valor é herdado e o dropdown trava */
-  parentId?: string | null;
+  /**
+   * tarefa dona do campo: se algum ancestral tem cliente, o valor é herdado e o dropdown trava;
+   * ao trocar o cliente, avisa quantas subtarefas com outro cliente serão sobrescritas
+   */
+  issue?: Pick<TIssue, "id" | "project_id" | "parent_id">;
 };
+
+const clientService = new ClientService();
 
 type TClientOptionsProps = {
   isOpen: boolean;
@@ -150,7 +157,7 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
     tabIndex,
     value: ownValue,
     renderByDefault = true,
-    parentId,
+    issue,
   } = props;
   // router
   const { workspaceSlug } = useParams();
@@ -161,6 +168,7 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
   // states
   const [isOpen, setIsOpen] = useState(false);
   const [referenceElement, setReferenceElement] = useState<HTMLButtonElement | null>(null);
+  const [pendingChange, setPendingChange] = useState<{ clientId: string; count: number } | null>(null);
   // refs
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -175,7 +183,7 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
   // Ancestrais fora do store sao ignorados; o backend corrige o valor de qualquer forma.
   let inheritedClientId: string | null = null;
   const seen = new Set<string>();
-  let ancestorId = parentId;
+  let ancestorId = issue?.parent_id;
   while (ancestorId && !seen.has(ancestorId)) {
     seen.add(ancestorId);
     inheritedClientId = issueMap[ancestorId]?.client_id ?? inheritedClientId;
@@ -190,9 +198,19 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
 
   const { handleClose, handleKeyDown, handleOnClick } = useDropdown({ dropdownRef, isOpen, onClose, setIsOpen });
 
-  const dropdownOnChange = (val: string | null) => {
-    onChange(val);
+  const dropdownOnChange = async (val: string | null) => {
     handleClose();
+    if (val && val !== value && issue?.project_id && workspaceSlug) {
+      // se a contagem falhar, segue sem aviso: o backend aplica a regra de qualquer forma
+      const count = await clientService
+        .countSubIssueConflicts(workspaceSlug.toString(), issue.project_id, issue.id, val)
+        .catch(() => 0);
+      if (count > 0) {
+        setPendingChange({ clientId: val, count });
+        return;
+      }
+    }
+    onChange(val);
   };
 
   const comboButton = button ? (
@@ -245,20 +263,39 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
   );
 
   return (
-    // o ComboDropDown ja renderiza um combobox acessivel; o onKeyDown fica no wrapper, igual ao dropdowns/cycle
-    // eslint-disable-next-line jsx-a11y/no-static-element-interactions
-    <ComboDropDown
-      as="div"
-      ref={dropdownRef}
-      className={cn("h-full", className)}
-      value={value}
-      onChange={dropdownOnChange}
-      disabled={disabled}
-      onKeyDown={handleKeyDown}
-      button={comboButton}
-      renderByDefault={renderByDefault}
-    >
-      {isOpen && <ClientOptions isOpen={isOpen} referenceElement={referenceElement} placement={placement} />}
-    </ComboDropDown>
+    <>
+      {/* o ComboDropDown ja renderiza um combobox acessivel; o onKeyDown fica no wrapper, igual ao dropdowns/cycle */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
+      <ComboDropDown
+        as="div"
+        ref={dropdownRef}
+        className={cn("h-full", className)}
+        value={value}
+        onChange={dropdownOnChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        button={comboButton}
+        renderByDefault={renderByDefault}
+      >
+        {isOpen && <ClientOptions isOpen={isOpen} referenceElement={referenceElement} placement={placement} />}
+      </ComboDropDown>
+      <AlertModalCore
+        isOpen={!!pendingChange}
+        variant="primary"
+        title={t("clients.change_subissues_title")}
+        content={t("clients.change_subissues_content", { count: pendingChange?.count ?? 0 })}
+        primaryButtonText={{
+          loading: t("clients.change_subissues_confirm"),
+          default: t("clients.change_subissues_confirm"),
+        }}
+        secondaryButtonText={t("cancel")}
+        isSubmitting={false}
+        handleClose={() => setPendingChange(null)}
+        handleSubmit={() => {
+          if (pendingChange) onChange(pendingChange.clientId);
+          setPendingChange(null);
+        }}
+      />
+    </>
   );
 });

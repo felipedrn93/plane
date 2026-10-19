@@ -72,6 +72,22 @@ export class ClientService extends APIService {
       });
   }
 
+  /** quantas subtarefas (todos os níveis) têm outro cliente e seriam trocadas ao definir clientId na tarefa */
+  async countSubIssueConflicts(
+    workspaceSlug: string,
+    projectId: string,
+    issueId: string,
+    clientId: string
+  ): Promise<number> {
+    return this.get(`/api/workspaces/${workspaceSlug}/projects/${projectId}/issues/${issueId}/client-conflicts/`, {
+      params: { client_id: clientId },
+    })
+      .then((response) => response?.data?.count ?? 0)
+      .catch((error) => {
+        throw error?.response?.data;
+      });
+  }
+
   async destroyCompany(workspaceSlug: string, clientId: string, companyId: string): Promise<void> {
     return this.delete(`/api/workspaces/${workspaceSlug}/clients/${clientId}/companies/${companyId}/`)
       .then((response) => response?.data)
