@@ -74,20 +74,22 @@ export const ProfileSidebar = observer(function ProfileSidebar(props: TProfileSi
       if (window && window.innerWidth < 768) {
         toggleProfileSidebar(true);
       }
-      if (window && profileSidebarCollapsed && window.innerWidth >= 768) {
-        toggleProfileSidebar(false);
-      }
     };
+    // desktop: respeita a última escolha do usuário; padrão é recolhida
+    if (window.innerWidth >= 768) {
+      toggleProfileSidebar(localStorage.getItem("profile_sidebar_collapsed") !== "false");
+    }
 
     window.addEventListener("resize", handleToggleProfileSidebar);
     handleToggleProfileSidebar();
     return () => window.removeEventListener("resize", handleToggleProfileSidebar);
-  }, []);
+  }, [toggleProfileSidebar]);
 
   return (
     <div
       className={cn(
         `vertical-scrollbar fixed z-5 scrollbar-md h-full w-full shrink-0 overflow-hidden overflow-y-auto border-l border-subtle bg-surface-1 shadow-raised-200 transition-all md:relative md:w-[300px]`,
+        profileSidebarCollapsed && "md:hidden",
         className
       )}
       style={profileSidebarCollapsed ? { marginLeft: `${window?.innerWidth || 0}px` } : {}}
