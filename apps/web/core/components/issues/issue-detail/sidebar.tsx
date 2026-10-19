@@ -244,6 +244,7 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
             <SidebarPropertyListItem icon={Building2} label={t("clients.client")}>
               <ClientDropdown
                 value={issue?.client_id ?? null}
+                parentId={issue?.parent_id}
                 onChange={(clientId) =>
                   issueOperations.update(workspaceSlug, projectId, issueId, { client_id: clientId })
                 }

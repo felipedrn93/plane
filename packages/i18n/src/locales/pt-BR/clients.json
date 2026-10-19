@@ -29,6 +29,7 @@
       "label": "Status",
       "active": "Ativo",
       "inactive": "Inativo"
-    }
+    },
+    "inherited_from_parent": "Herdado da tarefa pai"
   }
 }

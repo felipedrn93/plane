@@ -231,6 +231,9 @@ class SubIssuesEndpoint(BaseAPIView):
             sub_issue.parent = parent_issue
 
         _ = Issue.objects.bulk_update(sub_issues, ["parent"], batch_size=10)
+        # bulk_update pula o Issue.save(), entao a heranca de cliente e aplicada aqui
+        if parent_issue.client_id:
+            Issue.propagate_client([parent_issue.id], parent_issue.client_id)
 
         updated_sub_issues = Issue.issue_objects.filter(id__in=sub_issue_ids).annotate(state_group=F("state__group"))
 

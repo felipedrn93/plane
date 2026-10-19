@@ -75,3 +75,71 @@ class TestIssueClientField:
         from plane.db.models.issue import get_default_display_properties
 
         assert get_default_display_properties()["client"] is True
+
+
+@pytest.mark.unit
+@pytest.mark.django_db
+class TestSubIssueInheritsClient:
+    """Subtarefa herda o cliente do pai; só tem cliente próprio quando o pai não tem."""
+
+    @pytest.fixture
+    def setup(self, workspace, create_user):
+        from plane.db.models import Issue, Project, State
+
+        project = Project.objects.create(name="Proj", identifier="PROJ", workspace=workspace, created_by=create_user)
+        state = State.objects.create(name="Backlog", group="backlog", project=project, workspace=workspace)
+        acme = Client.objects.create(workspace=workspace, name="Acme")
+        globex = Client.objects.create(workspace=workspace, name="Globex")
+
+        def make(**kw):
+            return Issue.objects.create(name="T", project=project, workspace=workspace, state=state, **kw)
+
+        return make, acme, globex
+
+    def test_child_created_under_parent_with_client_inherits(self, setup):
+        make, acme, globex = setup
+        parent = make(client=acme)
+        child = make(parent=parent, client=globex)
+        assert child.client_id == acme.id
+
+    def test_child_cannot_override_parent_client(self, setup):
+        make, acme, globex = setup
+        child = make(parent=make(client=acme))
+        child.client = globex
+        child.save()
+        child.refresh_from_db()
+        assert child.client_id == acme.id
+
+    def test_child_keeps_own_client_when_parent_has_none(self, setup):
+        make, acme, globex = setup
+        child = make(parent=make(), client=globex)
+        child.refresh_from_db()
+        assert child.client_id == globex.id
+
+    def test_parent_client_change_propagates_to_all_descendants(self, setup):
+        make, acme, globex = setup
+        parent = make()
+        child = make(parent=parent, client=globex)
+        grandchild = make(parent=child)
+
+        parent.client = acme
+        parent.save()
+
+        child.refresh_from_db()
+        grandchild.refresh_from_db()
+        assert child.client_id == acme.id
+        assert grandchild.client_id == acme.id
+
+    def test_moving_child_under_parent_with_client_inherits(self, setup):
+        make, acme, globex = setup
+        parent = make(client=acme)
+        child = make(client=globex)
+        grandchild = make(parent=child)
+
+        child.parent = parent
+        child.save(update_fields=["parent"])
+
+        child.refresh_from_db()
+        grandchild.refresh_from_db()
+        assert child.client_id == acme.id
+        assert grandchild.client_id == acme.id

@@ -29,6 +29,7 @@
       "label": "Status",
       "active": "Active",
       "inactive": "Inactive"
-    }
+    },
+    "inherited_from_parent": "Inherited from parent work item"
   }
 }

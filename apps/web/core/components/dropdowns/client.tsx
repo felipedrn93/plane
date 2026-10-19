@@ -19,6 +19,7 @@ import { ComboDropDown } from "@plane/ui";
 import { cn } from "@plane/utils";
 // hooks
 import { useClient } from "@/hooks/store/use-client";
+import { useIssues } from "@/hooks/store/use-issues";
 import { useDropdown } from "@/hooks/use-dropdown";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // local imports
@@ -34,6 +35,8 @@ type Props = TDropdownProps & {
   onClose?: () => void;
   value: string | null;
   renderByDefault?: boolean;
+  /** pai da tarefa: se algum ancestral tem cliente, o valor é herdado e o dropdown trava */
+  parentId?: string | null;
 };
 
 type TClientOptionsProps = {
@@ -135,7 +138,7 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
     buttonContainerClassName,
     buttonVariant,
     className = "",
-    disabled = false,
+    disabled: disabledProp = false,
     dropdownArrow = false,
     dropdownArrowClassName = "",
     hideIcon = false,
@@ -145,14 +148,16 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
     placement,
     showTooltip = false,
     tabIndex,
-    value,
+    value: ownValue,
     renderByDefault = true,
+    parentId,
   } = props;
   // router
   const { workspaceSlug } = useParams();
   // hooks
   const { t } = useTranslation();
   const { getClientById, fetchClients } = useClient();
+  const { issueMap } = useIssues();
   // states
   const [isOpen, setIsOpen] = useState(false);
   const [referenceElement, setReferenceElement] = useState<HTMLButtonElement | null>(null);
@@ -165,6 +170,19 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
   useSWR(workspaceSlug ? `WORKSPACE_CLIENTS_${workspaceSlug}` : null, () =>
     workspaceSlug ? fetchClients(workspaceSlug.toString()) : null
   );
+
+  // mesma regra do Issue.save no backend: vale o cliente do ancestral mais alto que tem um.
+  // Ancestrais fora do store sao ignorados; o backend corrige o valor de qualquer forma.
+  let inheritedClientId: string | null = null;
+  const seen = new Set<string>();
+  let ancestorId = parentId;
+  while (ancestorId && !seen.has(ancestorId)) {
+    seen.add(ancestorId);
+    inheritedClientId = issueMap[ancestorId]?.client_id ?? inheritedClientId;
+    ancestorId = issueMap[ancestorId]?.parent_id;
+  }
+  const value = inheritedClientId ?? ownValue;
+  const disabled = disabledProp || !!inheritedClientId;
 
   // getClientById tambem resolve clientes inativos, que ficam fora das opcoes mas
   // precisam continuar aparecendo no botao quando ja estao vinculados a tarefa
@@ -208,8 +226,10 @@ export const ClientDropdown = observer(function ClientDropdown(props: Props) {
         className={buttonClassName}
         isActive={isOpen}
         tooltipHeading={t("clients.client")}
-        tooltipContent={selectedName ?? placeholder}
-        showTooltip={showTooltip}
+        tooltipContent={
+          inheritedClientId ? `${selectedName} — ${t("clients.inherited_from_parent")}` : (selectedName ?? placeholder)
+        }
+        showTooltip={showTooltip || !!inheritedClientId}
         variant={buttonVariant}
         renderToolTipByDefault={renderByDefault}
       >

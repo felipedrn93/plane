@@ -106,7 +106,7 @@ class IssueManager(SoftDeletionManager):
 
 
 class Issue(ChangeTrackerMixin, ProjectBaseModel):
-    TRACKED_FIELDS = ["state_id"]
+    TRACKED_FIELDS = ["state_id", "client_id"]
 
     PRIORITY_CHOICES = (
         ("urgent", "Urgent"),
@@ -191,6 +191,8 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
 
     def save(self, *args, **kwargs):
         self._ensure_default_state()
+        kwargs = self._inherit_parent_client(kwargs)
+        client_changed = not self._state.adding and self.has_changed("client_id")
         was_completed_before = self.completed_at is not None
         kwargs = self._sync_completed_at(kwargs)
         becoming_completed = self.completed_at is not None and not was_completed_before
@@ -235,6 +237,9 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
             )
             super(Issue, self).save(*args, **kwargs)
 
+        if client_changed and self.client_id:
+            Issue.propagate_client([self.id], self.client_id)
+
         if becoming_completed and self.recurrence_pattern:
             from plane.bgtasks.recurring_issue_task import create_next_recurring_issue
 
@@ -244,6 +249,28 @@ class Issue(ChangeTrackerMixin, ProjectBaseModel):
     def __str__(self):
         """Return name of the issue"""
         return f"{self.name} <{self.project.name}>"
+
+    def _inherit_parent_client(self, kwargs):
+        """A sub-issue takes its parent's client; it keeps its own only when the parent has none."""
+        if not self.parent_id:
+            return kwargs
+        parent_client_id = Issue.objects.filter(pk=self.parent_id).values_list("client_id", flat=True).first()
+        if parent_client_id and parent_client_id != self.client_id:
+            self.client_id = parent_client_id
+            if kwargs.get("update_fields") is not None:
+                kwargs["update_fields"] = [*kwargs["update_fields"], "client"]
+        return kwargs
+
+    @staticmethod
+    def propagate_client(issue_ids, client_id):
+        """Push client_id down to every descendant of issue_ids (bulk update, bypasses save)."""
+        seen = set(issue_ids)
+        level = list(issue_ids)
+        while level:
+            children = Issue.objects.filter(parent_id__in=level).exclude(id__in=seen)
+            children.exclude(client_id=client_id).update(client_id=client_id)
+            level = list(children.values_list("id", flat=True))
+            seen.update(level)
 
     def _ensure_default_state(self):
         """Assign a default state when none is set."""
