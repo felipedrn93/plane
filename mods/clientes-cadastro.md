@@ -182,3 +182,9 @@ Tudo que não depende de renderizar linhas de work item foi verificado com o app
 O `IssueCreateSerializer` (`plane/app/serializers/issue.py`) usa `fields = "__all__"`, que expõe a FK como `client` — mas o front envia `client_id`. O DRF descartava o campo em silêncio: o PATCH respondia 204 e o `client_id` continuava `NULL` (nenhuma tarefa em produção tinha cliente gravado). Corrigido com um `client_id = PrimaryKeyRelatedField(source="client")`, como já é feito com `state_id`/`parent_id`, e validação de que o cliente é do workspace do projeto. Teste: `tests/unit/serializers/test_client.py::TestIssueClientId`.
 
 Mais um item para a lista de _shadow allowlists_ acima: campo FK novo na `Issue` precisa de um `<campo>_id` explícito no `IssueCreateSerializer`.
+
+## Atualização 2026-10-27 — filtro de cliente em "Seu trabalho"
+
+O filtro de cliente existia nas telas de projeto, minhas tarefas e arquivadas, mas não em "Seu trabalho" (`profile_issues`). O endpoint do perfil já usa o `IssueFilterSet` (que tem `client_id__in`), então bastou incluir `client_id` em `ISSUE_DISPLAY_FILTERS_BY_PAGE.profile_issues.filters` (`packages/constants/src/issue/filter.ts`).
+
+O `useWorkItemFiltersConfig` (`apps/web/ce/hooks/work-item-filters/use-work-item-filters-config.tsx`) agora carrega a lista de clientes com o mesmo `useSWR` do `ClientDropdown`. Antes, a lista só era buscada quando algum card renderizava o dropdown de cliente; com a propriedade "Cliente" oculta no menu _Exibir_, o filtro abria vazio em qualquer tela.

@@ -6,6 +6,7 @@
 
 import { useCallback, useMemo } from "react";
 import { AtSign, Ban, Briefcase, Building2 } from "lucide-react";
+import useSWR from "swr";
 // plane imports
 import { Logo } from "@plane/propel/emoji-icon-picker";
 import {
@@ -98,7 +99,9 @@ export const useWorkItemFiltersConfig = (props: TUseWorkItemFiltersConfigProps):
   // store hooks
   const { loader: projectLoader, getProjectById } = useProject();
   const { getCycleById } = useCycle();
-  const { activeClients } = useClient();
+  const { activeClients, fetchClients } = useClient();
+  // o filtro precisa da lista mesmo quando nenhum card mostra o cliente; mesma chave do ClientDropdown (SWR deduplica)
+  useSWR(workspaceSlug ? `WORKSPACE_CLIENTS_${workspaceSlug}` : null, () => fetchClients(workspaceSlug));
   const { getLabelById } = useLabel();
   const { getModuleById } = useModule();
   const { getStateById } = useProjectState();

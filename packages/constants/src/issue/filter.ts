@@ -114,7 +114,16 @@ export type TIssueFiltersToDisplayByPageType = {
 
 export const ISSUE_DISPLAY_FILTERS_BY_PAGE: TIssueFiltersToDisplayByPageType = {
   profile_issues: {
-    filters: ["priority", "state_group", "label_id", "start_date", "target_date", "completed_at", "is_blocked"],
+    filters: [
+      "priority",
+      "state_group",
+      "label_id",
+      "client_id",
+      "start_date",
+      "target_date",
+      "completed_at",
+      "is_blocked",
+    ],
     layoutOptions: {
       list: {
         display_properties: ISSUE_DISPLAY_PROPERTIES_KEYS,
