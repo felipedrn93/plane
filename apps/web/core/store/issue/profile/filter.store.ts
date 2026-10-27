@@ -52,6 +52,8 @@ export interface IProfileIssuesFilter extends IBaseIssueFilterStore {
     filters: TSupportedFilterForUpdate,
     userId: string
   ) => Promise<void>;
+  getSearchQuery: (entityId: string) => string;
+  updateSearchQuery: (workspaceSlug: string, userId: string, query: string) => void;
 }
 
 export class ProfileIssuesFilter extends IssueFilterHelperStore implements IProfileIssuesFilter {
@@ -69,12 +71,14 @@ export class ProfileIssuesFilter extends IssueFilterHelperStore implements IProf
       // observables
       userId: observable.ref,
       filters: observable,
+      searchQuery: observable,
       // computed
       issueFilters: computed,
       appliedFilters: computed,
       // actions
       fetchFilters: action,
       updateFilters: action,
+      updateSearchQuery: action,
     });
     // root store
     this.rootIssueStore = _rootStore;
@@ -115,7 +119,8 @@ export class ProfileIssuesFilter extends IssueFilterHelperStore implements IProf
     const filteredRouteParams: Partial<Record<TIssueParams, string | boolean>> = this.computedFilteredParams(
       userFilters?.richFilters,
       userFilters?.displayFilters,
-      filteredParams
+      filteredParams,
+      this.getSearchQuery(userId)
     );
 
     return filteredRouteParams;
@@ -135,6 +140,11 @@ export class ProfileIssuesFilter extends IssueFilterHelperStore implements IProf
       return paginationParams;
     }
   );
+
+  updateSearchQuery: IProfileIssuesFilter["updateSearchQuery"] = (workspaceSlug, userId, query) => {
+    this.setSearchQuery(userId, query);
+    this.rootIssueStore.profileIssues.fetchIssuesWithExistingPagination(workspaceSlug, userId, "mutation");
+  };
 
   fetchFilters = async (workspaceSlug: string, userId: string) => {
     this.userId = userId;

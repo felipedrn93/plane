@@ -17,6 +17,7 @@ import { ProfileIssuesListLayout } from "@/components/issues/issue-layouts/list/
 import { IssuePeekOverview } from "@/components/issues/peek-overview";
 import { WorkspaceLevelWorkItemFiltersHOC } from "@/components/work-item-filters/filters-hoc/workspace-level";
 import { WorkItemFiltersRow } from "@/components/work-item-filters/filters-row";
+import { WorkItemSearch } from "@/components/work-item-filters/work-item-search";
 // hooks
 import { useIssues } from "@/hooks/store/use-issues";
 import { IssuesStoreContext } from "@/hooks/use-issue-layout-store";
@@ -31,7 +32,7 @@ export const ProfileIssuesPage = observer(function ProfileIssuesPage(props: Prop
   // store hooks
   const {
     issues: { setViewId },
-    issuesFilter: { issueFilters, fetchFilters, updateFilterExpression },
+    issuesFilter: { issueFilters, fetchFilters, updateFilterExpression, getSearchQuery, updateSearchQuery },
   } = useIssues(EIssuesStoreType.PROFILE);
   // derived values
   const activeLayout = issueFilters?.displayFilters?.layout || undefined;
@@ -63,6 +64,13 @@ export const ProfileIssuesPage = observer(function ProfileIssuesPage(props: Prop
         {({ filter: profileWorkItemsFilter }) => (
           <>
             <div className="flex h-full w-full flex-col">
+              <div className="flex items-center justify-end px-3 pt-2">
+                <WorkItemSearch
+                  filterStore={{ getSearchQuery, updateSearchQuery }}
+                  workspaceSlug={workspaceSlug}
+                  entityId={userId}
+                />
+              </div>
               {profileWorkItemsFilter && <WorkItemFiltersRow filter={profileWorkItemsFilter} />}
               <div className="relative h-full w-full overflow-auto">
                 {activeLayout === "list" ? (

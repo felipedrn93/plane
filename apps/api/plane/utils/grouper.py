@@ -244,6 +244,9 @@ def search_issue_ids_by_text(
     project view) or, for cross-project workspace global views, pass
     ``project_id=None`` together with ``workspace_slug``.
 
+    Client, state, label and assignee names also match, but only the issue
+    itself (no descendant walk — a state/label hit shouldn't drag whole sub-trees).
+
     Matching is **space-insensitive**: "clube unir" also matches "clubeunir" and
     vice-versa (spaces are stripped from both the name/identifier and the query
     before comparing), on top of the plain substring match.
@@ -293,7 +296,28 @@ def search_issue_ids_by_text(
             JOIN matched m ON c.parent_id = m.id
             WHERE c.deleted_at IS NULL
         )
-        SELECT id FROM matched;
+        SELECT id FROM matched
+        UNION
+        SELECT i.id
+        FROM issues i
+        LEFT JOIN clients cl ON cl.id = i.client_id AND cl.deleted_at IS NULL
+        LEFT JOIN states s ON s.id = i.state_id
+        WHERE {scope}
+          AND i.deleted_at IS NULL
+          AND (
+            cl.name ILIKE %(like)s
+            OR s.name ILIKE %(like)s
+            OR EXISTS (
+                SELECT 1 FROM issue_labels il JOIN labels l ON l.id = il.label_id
+                WHERE il.issue_id = i.id AND il.deleted_at IS NULL AND l.deleted_at IS NULL
+                  AND l.name ILIKE %(like)s
+            )
+            OR EXISTS (
+                SELECT 1 FROM issue_assignees ia JOIN users u ON u.id = ia.assignee_id
+                WHERE ia.issue_id = i.id AND ia.deleted_at IS NULL
+                  AND (u.display_name ILIKE %(like)s OR (u.first_name || ' ' || u.last_name) ILIKE %(like)s)
+            )
+          );
     """.format(scope=scope)
 
     try:
