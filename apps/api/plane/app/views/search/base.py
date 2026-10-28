@@ -103,14 +103,19 @@ class GlobalSearchEndpoint(BaseAPIView):
         if workspace_search == "false" and project_id:
             issues = issues.filter(project_id=project_id)
 
-        return issues.distinct().values(
-            "name",
-            "id",
-            "sequence_id",
-            "project__identifier",
-            "project_id",
-            "workspace__slug",
-        )[:100]
+        # Most recent first, so the 100-row cap doesn't drop new work items (see mods/busca-sem-acento.md)
+        return (
+            issues.order_by("-created_at")
+            .distinct()
+            .values(
+                "name",
+                "id",
+                "sequence_id",
+                "project__identifier",
+                "project_id",
+                "workspace__slug",
+            )[:100]
+        )
 
     def filter_cycles(self, query, slug, project_id, workspace_search):
         fields = ["name"]

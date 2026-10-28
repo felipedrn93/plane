@@ -43,3 +43,9 @@ a tarefa do cliente "União".
   passam pelo backend e continuam sensíveis a acento.
 - API pública (`/api/v1/`), notificações e stickies mantêm `icontains` puro.
 - Se a migration não rodar, a busca inline cai no `except` e retorna vazio (contrato defensivo existente).
+
+## Correção 2026-10-28 — Ctrl+K cortava tarefas recentes
+
+O Ctrl+K (`GlobalSearchEndpoint.filter_issues`) devolve no máximo 100 tarefas e não tinha ordenação. Com o
+acento ignorado, "uniao" passou a casar 142 tarefas e a BI-7582 (recente) ficava fora do corte. Agora ordena por
+`-created_at` (igual ao `filter_intakes`), então as mais novas aparecem primeiro.
