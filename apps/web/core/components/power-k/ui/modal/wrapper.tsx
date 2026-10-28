@@ -16,6 +16,13 @@ import type { TPowerKCommandsListProps } from "./commands-list";
 import { PowerKModalFooter } from "./footer";
 import { PowerKModalHeader } from "./header";
 
+// Accent-insensitive, matching the backend's unaccent search (mods/busca-sem-acento.md)
+const fold = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
 type Props = {
   commandsListComponent: React.FC<TPowerKCommandsListProps>;
   context: TPowerKContext;
@@ -147,7 +154,7 @@ export const ProjectsAppPowerKModalWrapper = observer(function ProjectsAppPowerK
                 <Command
                   filter={(i18nValue: string, search: string) => {
                     if (i18nValue === "no-results") return 1;
-                    if (i18nValue.toLowerCase().includes(search.toLowerCase())) return 1;
+                    if (fold(i18nValue).includes(fold(search))) return 1;
                     return 0;
                   }}
                   shouldFilter={searchTerm.length > 0}

@@ -49,3 +49,9 @@ a tarefa do cliente "União".
 O Ctrl+K (`GlobalSearchEndpoint.filter_issues`) devolve no máximo 100 tarefas e não tinha ordenação. Com o
 acento ignorado, "uniao" passou a casar 142 tarefas e a BI-7582 (recente) ficava fora do corte. Agora ordena por
 `-created_at` (igual ao `filter_intakes`), então as mais novas aparecem primeiro.
+
+## Correção 2026-10-28 — Ctrl+K refiltrava no navegador com acento
+
+O `<Command>` do Power-K (`apps/web/core/components/power-k/ui/modal/wrapper.tsx`) tem um `filter` próprio que
+refiltra no navegador o que o backend devolveu, com `toLowerCase().includes()`. Ele descartava "União…" ao buscar
+"uniao". O filtro agora remove acentos dos dois lados (`normalize("NFD")` + remoção dos diacríticos).
