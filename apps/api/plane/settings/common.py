@@ -81,6 +81,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.staticfiles",
+    "django.contrib.postgres",
     # Inhouse apps
     "plane.analytics",
     "plane.app",

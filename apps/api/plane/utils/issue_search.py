@@ -20,5 +20,5 @@ def search_issues(query, queryset):
             for sequence_id in sequences:
                 q |= Q(**{"sequence_id": sequence_id})
         else:
-            q |= Q(**{f"{field}__icontains": query})
+            q |= Q(**{f"{field}__unaccent__icontains": query})
     return queryset.filter(q).distinct()

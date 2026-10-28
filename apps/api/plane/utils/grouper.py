@@ -247,7 +247,8 @@ def search_issue_ids_by_text(
     Client, state, label and assignee names also match, but only the issue
     itself (no descendant walk — a state/label hit shouldn't drag whole sub-trees).
 
-    Matching is **space-insensitive**: "clube unir" also matches "clubeunir" and
+    Matching is **accent-insensitive** (Postgres ``unaccent``: "uniao" matches "União")
+    and **space-insensitive**: "clube unir" also matches "clubeunir" and
     vice-versa (spaces are stripped from both the name/identifier and the query
     before comparing), on top of the plain substring match.
 
@@ -285,9 +286,9 @@ def search_issue_ids_by_text(
             WHERE {scope}
               AND i.deleted_at IS NULL
               AND (
-                i.name ILIKE %(like)s
+                unaccent(i.name) ILIKE unaccent(%(like)s)
                 OR (p.identifier || '-' || i.sequence_id::text) ILIKE %(like)s
-                OR replace(i.name, ' ', '') ILIKE %(like_nospace)s
+                OR unaccent(replace(i.name, ' ', '')) ILIKE unaccent(%(like_nospace)s)
                 OR replace(p.identifier || '-' || i.sequence_id::text, ' ', '') ILIKE %(like_nospace)s
               )
             UNION
@@ -305,17 +306,20 @@ def search_issue_ids_by_text(
         WHERE {scope}
           AND i.deleted_at IS NULL
           AND (
-            cl.name ILIKE %(like)s
-            OR s.name ILIKE %(like)s
+            unaccent(cl.name) ILIKE unaccent(%(like)s)
+            OR unaccent(s.name) ILIKE unaccent(%(like)s)
             OR EXISTS (
                 SELECT 1 FROM issue_labels il JOIN labels l ON l.id = il.label_id
                 WHERE il.issue_id = i.id AND il.deleted_at IS NULL AND l.deleted_at IS NULL
-                  AND l.name ILIKE %(like)s
+                  AND unaccent(l.name) ILIKE unaccent(%(like)s)
             )
             OR EXISTS (
                 SELECT 1 FROM issue_assignees ia JOIN users u ON u.id = ia.assignee_id
                 WHERE ia.issue_id = i.id AND ia.deleted_at IS NULL
-                  AND (u.display_name ILIKE %(like)s OR (u.first_name || ' ' || u.last_name) ILIKE %(like)s)
+                  AND (
+                    unaccent(u.display_name) ILIKE unaccent(%(like)s)
+                    OR unaccent(u.first_name || ' ' || u.last_name) ILIKE unaccent(%(like)s)
+                  )
             )
           );
     """.format(scope=scope)
