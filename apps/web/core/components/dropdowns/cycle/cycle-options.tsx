@@ -20,6 +20,7 @@ import type { TCycleGroups } from "@plane/types";
 // store hooks
 import { useCycle } from "@/hooks/store/use-cycle";
 import { usePlatformOS } from "@/hooks/use-platform-os";
+import { includesSearchQuery } from "@plane/utils";
 // types
 
 type DropdownOptions =
@@ -120,8 +121,7 @@ export const CycleOptions = observer(function CycleOptions(props: CycleOptionsPr
     });
   }
 
-  const filteredOptions =
-    query === "" ? options : options?.filter((o) => o.query.toLowerCase().includes(query.toLowerCase()));
+  const filteredOptions = query === "" ? options : options?.filter((o) => includesSearchQuery(o.query, query));
 
   return (
     <Combobox.Options className="fixed z-10" static>

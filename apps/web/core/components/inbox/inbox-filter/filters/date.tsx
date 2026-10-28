@@ -16,6 +16,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   filterKey: TInboxIssueFilterDateKeys;
   label?: string;
@@ -37,9 +38,7 @@ export const FilterDate = observer(function FilterDate(props: Props) {
   // derived values
   const filterValue: string[] = inboxFilters?.[filterKey] || [];
   const appliedFiltersCount = filterValue?.length ?? 0;
-  const filteredOptions = PAST_DURATION_FILTER_OPTIONS.filter((d) =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = PAST_DURATION_FILTER_OPTIONS.filter((d) => includesSearchQuery(d.name, searchQuery));
 
   const handleFilterValue = (value: string): string[] => (filterValue?.includes(value) ? [] : uniq(concat(value)));
 

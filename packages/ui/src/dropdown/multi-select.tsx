@@ -17,6 +17,7 @@ import { DropdownButton } from "./common";
 import { DropdownOptions } from "./common/options";
 import type { IMultiSelectDropdown } from "./dropdown";
 
+import { includesSearchQuery } from "@plane/utils";
 export function MultiSelectDropdown(props: IMultiSelectDropdown) {
   const {
     value,
@@ -95,7 +96,7 @@ export function MultiSelectDropdown(props: IMultiSelectDropdown) {
     const filteredOptions = queryArray
       ? (options || []).filter((options) => {
           const queryString = queryArray.map((query) => options.data[query]).join(" ");
-          return queryString.toLowerCase().includes(query.toLowerCase());
+          return includesSearchQuery(queryString, query);
         })
       : options;
 

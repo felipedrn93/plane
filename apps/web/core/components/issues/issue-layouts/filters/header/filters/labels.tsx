@@ -12,6 +12,7 @@ import type { IIssueLabel } from "@plane/types";
 import { Loader } from "@plane/ui";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 
+import { includesSearchQuery } from "@plane/utils";
 // ui
 // types
 
@@ -35,9 +36,7 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
-    const filteredOptions = (labels || []).filter((label) =>
-      label.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredOptions = (labels || []).filter((label) => includesSearchQuery(label.name, searchQuery));
 
     return sortBy(filteredOptions, [
       (label) => !(appliedFilters ?? []).includes(label.id),

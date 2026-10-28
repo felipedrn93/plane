@@ -14,6 +14,7 @@ import type { TCycleGroups } from "@plane/types";
 import { Loader } from "@plane/ui";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 import { useCycle } from "@/hooks/store/use-cycle";
+import { includesSearchQuery } from "@plane/utils";
 // ui
 // types
 
@@ -39,9 +40,7 @@ export const FilterCycle = observer(function FilterCycle(props: Props) {
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
-    const filteredOptions = (cycles || []).filter((cycle) =>
-      cycle.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredOptions = (cycles || []).filter((cycle) => includesSearchQuery(cycle.name, searchQuery));
 
     return sortBy(filteredOptions, [
       (cycle) => !appliedFilters?.includes(cycle.id),

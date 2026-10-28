@@ -9,6 +9,7 @@ import { Combobox as BaseCombobox } from "@base-ui-components/react/combobox";
 import { SearchIcon } from "../icons";
 import { cn } from "../utils/classname";
 
+import { includesSearchQuery } from "@plane/utils";
 // Type definitions
 type TMaxHeight = "lg" | "md" | "rg" | "sm";
 
@@ -166,7 +167,7 @@ function ComboboxOptions({
       const value = child.props.value || "";
 
       const searchLower = searchQuery.toLowerCase();
-      return textContent.toLowerCase().includes(searchLower) || String(value).toLowerCase().includes(searchLower);
+      return includesSearchQuery(textContent, searchLower) || includesSearchQuery(String(value), searchLower);
     });
   }, [children, searchQuery, showSearch]);
 

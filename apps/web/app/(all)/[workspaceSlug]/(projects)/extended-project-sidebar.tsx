@@ -14,7 +14,7 @@ import { EmptyStateCompact } from "@plane/propel/empty-state";
 import { PlusIcon, SearchIcon } from "@plane/propel/icons";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { Tooltip } from "@plane/propel/tooltip";
-import { copyUrlToClipboard, orderJoinedProjects } from "@plane/utils";
+import { copyUrlToClipboard, orderJoinedProjects, includesSearchQuery } from "@plane/utils";
 // components
 import { CreateProjectModal } from "@/components/project/create-project-modal";
 import { SidebarProjectsListItem } from "@/components/workspace/sidebar/projects-list-item";
@@ -73,7 +73,7 @@ export const ExtendedProjectSidebar = observer(function ExtendedProjectSidebar()
   const filteredProjects = joinedProjects.filter((projectId) => {
     const project = getPartialProjectById(projectId);
     if (!project) return false;
-    return project.name.toLowerCase().includes(searchQuery.toLowerCase()) || project.identifier.includes(searchQuery);
+    return includesSearchQuery(project.name, searchQuery) || project.identifier.includes(searchQuery);
   });
 
   // auth

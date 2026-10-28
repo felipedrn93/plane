@@ -15,6 +15,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 // hooks
 import { useProject } from "@/hooks/store/use-project";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   appliedFilters: string[] | null;
   handleUpdate: (val: string) => void;
@@ -33,9 +34,7 @@ export const FilterProjects = observer(function FilterProjects(props: Props) {
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
-    const filteredOptions = (projects || []).filter((project) =>
-      project.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredOptions = (projects || []).filter((project) => includesSearchQuery(project.name, searchQuery));
     return sortBy(filteredOptions, [
       (project) => !(appliedFilters ?? []).includes(project.id),
       (project) => project.name.toLowerCase(),

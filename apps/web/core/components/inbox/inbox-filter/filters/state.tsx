@@ -15,6 +15,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   states: IState[] | undefined;
   searchQuery: string;
@@ -32,7 +33,7 @@ export const FilterState = observer(function FilterState(props: Props) {
 
   const appliedFiltersCount = filterValue?.length ?? 0;
 
-  const filteredOptions = states?.filter((state) => state.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredOptions = states?.filter((state) => includesSearchQuery(state.name, searchQuery));
 
   const handleViewToggle = () => {
     if (!filteredOptions) return;

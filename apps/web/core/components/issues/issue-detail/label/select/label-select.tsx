@@ -17,7 +17,7 @@ import { CheckIcon, SearchIcon, PlusIcon } from "@plane/propel/icons";
 import type { IIssueLabel } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // helpers
-import { getTabIndex } from "@plane/utils";
+import { getTabIndex, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useLabel } from "@/hooks/store/use-label";
 import { useUserPermissions } from "@/hooks/store/user";
@@ -76,7 +76,7 @@ export const IssueLabelSelect = observer(function IssueLabelSelect(props: IIssue
   }));
 
   const filteredOptions =
-    query === "" ? options : options?.filter((option) => option.query.toLowerCase().includes(query.toLowerCase()));
+    query === "" ? options : options?.filter((option) => includesSearchQuery(option.query, query));
 
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: "bottom-start",

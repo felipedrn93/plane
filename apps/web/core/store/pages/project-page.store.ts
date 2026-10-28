@@ -12,7 +12,7 @@ import { EUserPermissions } from "@plane/constants";
 import type { TPage, TPageFilters, TPageNavigationTabs } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // helpers
-import { filterPagesByPageType, getPageName, orderPages, shouldFilterPage } from "@plane/utils";
+import { filterPagesByPageType, getPageName, orderPages, shouldFilterPage, includesSearchQuery } from "@plane/utils";
 // plane web constants
 // plane web store
 import type { RootStore } from "@/plane-web/store/root.store";
@@ -173,7 +173,7 @@ export class ProjectPageStore implements IProjectPageStore {
     let filteredPages = pagesByType.filter(
       (p) =>
         p.project_ids?.includes(projectId) &&
-        getPageName(p.name).toLowerCase().includes(this.filters.searchQuery.toLowerCase()) &&
+        includesSearchQuery(getPageName(p.name), this.filters.searchQuery) &&
         shouldFilterPage(p, this.filters.filters)
     );
     filteredPages = orderPages(filteredPages, this.filters.sortKey, this.filters.sortBy);

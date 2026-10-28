@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 import { useParams } from "next/navigation";
 // hooks
 import { CloseIcon, SearchIcon } from "@plane/propel/icons";
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // power-k
 import type { TPowerKCommandConfig, TPowerKContext } from "@/components/power-k/core/types";
 import { ProjectsAppPowerKCommandsList } from "@/components/power-k/ui/modal/commands-list";
@@ -258,7 +258,7 @@ export const TopNavPowerK = observer(() => {
           <Command
             filter={(i18nValue: string, search: string) => {
               if (i18nValue === "no-results") return 1;
-              if (i18nValue.toLowerCase().includes(search.toLowerCase())) return 1;
+              if (includesSearchQuery(i18nValue, search)) return 1;
               return 0;
             }}
             shouldFilter={searchTerm.length > 0}

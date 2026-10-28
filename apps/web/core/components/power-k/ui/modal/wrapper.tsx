@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Command } from "cmdk";
 import { observer } from "mobx-react";
 import { Dialog, Transition } from "@headlessui/react";
+import { includesSearchQuery } from "@plane/utils";
 // hooks
 import { usePowerK } from "@/hooks/store/use-power-k";
 // local imports
@@ -15,13 +16,6 @@ import type { TPowerKCommandConfig, TPowerKContext } from "../../core/types";
 import type { TPowerKCommandsListProps } from "./commands-list";
 import { PowerKModalFooter } from "./footer";
 import { PowerKModalHeader } from "./header";
-
-// Accent-insensitive, matching the backend's unaccent search (mods/busca-sem-acento.md)
-const fold = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
 
 type Props = {
   commandsListComponent: React.FC<TPowerKCommandsListProps>;
@@ -154,7 +148,7 @@ export const ProjectsAppPowerKModalWrapper = observer(function ProjectsAppPowerK
                 <Command
                   filter={(i18nValue: string, search: string) => {
                     if (i18nValue === "no-results") return 1;
-                    if (fold(i18nValue).includes(fold(search))) return 1;
+                    if (includesSearchQuery(i18nValue, search)) return 1;
                     return 0;
                   }}
                   shouldFilter={searchTerm.length > 0}

@@ -13,6 +13,7 @@ import type { IState } from "@plane/types";
 // components
 import { Loader } from "@plane/ui";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
+import { includesSearchQuery } from "@plane/utils";
 // ui
 // types
 
@@ -32,7 +33,7 @@ export const FilterState = observer(function FilterState(props: Props) {
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
-    const filteredOptions = (states ?? []).filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredOptions = (states ?? []).filter((s) => includesSearchQuery(s.name, searchQuery));
 
     return sortBy(filteredOptions, [(s) => !(appliedFilters ?? []).includes(s.id)]);
     // eslint-disable-next-line react-hooks/exhaustive-deps

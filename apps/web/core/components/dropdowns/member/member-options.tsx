@@ -17,7 +17,7 @@ import { CheckIcon, SearchIcon, SuspendedUserIcon } from "@plane/propel/icons";
 import { EPillSize, EPillVariant, Pill } from "@plane/propel/pill";
 import type { IUserLite } from "@plane/types";
 import { Avatar } from "@plane/ui";
-import { cn, getFileURL, sortByCurrentUserThenSelected } from "@plane/utils";
+import { cn, getFileURL, sortByCurrentUserThenSelected, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useMember } from "@/hooks/store/use-member";
 import { useUser } from "@/hooks/store/user";
@@ -120,7 +120,7 @@ export const MemberOptions = observer(function MemberOptions(props: Props) {
     .filter((o) => !!o);
 
   const filteredOptions = sortByCurrentUserThenSelected(
-    query === "" ? options : options?.filter((o) => o?.query.toLowerCase().includes(query.toLowerCase())),
+    query === "" ? options : options?.filter((o) => includesSearchQuery(o?.query, query)),
     value,
     currentUser?.id
   );

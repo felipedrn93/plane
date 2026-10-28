@@ -13,6 +13,7 @@ import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/fi
 // hooks
 import { useProjectInbox } from "@/hooks/store/use-project-inbox";
 
+import { includesSearchQuery } from "@plane/utils";
 function LabelIcons({ color }: { color: string }) {
   return <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />;
 }
@@ -34,7 +35,7 @@ export const FilterLabels = observer(function FilterLabels(props: Props) {
 
   const appliedFiltersCount = filterValue?.length ?? 0;
 
-  const filteredOptions = labels?.filter((label) => label.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredOptions = labels?.filter((label) => includesSearchQuery(label.name, searchQuery));
 
   const handleViewToggle = () => {
     if (!filteredOptions) return;

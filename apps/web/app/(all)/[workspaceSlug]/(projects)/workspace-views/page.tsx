@@ -18,6 +18,7 @@ import { GlobalViewsList } from "@/components/workspace/views/views-list";
 // hooks
 import { useWorkspace } from "@/hooks/store/use-workspace";
 
+import { includesSearchQuery } from "@plane/utils";
 function WorkspaceViewsPage() {
   const [query, setQuery] = useState("");
   // store
@@ -41,11 +42,9 @@ function WorkspaceViewsPage() {
           />
         </div>
         <div className="vertical-scrollbar flex scrollbar-lg h-full w-full flex-col">
-          {DEFAULT_GLOBAL_VIEWS_LIST.filter((v) => t(v.i18n_label).toLowerCase().includes(query.toLowerCase())).map(
-            (option) => (
-              <GlobalDefaultViewListItem key={option.key} view={option} />
-            )
-          )}
+          {DEFAULT_GLOBAL_VIEWS_LIST.filter((v) => includesSearchQuery(t(v.i18n_label), query)).map((option) => (
+            <GlobalDefaultViewListItem key={option.key} view={option} />
+          ))}
           <GlobalViewsList searchQuery={query} />
         </div>
       </div>

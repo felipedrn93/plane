@@ -11,7 +11,7 @@ import { computedFn } from "mobx-utils";
 import type { IProjectView, TViewFilters } from "@plane/types";
 // constants
 // helpers
-import { getValidatedViewFilters, getViewName, orderViews, shouldFilterView } from "@plane/utils";
+import { getValidatedViewFilters, getViewName, orderViews, shouldFilterView, includesSearchQuery } from "@plane/utils";
 // services
 import { ViewService } from "@/services/view.service";
 // store
@@ -124,7 +124,7 @@ export class ProjectViewStore implements IProjectViewStore {
     let filteredViews = ViewsList.filter(
       (view) =>
         view?.project === projectId &&
-        getViewName(view.name).toLowerCase().includes(this.filters.searchQuery.toLowerCase()) &&
+        includesSearchQuery(getViewName(view.name), this.filters.searchQuery) &&
         shouldFilterView(view, this.filters.filters)
     );
     filteredViews = orderViews(filteredViews, this.filters.sortKey, this.filters.sortBy);

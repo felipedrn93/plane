@@ -13,6 +13,7 @@ import type { IIssueLabel } from "@/types/issue";
 import { FilterHeader } from "./helpers/filter-header";
 import { FilterOption } from "./helpers/filter-option";
 
+import { includesSearchQuery } from "@plane/utils";
 function LabelIcons({ color }: { color: string }) {
   return <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />;
 }
@@ -32,7 +33,7 @@ export function FilterLabels(props: Props) {
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
-  const filteredOptions = labels?.filter((label) => label.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredOptions = labels?.filter((label) => includesSearchQuery(label.name, searchQuery));
 
   const handleViewToggle = () => {
     if (!filteredOptions) return;

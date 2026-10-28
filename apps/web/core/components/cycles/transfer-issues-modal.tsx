@@ -15,6 +15,7 @@ import { EModalPosition, EModalWidth, ModalCore } from "@plane/ui";
 import { useCycle } from "@/hooks/store/use-cycle";
 import { useIssues } from "@/hooks/store/use-issues";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
@@ -73,7 +74,7 @@ export const TransferIssuesModal = observer(function TransferIssuesModal(props: 
   const filteredOptions = currentProjectIncompleteCycleIds?.filter((optionId) => {
     const cycleDetails = getCycleById(optionId);
 
-    return cycleDetails?.name?.toLowerCase().includes(query?.toLowerCase());
+    return includesSearchQuery(cycleDetails?.name, query);
   });
 
   return (

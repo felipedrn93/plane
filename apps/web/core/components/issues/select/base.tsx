@@ -16,7 +16,7 @@ import { useOutsideClickDetector } from "@plane/hooks";
 import { useTranslation } from "@plane/i18n";
 import { CheckIcon, SearchIcon, LabelPropertyIcon } from "@plane/propel/icons";
 import type { IIssueLabel } from "@plane/types";
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // components
 import { IssueLabelsList } from "@/components/ui/labels-list";
 // hooks
@@ -74,8 +74,7 @@ export const WorkItemLabelSelectBase = observer(function WorkItemLabelSelectBase
   });
   // derived values
   const labelsList = labelIds.map((labelId) => getLabelById(labelId)).filter((label) => !!label);
-  const filteredOptions =
-    query === "" ? labelsList : labelsList?.filter((l) => l.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredOptions = query === "" ? labelsList : labelsList?.filter((l) => includesSearchQuery(l.name, query));
 
   const onOpen = () => {
     if (referenceElement) referenceElement.focus();

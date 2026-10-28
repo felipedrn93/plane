@@ -16,6 +16,7 @@ import { useStates } from "@/hooks/store/use-state";
 import { FilterHeader } from "./helpers/filter-header";
 import { FilterOption } from "./helpers/filter-option";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   appliedFilters: string[] | null;
   handleUpdate: (val: string) => void;
@@ -32,7 +33,7 @@ export const FilterState = observer(function FilterState(props: Props) {
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
-  const filteredOptions = states?.filter((s) => s.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredOptions = states?.filter((s) => includesSearchQuery(s.name, searchQuery));
 
   const handleViewToggle = () => {
     if (!filteredOptions) return;

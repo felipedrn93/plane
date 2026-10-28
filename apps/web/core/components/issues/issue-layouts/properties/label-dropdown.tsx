@@ -20,7 +20,7 @@ import type { IIssueLabel } from "@plane/types";
 import { EUserProjectRoles } from "@plane/types";
 // components
 import { ComboDropDown } from "@plane/ui";
-import { sortBySelectedFirst } from "@plane/utils";
+import { sortBySelectedFirst, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useLabel } from "@/hooks/store/use-label";
 import { useUserPermissions } from "@/hooks/store/user";
@@ -120,7 +120,7 @@ export function LabelDropdown(props: ILabelDropdownProps) {
   const filteredOptions = useMemo(
     () =>
       sortBySelectedFirst(
-        query === "" ? options : options?.filter((option) => option.query.toLowerCase().includes(query.toLowerCase())),
+        query === "" ? options : options?.filter((option) => includesSearchQuery(option.query, query)),
         value
       ),
     [options, query, value]

@@ -10,7 +10,7 @@ import { computedFn } from "mobx-utils";
 // plane imports
 import type { TFetchStatus, TLoader, TProjectAnalyticsCount, TProjectAnalyticsCountParams } from "@plane/types";
 // helpers
-import { orderProjects, shouldFilterProject } from "@plane/utils";
+import { orderProjects, shouldFilterProject, includesSearchQuery } from "@plane/utils";
 // services
 import type { TProject, TPartialProject } from "@/plane-web/types/projects";
 import { IssueLabelService, IssueService } from "@/services/issue";
@@ -166,8 +166,7 @@ export class ProjectStore implements IProjectStore {
     let workspaceProjects = Object.values(this.projectMap).filter(
       (p) =>
         p.workspace === workspaceDetails.id &&
-        (p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.identifier.toLowerCase().includes(searchQuery.toLowerCase())) &&
+        (includesSearchQuery(p.name, searchQuery) || includesSearchQuery(p.identifier, searchQuery)) &&
         shouldFilterProject(p, displayFilters, filters)
     );
     workspaceProjects = orderProjects(workspaceProjects, displayFilters.order_by);

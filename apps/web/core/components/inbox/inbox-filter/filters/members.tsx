@@ -12,7 +12,7 @@ import type { TInboxIssueFilterMemberKeys } from "@plane/types";
 // plane ui
 import { Avatar, Loader } from "@plane/ui";
 // components
-import { getFileURL } from "@plane/utils";
+import { getFileURL, includesSearchQuery } from "@plane/utils";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 // helpers
 // hooks
@@ -42,7 +42,7 @@ export const FilterMember = observer(function FilterMember(props: Props) {
 
   const sortedOptions = useMemo(() => {
     const filteredOptions = (memberIds || []).filter((memberId) =>
-      getUserDetails(memberId)?.display_name.toLowerCase().includes(searchQuery.toLowerCase())
+      includesSearchQuery(getUserDetails(memberId)?.display_name, searchQuery)
     );
 
     return sortBy(filteredOptions, [

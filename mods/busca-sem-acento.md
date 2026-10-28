@@ -55,3 +55,20 @@ acento ignorado, "uniao" passou a casar 142 tarefas e a BI-7582 (recente) ficava
 O `<Command>` do Power-K (`apps/web/core/components/power-k/ui/modal/wrapper.tsx`) tem um `filter` próprio que
 refiltra no navegador o que o backend devolveu, com `toLowerCase().includes()`. Ele descartava "União…" ao buscar
 "uniao". O filtro agora remove acentos dos dois lados (`normalize("NFD")` + remoção dos diacríticos).
+
+## Atualização 2026-10-28 — todas as buscas do frontend sem acento
+
+Os filtros feitos no navegador (barra "Search commands" do topo, dropdowns de cliente/estado/etiqueta/membro/
+ciclo/módulo/projeto, filtros do cabeçalho, listas de projetos/ciclos/módulos/páginas/views, `CustomSearchSelect`,
+`Combobox` do propel, menu `/` do editor, seletor de ícones) comparavam com `x.toLowerCase().includes(q.toLowerCase())`.
+
+- **`@plane/utils`** (`packages/utils/src/string.ts`): novos `normalizeSearchText` (minúsculas + remove
+  diacríticos via `normalize("NFD")` + `\p{Diacritic}`) e `includesSearchQuery(texto, busca)`; `substringMatch`
+  (busca de atalhos do Power-K) também normaliza.
+- Todas as ocorrências de `.toLowerCase().includes(` em `apps/web`, `apps/space`, `packages/ui`, `packages/propel`
+  e `packages/editor` viraram `includesSearchQuery(...)` (troca mecânica, ~60 pontos). O filtro local do Ctrl+K
+  (`wrapper.tsx`) passou a usar o helper também.
+- **Ao criar uma busca nova no frontend, use `includesSearchQuery`**, não `toLowerCase().includes`.
+
+Deploy: `docker compose build web space admin && docker compose up -d web space admin` (o `admin` empacota
+`@plane/ui`/`@plane/propel`).

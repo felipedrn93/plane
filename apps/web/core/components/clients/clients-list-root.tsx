@@ -16,7 +16,7 @@ import { useTranslation } from "@plane/i18n";
 import { Button } from "@plane/propel/button";
 import { TOAST_TYPE, setToast } from "@plane/propel/toast";
 import { CustomMenu, Input, Loader } from "@plane/ui";
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // components
 import { PageHead } from "@/components/core/page-title";
 // hooks
@@ -55,7 +55,7 @@ export const ClientsListRoot = observer(function ClientsListRoot() {
   const filteredClients = clients.filter((client) => {
     if (!client.is_active && !showInactive) return false;
     if (normalizedQuery === "") return true;
-    if (client.name.toLowerCase().includes(normalizedQuery)) return true;
+    if (includesSearchQuery(client.name, normalizedQuery)) return true;
     if (normalizedQueryDigits === "") return false;
     return client.companies.some((company) => normalizeCnpj(company.cnpj).includes(normalizedQueryDigits));
   });

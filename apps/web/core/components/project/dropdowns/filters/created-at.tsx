@@ -9,7 +9,7 @@ import { observer } from "mobx-react";
 // plane constants
 import { PROJECT_CREATED_AT_FILTER_OPTIONS } from "@plane/constants";
 // components
-import { isInDateFormat } from "@plane/utils";
+import { isInDateFormat, includesSearchQuery } from "@plane/utils";
 import { DateFilterModal } from "@/components/core/filters/date-filter-modal";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 
@@ -28,9 +28,7 @@ export const FilterCreatedDate = observer(function FilterCreatedDate(props: Prop
   const [isDateFilterModalOpen, setIsDateFilterModalOpen] = useState(false);
   // derived values
   const appliedFiltersCount = appliedFilters?.length ?? 0;
-  const filteredOptions = PROJECT_CREATED_AT_FILTER_OPTIONS.filter((d) =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = PROJECT_CREATED_AT_FILTER_OPTIONS.filter((d) => includesSearchQuery(d.name, searchQuery));
 
   const isCustomDateSelected = () => {
     const isValidDateSelected = appliedFilters?.filter((f) => isInDateFormat(f.split(";")[0])) || [];

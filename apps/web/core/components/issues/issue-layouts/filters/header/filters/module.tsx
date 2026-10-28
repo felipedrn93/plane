@@ -13,6 +13,7 @@ import { ModuleIcon } from "@plane/propel/icons";
 import { Loader } from "@plane/ui";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 import { useModule } from "@/hooks/store/use-module";
+import { includesSearchQuery } from "@plane/utils";
 // ui
 
 type Props = {
@@ -35,9 +36,7 @@ export const FilterModule = observer(function FilterModule(props: Props) {
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
   const sortedOptions = useMemo(() => {
-    const filteredOptions = (modules || []).filter((module) =>
-      module.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const filteredOptions = (modules || []).filter((module) => includesSearchQuery(module.name, searchQuery));
 
     return sortBy(filteredOptions, [
       (module) => !appliedFilters?.includes(module.id),

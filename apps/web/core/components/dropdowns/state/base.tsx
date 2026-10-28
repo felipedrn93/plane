@@ -14,7 +14,7 @@ import { useTranslation } from "@plane/i18n";
 import { SearchIcon, StateGroupIcon, ChevronDownIcon } from "@plane/propel/icons";
 import type { IState } from "@plane/types";
 import { ComboDropDown, Spinner } from "@plane/ui";
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // components
 import { DropdownButton } from "@/components/dropdowns/buttons";
 import { BUTTON_VARIANTS_WITH_TEXT } from "@/components/dropdowns/constants";
@@ -126,8 +126,7 @@ export const WorkItemStateDropdownBase = observer(function WorkItemStateDropdown
     ),
   }));
 
-  const filteredOptions =
-    query === "" ? options : options?.filter((o) => o.query.toLowerCase().includes(query.toLowerCase()));
+  const filteredOptions = query === "" ? options : options?.filter((o) => includesSearchQuery(o.query, query));
 
   const selectedState = stateValue ? getStateById(stateValue) : undefined;
 

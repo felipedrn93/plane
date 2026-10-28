@@ -7,6 +7,7 @@
 import useFontFaceObserver from "use-font-face-observer";
 import { MATERIAL_ICONS_LIST } from "../material-icons";
 
+import { includesSearchQuery } from "@plane/utils";
 type MaterialIconListProps = {
   onChange: (value: { name: string; color: string }) => void;
   activeColor: string;
@@ -16,7 +17,7 @@ type MaterialIconListProps = {
 export function MaterialIconList(props: MaterialIconListProps) {
   const { query, onChange, activeColor } = props;
 
-  const filteredArray = MATERIAL_ICONS_LIST.filter((icon) => icon.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredArray = MATERIAL_ICONS_LIST.filter((icon) => includesSearchQuery(icon.name, query));
 
   const isMaterialSymbolsFontLoaded = useFontFaceObserver([
     {

@@ -18,7 +18,7 @@ import type {
   TCycleEstimateType,
 } from "@plane/types";
 import type { DistributionUpdates } from "@plane/utils";
-import { orderCycles, shouldFilterCycle, getDate, updateDistribution } from "@plane/utils";
+import { orderCycles, shouldFilterCycle, getDate, updateDistribution, includesSearchQuery } from "@plane/utils";
 // helpers
 // services
 import { CycleService } from "@/services/cycle.service";
@@ -266,7 +266,7 @@ export class CycleStore implements ICycleStore {
       (c) =>
         c.project_id === projectId &&
         !c.archived_at &&
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        includesSearchQuery(c.name, searchQuery) &&
         shouldFilterCycle(c, filters ?? {})
     );
     cycles = orderCycles(cycles, sortByManual);
@@ -289,7 +289,7 @@ export class CycleStore implements ICycleStore {
         c.project_id === projectId &&
         !c.archived_at &&
         c.status?.toLowerCase() === "completed" &&
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        includesSearchQuery(c.name, searchQuery) &&
         shouldFilterCycle(c, filters ?? {})
     );
     cycles = sortBy(cycles, [(c) => !c.start_date]);
@@ -310,7 +310,7 @@ export class CycleStore implements ICycleStore {
       (c) =>
         c.project_id === projectId &&
         !!c.archived_at &&
-        c.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        includesSearchQuery(c.name, searchQuery) &&
         shouldFilterCycle(c, filters ?? {})
     );
     cycles = sortBy(cycles, [(c) => !c.start_date]);

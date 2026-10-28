@@ -7,6 +7,7 @@
 import React from "react";
 import { LUCIDE_ICONS_LIST } from "../lucide-icons";
 
+import { includesSearchQuery } from "@plane/utils";
 type LucideIconsListProps = {
   onChange: (value: { name: string; color: string }) => void;
   activeColor: string;
@@ -16,7 +17,7 @@ type LucideIconsListProps = {
 export function LucideIconsList(props: LucideIconsListProps) {
   const { query, onChange, activeColor } = props;
 
-  const filteredArray = LUCIDE_ICONS_LIST.filter((icon) => icon.name.toLowerCase().includes(query.toLowerCase()));
+  const filteredArray = LUCIDE_ICONS_LIST.filter((icon) => includesSearchQuery(icon.name, query));
 
   return (
     <>

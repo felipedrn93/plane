@@ -14,6 +14,7 @@ import { WorkspaceService } from "@/services/workspace.service";
 // store
 import type { CoreRootStore } from "./root.store";
 
+import { includesSearchQuery } from "@plane/utils";
 export interface IGlobalViewStore {
   // observables
   globalViewMap: Record<string, IWorkspaceView>;
@@ -94,7 +95,7 @@ export class GlobalViewStore implements IGlobalViewStore {
       Object.keys(this.globalViewMap ?? {})?.filter(
         (viewId) =>
           this.globalViewMap[viewId]?.workspace === currentWorkspaceDetails.id &&
-          this.globalViewMap[viewId]?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+          includesSearchQuery(this.globalViewMap[viewId]?.name, searchQuery)
       ) ?? null
     );
   });

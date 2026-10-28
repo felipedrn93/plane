@@ -18,7 +18,7 @@ import type { TIssuePriorities } from "@plane/types";
 // ui
 import { ComboDropDown } from "@plane/ui";
 // helpers
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useDropdown } from "@/hooks/use-dropdown";
 import { usePlatformOS } from "@/hooks/use-platform-os";
@@ -374,8 +374,7 @@ export function PriorityDropdown(props: Props) {
     ),
   }));
 
-  const filteredOptions =
-    query === "" ? options : options.filter((o) => o.query.toLowerCase().includes(query.toLowerCase()));
+  const filteredOptions = query === "" ? options : options.filter((o) => includesSearchQuery(o.query, query));
 
   const dropdownOnChange = (val: TIssuePriorities) => {
     onChange(val);

@@ -18,6 +18,7 @@ import { useDropdownKeyDown } from "../hooks/use-dropdown-key-down";
 import { cn } from "../utils";
 import type { ICustomSearchSelectProps } from "./helper";
 
+import { includesSearchQuery } from "@plane/utils";
 export function CustomSearchSelect(props: ICustomSearchSelectProps) {
   const {
     customButtonClassName = "",
@@ -56,7 +57,7 @@ export function CustomSearchSelect(props: ICustomSearchSelectProps) {
   });
 
   const filteredOptions =
-    query === "" ? options : options?.filter((option) => option.query.toLowerCase().includes(query.toLowerCase()));
+    query === "" ? options : options?.filter((option) => includesSearchQuery(option.query, query));
 
   const comboboxProps: any = {
     value,

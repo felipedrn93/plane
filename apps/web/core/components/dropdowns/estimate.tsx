@@ -15,7 +15,7 @@ import { useTranslation } from "@plane/i18n";
 import { CheckIcon, SearchIcon, EstimatePropertyIcon, ChevronDownIcon } from "@plane/propel/icons";
 import { EEstimateSystem } from "@plane/types";
 import { ComboDropDown } from "@plane/ui";
-import { convertMinutesToHoursMinutesString, cn } from "@plane/utils";
+import { convertMinutesToHoursMinutesString, cn, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useEstimate } from "@/hooks/store/estimates/use-estimate";
@@ -133,8 +133,7 @@ export const EstimateDropdown = observer(function EstimateDropdown(props: Props)
     ),
   });
 
-  const filteredOptions =
-    query === "" ? options : options?.filter((o) => o.query.toLowerCase().includes(query.toLowerCase()));
+  const filteredOptions = query === "" ? options : options?.filter((o) => includesSearchQuery(o.query, query));
 
   const selectedEstimate = value && estimatePointById ? estimatePointById(value) : undefined;
 

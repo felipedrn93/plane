@@ -13,7 +13,7 @@ import { Combobox } from "@headlessui/react";
 import { useTranslation } from "@plane/i18n";
 import { CheckIcon, SearchIcon, ModuleIcon } from "@plane/propel/icons";
 import type { IModule } from "@plane/types";
-import { cn, sortBySelectedFirst } from "@plane/utils";
+import { cn, sortBySelectedFirst, includesSearchQuery } from "@plane/utils";
 // hooks
 import { usePlatformOS } from "@/hooks/use-platform-os";
 
@@ -108,7 +108,7 @@ export const ModuleOptions = observer(function ModuleOptions(props: Props) {
     });
 
   const filteredOptions = sortBySelectedFirst(
-    query === "" ? options : options?.filter((o) => o.query.toLowerCase().includes(query.toLowerCase())),
+    query === "" ? options : options?.filter((o) => includesSearchQuery(o.query, query)),
     value
   );
 

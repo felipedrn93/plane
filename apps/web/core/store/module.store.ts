@@ -10,7 +10,7 @@ import { computedFn } from "mobx-utils";
 // types
 import type { IModule, ILinkDetails, TModulePlotType } from "@plane/types";
 import type { DistributionUpdates } from "@plane/utils";
-import { updateDistribution, orderModules, shouldFilterModule } from "@plane/utils";
+import { updateDistribution, orderModules, shouldFilterModule, includesSearchQuery } from "@plane/utils";
 // helpers
 // services
 import { ModuleService } from "@/services/module.service";
@@ -177,7 +177,7 @@ export class ModulesStore implements IModuleStore {
       (m) =>
         m.project_id === projectId &&
         !m.archived_at &&
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        includesSearchQuery(m.name, searchQuery) &&
         shouldFilterModule(m, displayFilters ?? {}, filters ?? {})
     );
     modules = orderModules(modules, displayFilters?.order_by);
@@ -199,7 +199,7 @@ export class ModulesStore implements IModuleStore {
       (m) =>
         m.project_id === projectId &&
         !!m.archived_at &&
-        m.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        includesSearchQuery(m.name, searchQuery) &&
         shouldFilterModule(m, displayFilters ?? {}, filters ?? {})
     );
     modules = orderModules(modules, displayFilters?.order_by);

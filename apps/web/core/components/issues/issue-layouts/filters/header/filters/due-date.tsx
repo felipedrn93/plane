@@ -12,6 +12,7 @@ import { DATE_AFTER_FILTER_OPTIONS } from "@plane/constants";
 import { DateFilterModal } from "@/components/core/filters/date-filter-modal";
 import { FilterHeader, FilterOption } from "@/components/issues/issue-layouts/filters";
 
+import { includesSearchQuery } from "@plane/utils";
 type Props = {
   appliedFilters: string[] | null;
   handleUpdate: (val: string | string[]) => void;
@@ -26,9 +27,7 @@ export const FilterDueDate = observer(function FilterDueDate(props: Props) {
 
   const appliedFiltersCount = appliedFilters?.length ?? 0;
 
-  const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((d) =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredOptions = DATE_AFTER_FILTER_OPTIONS.filter((d) => includesSearchQuery(d.name, searchQuery));
 
   const isCustomDateSelected = () => {
     const isCustomFateApplied = appliedFilters?.filter((f) => f.includes("-")) || [];

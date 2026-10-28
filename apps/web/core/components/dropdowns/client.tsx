@@ -18,7 +18,7 @@ import { CheckIcon, ChevronDownIcon, SearchIcon } from "@plane/propel/icons";
 import { ClientService } from "@plane/services";
 import type { TIssue } from "@plane/types";
 import { AlertModalCore, ComboDropDown } from "@plane/ui";
-import { cn } from "@plane/utils";
+import { cn, includesSearchQuery } from "@plane/utils";
 // hooks
 import { useClient } from "@/hooks/store/use-client";
 import { useIssues } from "@/hooks/store/use-issues";
@@ -82,7 +82,7 @@ const ClientOptions = observer(function ClientOptions(props: TClientOptionsProps
   };
 
   const options = activeClients
-    .filter((client) => client.name.toLowerCase().includes(query.toLowerCase()))
+    .filter((client) => includesSearchQuery(client.name, query))
     .map((client) => ({ value: client.id as string | null, label: client.name }));
   options.unshift({ value: null, label: t("clients.none") });
 

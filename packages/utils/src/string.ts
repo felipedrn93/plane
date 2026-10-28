@@ -310,6 +310,23 @@ export const joinWithConjunction = (array: string[], separator: string = ", ", c
 export const ensureUrlHasProtocol = (url: string): string => (url.startsWith("http") ? url : `http://${url}`);
 
 /**
+ * @description Lowercases and strips accents, so searches ignore case and diacritics (see mods/busca-sem-acento.md)
+ * @example normalizeSearchText("União") => "uniao"
+ */
+export const normalizeSearchText = (text: string): string =>
+  text
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
+/**
+ * @description Case- and accent-insensitive "text contains query"; nullish text never matches
+ * @example includesSearchQuery("União Seguros", "uniao") => true
+ */
+export const includesSearchQuery = (text: string | null | undefined, query: string | null | undefined): boolean =>
+  text != null && normalizeSearchText(text).includes(normalizeSearchText(query ?? ""));
+
+/**
  * @returns {boolean} true if searchQuery is substring of text in the same order, false otherwise
  * @description Returns true if searchQuery is substring of text in the same order, false otherwise
  * @param {string} text string to compare from
@@ -319,6 +336,8 @@ export const ensureUrlHasProtocol = (url: string): string => (url.startsWith("ht
  */
 export const substringMatch = (text: string, searchQuery: string): boolean => {
   try {
+    text = normalizeSearchText(text);
+    searchQuery = normalizeSearchText(searchQuery);
     let searchIndex = 0;
 
     for (let i = 0; i < text.length; i++) {

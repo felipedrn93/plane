@@ -48,6 +48,7 @@ import type { CommandProps, ISlashCommandItem, TSlashCommandSectionKeys } from "
 // local types
 import type { TExtensionProps, TSlashCommandAdditionalOption } from "./root";
 
+import { includesSearchQuery } from "@plane/utils";
 export type TSlashCommandSection = {
   key: TSlashCommandSectionKeys;
   title?: string;
@@ -326,8 +327,8 @@ export const getSlashCommandFilteredSections =
 
         const lowercaseQuery = query.toLowerCase();
         return (
-          item.title.toLowerCase().includes(lowercaseQuery) ||
-          item.description.toLowerCase().includes(lowercaseQuery) ||
+          includesSearchQuery(item.title, lowercaseQuery) ||
+          includesSearchQuery(item.description, lowercaseQuery) ||
           item.searchTerms.some((t) => t.includes(lowercaseQuery))
         );
       }),
